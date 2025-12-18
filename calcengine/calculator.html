@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Romasm Calculator</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="../nav.css">
+    <style>
+        .romasm-calculator {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            padding: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .calc-screen {
+            background: #1a1a1a;
+            border: 3px solid #333;
+            border-radius: 8px;
+            padding: 1rem;
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .calc-status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            background: #000;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .calc-display {
+            background: #fff;
+            border: 2px solid #333;
+            border-radius: 4px;
+            padding: 0.5rem;
+        }
+        
+        #calc-canvas {
+            width: 100%;
+            height: 240px;
+            background: #fff;
+            display: block;
+        }
+        
+        .calc-keypad {
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .keypad-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .keypad-main {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+        }
+        
+        .calc-key {
+            padding: 0.75rem;
+            background: var(--surface);
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+        
+        .calc-key:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .calc-key:active {
+            transform: scale(0.95);
+        }
+        
+        .function-key {
+            background: #ff6b00;
+            color: white;
+        }
+        
+        .function-key:hover {
+            background: #ff8c00;
+        }
+        
+        .nav-pad {
+            grid-column: span 4;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+            gap: 0.25rem;
+        }
+        
+        .nav-key {
+            padding: 0.5rem;
+        }
+        
+        .nav-center {
+            grid-column: 3;
+        }
+        
+        .mode-selector {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: var(--surface);
+            border-radius: 8px;
+        }
+        
+        .mode-btn {
+            padding: 0.5rem 1rem;
+            background: var(--surface-light);
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+        
+        .mode-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Romasm Calculator</h1>
+            <p class="subtitle">Full-featured calculator powered entirely by Romasm assembly</p>
+        </header>
+        
+        <main>
+            <div class="mode-selector">
+                <button class="mode-btn active" data-mode="function">Function (y=f(x))</button>
+                <button class="mode-btn" data-mode="polar">Polar (r=f(θ))</button>
+                <button class="mode-btn" data-mode="parametric">Parametric (x=f(t), y=g(t))</button>
+                <button class="mode-btn" data-mode="sequence">Sequence (u_n)</button>
+            </div>
+            
+            <div id="calculator-container"></div>
+        </main>
+    </div>
+    
+    <script src="../compiler/romasm-assembler.js"></script>
+    <script src="../compiler/romasm-vm.js"></script>
+    <script src="romasm-math-engine.js"></script>
+    <script src="romasm-calculator-engine.js"></script>
+    <script src="romasm-calculator-ui.js"></script>
+    <script>
+        // Initialize calculator
+        const engine = new RomasmCalculatorEngine();
+        const ui = new RomasmCalculatorUI('calculator-container', engine);
+        
+        // Mode selector
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                engine.setMode(btn.dataset.mode);
+                ui.setState('graphing');
+            });
+        });
+        
+        // Define some test functions
+        engine.defineFunction('Y1', `; f(x) = x²
+LOAD R1, R0
+MUL R0, R1
+LOAD R1, 100
+DIV R0, R1
+RET`);
+        
+        engine.defineFunction('Y2', `; f(x) = sin(x)
+; Input: R0 = x (scaled by 100, degrees)
+; Output: R0 = sin(x) scaled by 100
+; Use math engine's sin function
+; For now, simplified version
+LOAD R1, R0
+LOAD R2, 100
+DIV R1, R2
+; Convert degrees to approximate sin
+; sin(x) ≈ x for small x, scaled
+LOAD R0, R1
+LOAD R1, 100
+MUL R0, R1
+LOAD R1, 1000
+DIV R0, R1
+RET`);
+        
+        // Set initial window
+        engine.setWindow(-10, 10, -10, 10, 0.1);
+        
+        // Plot initial function
+        setTimeout(() => {
+            ui.plotCurrentFunctions();
+        }, 100);
+    </script>
+</body>
+</html>
+
