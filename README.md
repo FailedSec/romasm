@@ -1,246 +1,340 @@
-# Positional Roman Numeral System
+# Romasm - Roman Numeral Assembly Language
 
-A positional numeral system using Roman numeral symbols (I, V, X, etc.) where each position represents a power of 10, similar to modern decimal notation.
+**Romasm** is a complete assembly language ecosystem that uses Roman numerals for registers and instruction opcodes. It includes a full virtual machine, assembler, standard library, IDE, graphics calculator, and tools for exploring unsolved mathematical problems.
 
-## Concept
+## 🏛️ What is Romasm?
 
-This project implements a **Positional Roman** numeral system that combines the aesthetic of Roman numerals with the efficiency of positional (place-value) notation. Unlike standard Roman numerals which are additive/subtractive, this system uses Roman symbols as "digits" in a base-10 positional system.
+Romasm is a custom assembly language where:
+- **Registers** use Roman numerals: `R0` = `I`, `R1` = `II`, `R2` = `III`, etc.
+- **Instructions** use Roman numeral opcodes
+- **All math** is performed in Romasm assembly (not JavaScript)
+- **Runs entirely in the browser** via a JavaScript-based virtual machine
 
-### Why This Matters
+### Key Features
 
-Standard Roman numerals have limitations:
-- They're **additive/subtractive**: Each symbol has a fixed value regardless of position
-- They struggle with large numbers: Eventually run out of symbols (requiring bars or brackets)
-- Complex arithmetic is cumbersome
+✅ **Full Assembly Language** - Complete instruction set with arithmetic, control flow, memory, and I/O  
+✅ **Standard Library** - Math, trigonometry, calculus, binary operations, and more  
+✅ **IDE** - Online code editor with assembly, execution, and debugging  
+✅ **Graphics Calculator** - TI-84-like calculator powered entirely by Romasm  
+✅ **Problem Explorers** - Interactive tools for unsolved mathematical problems  
+✅ **Big Integer Support** - Handle numbers beyond JavaScript's safe integer limit  
+✅ **Canvas Drawing** - Direct canvas manipulation from Romasm code  
+✅ **Linker System** - Automatic linking with standard library functions  
+✅ **Complete Documentation** - Comprehensive docs for every feature  
 
-Positional Roman numerals solve these issues:
-- **Positional**: Each position represents a power of 10 (like modern decimal)
-- **Scalable**: Can represent any number using just 10 digit symbols (0-9)
-- **Efficient**: Enables easier arithmetic operations
-
-## Digit Set
-
-The system uses these symbols for digits 0-9:
-
-| Value | Symbol | Name |
-|-------|--------|------|
-| 0 | N | nulla (zero) |
-| 1 | I | unus |
-| 2 | II | duo |
-| 3 | III | tres |
-| 4 | IV | quattuor |
-| 5 | V | quinque |
-| 6 | VI | sex |
-| 7 | VII | septem |
-| 8 | VIII | octo |
-| 9 | IX | novem |
-
-## Examples
-
-### Basic Conversion
-
-```python
-from positional_roman import PositionalRoman
-
-pr = PositionalRoman(separator='space')
-
-# Convert decimal to Positional Roman
-pr.to_positional_roman(2025)  # Returns: "II N II V"
-
-# Convert Positional Roman to decimal
-pr.from_positional_roman("II N II V")  # Returns: 2025
-```
-
-### Understanding the Representation
-
-The number **2025** in Positional Roman is `II N II V`:
-- `II` in the **thousands** place (2 × 1000 = 2000)
-- `N` in the **hundreds** place (0 × 100 = 0)
-- `II` in the **tens** place (2 × 10 = 20)
-- `V` in the **ones** place (5 × 1 = 5)
-
-**Total: 2000 + 0 + 20 + 5 = 2025**
-
-### Comparison Table
-
-| Decimal | Standard Roman | Positional Roman |
-|---------|----------------|------------------|
-| 10 | X | I N |
-| 50 | L | V N |
-| 101 | CI | I N I |
-| 999 | CMXCIX | IX IX IX |
-| 2025 | MMXXV | II N II V |
-| 1234 | MCCXXXIV | I II III IV |
-
-## Separators
-
-Because Roman digits vary in width (e.g., `III` vs `V`), separators are needed to distinguish columns:
-
-- **Space**: `II N II V` (default)
-- **Dot**: `II·N·II·V`
-- **Box**: `II▢N▢II▢V`
-
-Without separators, `III` could mean:
-- The digit 3 (III = 3)
-- Three digits: 1, 1, 1 (111)
-
-With separators, `I·I·I` clearly means 111.
-
-## Installation
+## 🚀 Quick Start
 
 ### Web App (Recommended)
 
-The web app runs entirely in your browser - no build step required!
+Romasm runs entirely in your browser - no installation required!
 
-**Option 1: Simple HTTP Server (Node.js)**
 ```bash
-# Using the built-in server
+# Start the server
 node server.js
 
-# Or using http-server (if installed)
-npm start
+# Or use any HTTP server
+python -m http.server 8000
+# or
+npx http-server
 
 # Then open http://localhost:6969 in your browser
 ```
 
-**Option 2: Open Directly**
-Simply open `index.html` in your browser. Some browsers may have CORS restrictions, so using a local server is recommended.
-
 ### Available Pages
 
+#### Core Romasm
 - **`index.html`** - Positional Roman Numeral System converter
-- **`romasm.html`** - Romasm (Roman Assembly Language) with register operations
+- **`romasm.html`** - Basic Romasm (binary-like operations with Roman symbols)
 - **`romasm-extended.html`** - Extended features (fractions, negatives, ISA)
-- **`ide.html`** - **Romasm IDE** - Online code editor to write, compile, and run Romasm programs!
+- **`ide.html`** - **Romasm IDE** - Write, assemble, and run Romasm programs
 
-### Python Version
+#### Tools
+- **`text-to-romasm.html`** - Convert text to Roman numeral representation
+- **`calculator.html`** - Original graphics calculator
+- **`romasm-calculator.html`** - Full-featured TI-84-like calculator
+- **`docs/index.html`** - Complete documentation
 
-No dependencies required! Just Python 3.6+.
+#### Problem Explorers
+- **`collatz.html`** - Collatz Conjecture (3n+1 problem)
+- **`twin-primes.html`** - Twin Prime Conjecture
+- **`goldbach.html`** - Goldbach Conjecture
+- **`erdos-straus.html`** - Erdos-Straus Conjecture
+- **`beal-conjecture.html`** - Beal Conjecture
+- **`legendre-conjecture.html`** - Legendre's Conjecture
+- **`mersenne-primes.html`** - Mersenne Primes
+- **`brocard-problem.html`** - Brocard's Problem
+- **`perfect-numbers.html`** - Perfect Numbers
+- **`pascal.html`** - Pascal's Triangle
 
-```bash
-# Clone or download the repository
-cd romasm
+## 📚 Documentation
 
-# Run examples
-python positional_roman.py
+Complete documentation is available at **`docs/index.html`** covering:
+
+- **Getting Started** - Quick start guide, language overview, setup
+- **Language Reference** - Instruction set, registers, syntax, memory
+- **Standard Library** - Math, trigonometry, calculus, binary operations, BigInt
+- **Tools & Applications** - IDE, calculators, expression parser
+- **System Architecture** - Assembler, virtual machine, linker
+- **Problem Explorers** - All mathematical problem explorers
+- **Examples & Tutorials** - Basic, math, and graphics examples
+
+## 💻 Your First Romasm Program
+
+```assembly
+; Add two numbers
+LOAD R0, 10      ; Load 10 into R0
+LOAD R1, 20      ; Load 20 into R1
+ADD R0, R1       ; R0 = R0 + R1 (now 30)
+PRINT R0         ; Output: 30
 ```
 
-## Usage
+Try it in the [Romasm IDE](ide.html)!
 
-### Web App
+## 🎯 Instruction Set
 
-1. Start the server: `node server.js` or `npm start`
-2. Open `http://localhost:6969` in your browser
-3. Use the interactive converter to:
-   - Convert decimal numbers to Positional Roman
-   - Convert Positional Roman back to decimal
-   - Convert standard Roman numerals
-   - Compare all three systems side-by-side
-   - View examples and explanations
+Romasm includes a complete instruction set:
 
-The web app includes:
-- Interactive conversion interface
-- Real-time results with explanations
-- Comparison table showing multiple examples
-- Detailed examples with breakdowns
-- Information about the digit set and system
+### Arithmetic
+- `ADD`, `SUB`, `MUL`, `DIV`, `MOD` - Basic arithmetic
+- `INC`, `DEC` - Increment/decrement
+- `SHL`, `SHR` - Bit shifts
 
-### Python API
+### Control Flow
+- `JMP`, `JEQ`, `JNE`, `JLT`, `JGT`, `JLE`, `JGE` - Jumps
+- `CMP` - Compare and set flags
+- `CALL`, `RET` - Function calls
+- `PUSH`, `POP` - Stack operations
 
-```python
-from positional_roman import PositionalRoman, compare_systems
+### Memory
+- `LOAD`, `STORE` - Register and memory operations
 
-# Create converter
-pr = PositionalRoman(separator='space')  # or 'dot' or 'box'
+### I/O
+- `PRINT` - Output values
 
-# Convert decimal to Positional Roman
-positional = pr.to_positional_roman(2025)
-print(positional)  # "II N II V"
+### Canvas Drawing
+- `CLEAR`, `MOVE`, `DRAW`, `STROKE` - Direct canvas manipulation
 
-# Convert Positional Roman to decimal
-decimal = pr.from_positional_roman("II N II V")
-print(decimal)  # 2025
+## 📖 Standard Library
 
-# Convert to standard Roman (for comparison)
-standard = pr.to_standard_roman(2025)
-print(standard)  # "MMXXV"
+The Romasm standard library provides pre-built functions:
 
-# Compare all systems
-result = compare_systems(2025)
-print(result)
-# {
-#     'decimal': 2025,
-#     'standard_roman': 'MMXXV',
-#     'positional_roman': 'II N II V',
-#     'explanation': 'II in the thousands place (2 × 1000 = 2000) | ...'
-# }
+### Math (`stdlib/math.romasm`)
+- `factorial` - Calculate n!
+- `power` - Calculate base^exponent
+- `sqrt` - Square root (Newton's method)
+
+### Trigonometry (`stdlib/trig.romasm`)
+- `sin`, `cos` - Sine and cosine (Taylor series)
+- `sin_cordic` - CORDIC algorithm
+
+### Calculus (`stdlib/calculus.romasm`)
+- `derivative_x_squared`, `derivative_x_cubed` - Derivatives
+- `integral_x_squared`, `integral_trapezoidal_x_squared` - Integrals
+- `integral_simpson_x_squared` - Simpson's rule
+
+### Advanced Math (`stdlib/advanced-math.romasm`)
+- `exp` - Exponential function e^x
+- `ln` - Natural logarithm
+
+### Binary Operations (`stdlib/binary.romasm`)
+- `bitwise_and`, `bitwise_or`, `bitwise_xor` - Bitwise operations
+- `bitwise_not` - Bitwise complement
+
+### Usage Example
+
+```assembly
+; Calculate sin(30°)
+LOAD R0, 3000    ; 30 degrees (scaled by 100)
+CALL sin         ; Call stdlib sin function
+PRINT R0         ; Outputs ~500 (0.5 × 1000)
 ```
 
-### Command Line Interface
+## 🧮 Graphics Calculator
 
-```bash
-# Convert decimal to Positional Roman
-python cli.py 2025
+The Romasm Calculator (`romasm-calculator.html`) is a full-featured calculator that:
 
-# Convert with dot separator
-python cli.py 2025 --separator dot
+- Plots functions: `y = f(x)` defined in Romasm assembly
+- Polar curves: `r = f(θ)` with automatic Cartesian conversion
+- Parametric mode: `x = f(t), y = g(t)` (coming soon)
+- Sequence mode: `u_n` (coming soon)
+- Console: Run arbitrary Romasm scripts with drawing commands
+- Expression parser: Convert math expressions to Romasm
 
-# Compare all systems
-python cli.py 2025 --compare
+### Example Function
 
-# Show detailed explanation
-python cli.py 2025 --explain
-
-# Convert from Positional Roman to decimal
-python cli.py --from-positional "II N II V"
-
-# Convert from standard Roman to decimal
-python cli.py --from-standard MMXXV
+```assembly
+; Y1 = x²
+LOAD R1, R0    ; Copy x to R1
+MUL R0, R1     ; R0 = x * x = x²
+LOAD R1, 100
+DIV R0, R1     ; Scale down
+RET
 ```
 
-## Technical Details
+## 🔬 Problem Explorers
 
-### System Comparison
+Romasm includes interactive explorers for unsolved mathematical problems:
 
-| System | Logic | Efficiency | Analogy |
-|--------|-------|------------|---------|
-| Tally Marks | Unary (1 mark = 1) | Very Low | Raw electrical signals |
-| Standard Roman | Additive/Subtractive | Low | Assembly / Machine Code |
-| Positional Roman | Positional (Base-10) | High | High-Level Languages |
-| Modern Decimal | Positional (Base-10) | High | High-Level Languages |
+- **Collatz Conjecture** - Test the 3n+1 problem with BigInt support
+- **Twin Primes** - Search for large twin prime pairs
+- **Goldbach Conjecture** - Verify even numbers are sum of two primes
+- **Erdos-Straus** - Find unit fraction decompositions
+- **Beal Conjecture** - Search for counterexamples
+- **Legendre's Conjecture** - Verify primes between n² and (n+1)²
+- **Mersenne Primes** - Search for Mersenne primes
+- **Brocard's Problem** - Find solutions to n! + 1 = m²
+- **Perfect Numbers** - Search for perfect numbers
+- **Pascal's Triangle** - Generate and analyze Pascal's Triangle
 
-### Key Differences
+All computations are performed in Romasm assembly!
 
-**Standard Roman (Additive):**
-- `XXX` = 30 (X + X + X, each X always equals 10)
-- Position doesn't matter
-- To write larger numbers, keep adding symbols
+## 🛠️ Project Structure
 
-**Positional Roman (Place-Value):**
-- `III N` = 30 (III in tens place = 3 × 10, N in ones place = 0 × 1)
-- Position determines value
-- To write larger numbers, add more columns
+```
+romasm/
+├── compiler/              # Assembler and Virtual Machine
+│   ├── romasm-assembler.js
+│   └── romasm-vm.js
+├── stdlib/                # Standard Library
+│   ├── math.romasm        # Basic math functions
+│   ├── trig.romasm        # Trigonometric functions
+│   ├── calculus.romasm    # Derivatives and integrals
+│   ├── advanced-math.romasm # exp, ln
+│   ├── binary.romasm      # Bitwise operations
+│   └── bigint.js          # Big integer support
+├── linker/                # Linker system
+│   └── romasm-linker.js
+├── calcengine/            # Calculator engine
+│   ├── romasm-calculator-engine.js
+│   ├── romasm-calculator-ui.js
+│   ├── romasm-expression-parser.js
+│   └── romasm-math-engine.js
+├── docs/                  # Documentation
+│   ├── index.html
+│   └── pages/             # Individual doc pages
+├── ide.html               # Romasm IDE
+├── romasm-calculator.html # Full calculator
+├── calculator.html         # Graphics calculator
+├── text-to-romasm.html    # Text converter
+└── [problem-explorers].html  # Various problem explorers
+```
 
-## Inspiration
+## 🎓 Learning Resources
 
-This project was inspired by the analogy between:
-- **Roman Numerals** ↔ **Assembly Language** (low-level, literal, cumbersome)
-- **Positional Systems** ↔ **High-Level Languages** (abstract, efficient, scalable)
+1. **Quick Start** - [docs/pages/quickstart.html](docs/pages/quickstart.html)
+2. **Language Overview** - [docs/pages/language-overview.html](docs/pages/language-overview.html)
+3. **Instruction Set** - [docs/pages/instruction-set.html](docs/pages/instruction-set.html)
+4. **Standard Library** - [docs/pages/stdlib-math.html](docs/pages/stdlib-math.html)
+5. **Examples** - [docs/pages/examples-basic.html](docs/pages/examples-basic.html)
 
-Just as programmers moved from Assembly to high-level languages to build complex software, humanity moved from additive numeral systems to positional notation to build complex civilizations.
+## 🔧 Technical Details
 
-## License
+### Virtual Machine
+
+Romasm runs on a JavaScript-based virtual machine that:
+- Executes instructions sequentially
+- Maintains registers, memory, stack, and program counter
+- Supports function calls and recursion
+- Integrates with HTML5 Canvas for drawing
+
+### Fixed-Point Arithmetic
+
+Romasm uses fixed-point arithmetic for decimal numbers:
+- Numbers are scaled by factors (100, 1000, etc.)
+- Example: `3000` represents `30.00` (scaled by 100)
+- All stdlib functions document their scaling factors
+
+### Big Integer Support
+
+For numbers beyond JavaScript's safe integer limit (2^53), Romasm uses BigInt:
+- Arbitrary-precision arithmetic
+- Used in problem explorers for massive numbers
+- Implemented in `stdlib/bigint.js`
+
+## 🌟 Key Achievements
+
+- ✅ Complete assembly language with 30+ instructions
+- ✅ Full standard library (math, trig, calculus, binary)
+- ✅ Working IDE with memory visualization
+- ✅ Graphics calculator with function plotting
+- ✅ TI-84-like calculator interface
+- ✅ 10+ problem explorers for unsolved math problems
+- ✅ Comprehensive documentation (25+ pages)
+- ✅ Text-to-Romasm converter
+- ✅ Linker system for stdlib functions
+- ✅ Canvas drawing opcodes
+
+## 📝 Example Programs
+
+### Factorial
+
+```assembly
+; Calculate 5!
+LOAD R0, 5
+LOAD R1, 1
+LOAD R2, 1
+
+loop:
+    MUL R1, R0
+    DEC R0
+    CMP R0, R2
+    JGT loop
+
+PRINT R1    ; Output: 120
+```
+
+### Using Standard Library
+
+```assembly
+; Calculate sin(30°) using stdlib
+LOAD R0, 3000    ; 30 degrees (scaled by 100)
+CALL sin         ; Call stdlib sin function
+PRINT R0         ; Outputs ~500 (0.5 × 1000)
+```
+
+### Drawing on Canvas
+
+```assembly
+; Draw a line
+CLEAR
+LOAD R0, -500    ; x1
+LOAD R1, -500    ; y1
+MOVE R0, R1      ; Move to start
+LOAD R0, 500     ; x2
+LOAD R1, 500     ; y2
+DRAW R0, R1      ; Draw line
+STROKE           ; Render it
+```
+
+## 🤝 Contributing
+
+Romasm is an open-source educational project. Feel free to:
+- Add new standard library functions
+- Create new problem explorers
+- Improve the documentation
+- Enhance the IDE or calculators
+- Report bugs or suggest features
+
+## 📄 License
 
 This project is open source and available for educational and experimental purposes.
 
-## Contributing
+## 🔗 Related Files
 
-Feel free to experiment, improve, and extend this system! Some ideas:
-- Support for negative numbers
-- Arithmetic operations (addition, subtraction, multiplication, division)
-- Different bases (base-2, base-16, etc.)
-- Visual rendering with proper typography
-- ✅ Web interface (implemented!)
-- ✅ Romasm - Roman Assembly Language (implemented! See `ROMASM_README.md`)
-- ✅ Romasm Compiler & IDE (implemented! See `compiler/` and `ide.html`)
+- **`ROMASM_README.md`** - Original Romasm concept documentation
+- **`QUICKSTART.md`** - Quick start guide
+- **`docs/`** - Complete documentation system
+- **`stdlib/README.md`** - Standard library documentation
 
+## 🎯 What Makes Romasm Unique?
+
+1. **Roman Numeral Aesthetic** - Registers and opcodes use Roman numerals
+2. **Pure Romasm Math** - All calculations done in assembly, not JavaScript
+3. **Complete Ecosystem** - IDE, calculators, explorers, documentation
+4. **Educational Focus** - Learn assembly concepts with a unique twist
+5. **Web-Based** - Runs entirely in the browser, no installation needed
+6. **Advanced Math** - Calculus, trigonometry, binary operations all in assembly
+
+---
+
+**Ready to start?** Open the [Romasm IDE](ide.html) and write your first program!
