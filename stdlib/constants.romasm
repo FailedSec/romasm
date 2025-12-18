@@ -1,0 +1,25 @@
+; Romasm Standard Constants
+; Scaling factors and mathematical constants for fixed-point arithmetic
+
+; Scaling Constants (for fixed-point representation)
+; Use these to maintain consistent precision across calculations
+
+; SCALE_100  = 100   (2 decimal places)
+; SCALE_1000 = 1000  (3 decimal places) - Most common
+; SCALE_10000 = 10000 (4 decimal places) - High precision
+
+; Small step sizes for calculus (scaled by 1000)
+; DELTA_X_SMALL = 1   (represents 0.001)
+; DELTA_X_MEDIUM = 10 (represents 0.01)
+; DELTA_X_LARGE = 100 (represents 0.1)
+
+; Mathematical Constants (scaled by 1000)
+; PI ≈ 3142 (represents 3.142)
+; E ≈ 2718 (represents 2.718)
+
+; Note: These are documentation constants.
+; In actual code, use immediate values:
+;   LOAD R1, 1000   ; SCALE_1000
+;   LOAD R2, 1      ; DELTA_X_SMALL
+;   LOAD R3, 3142   ; PI (scaled)
+

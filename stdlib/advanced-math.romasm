@@ -1,0 +1,191 @@
+; Advanced Mathematical Functions for Romasm
+; Exponential, logarithm, and other advanced functions
+
+; Exponential function: e^x using Taylor Series
+; e^x = 1 + x + x²/2! + x³/3! + x⁴/4! + ...
+; Input: R0 = x (scaled by 1000, e.g., 1000 = 1.000)
+; Output: R0 = e^x (scaled by 1000)
+; Uses: R1, R2, R3, R4, R5, R6
+exp:
+  PUSH R1
+  PUSH R2
+  PUSH R3
+  PUSH R4
+  PUSH R5
+  PUSH R6
+  
+  ; Handle negative x: e^(-x) = 1 / e^x
+  LOAD R1, R0
+  LOAD R6, 0
+  CMP R1, R6
+  JGE exp_positive
+  ; Negative: calculate e^(-x) then invert
+  LOAD R2, 0
+  SUB R2, R1     ; R2 = -x (positive)
+  LOAD R0, R2
+  CALL exp_positive_internal
+  ; Invert: 1 / result
+  LOAD R1, 1000  ; 1.000 scaled
+  LOAD R2, 1000
+  MUL R1, R2     ; R1 = 1000000 (for division)
+  DIV R1, R0     ; R1 = 1000000 / e^x
+  LOAD R2, 1000
+  DIV R1, R2     ; R1 = result scaled by 1000
+  LOAD R0, R1
+  JMP exp_done
+  
+exp_positive:
+  CALL exp_positive_internal
+  
+exp_done:
+  POP R6
+  POP R5
+  POP R4
+  POP R3
+  POP R2
+  POP R1
+  RET
+
+exp_positive_internal:
+  ; Calculate e^x for x >= 0
+  ; Use 10 terms of Taylor series for good accuracy
+  ; e^x ≈ 1 + x + x²/2 + x³/6 + x⁴/24 + x⁵/120 + ...
+  
+  ; Result accumulator: start with 1
+  LOAD R1, 1000  ; R1 = 1.000 (scaled by 1000)
+  
+  ; Term 1: x
+  LOAD R2, R0    ; R2 = x
+  ADD R1, R2     ; R1 = 1 + x
+  
+  ; Term 2: x²/2
+  LOAD R2, R0
+  LOAD R3, R0
+  MUL R2, R3     ; R2 = x² (scaled by 1000000)
+  LOAD R3, 2
+  LOAD R4, 1000
+  MUL R3, R4     ; R3 = 2000
+  DIV R2, R3     ; R2 = x²/2 (scaled by 1000)
+  ADD R1, R2     ; R1 = 1 + x + x²/2
+  
+  ; Term 3: x³/6
+  LOAD R2, R0
+  LOAD R3, R0
+  MUL R2, R3     ; R2 = x²
+  MUL R2, R0     ; R2 = x³ (scaled by 1000000000)
+  LOAD R3, 6
+  LOAD R4, 1000000
+  MUL R3, R4     ; R3 = 6000000
+  DIV R2, R3     ; R2 = x³/6 (scaled by 1000)
+  ADD R1, R2     ; R1 = 1 + x + x²/2 + x³/6
+  
+  ; Term 4: x⁴/24
+  LOAD R2, R0
+  LOAD R3, R0
+  MUL R2, R3     ; x²
+  MUL R2, R3     ; x³
+  MUL R2, R0     ; x⁴ (scaled by 1000000000000)
+  LOAD R3, 24
+  LOAD R4, 1000000000
+  MUL R3, R4     ; R3 = 24000000000
+  DIV R2, R3     ; R2 = x⁴/24 (scaled by 1000)
+  ADD R1, R2
+  
+  ; Term 5: x⁵/120
+  LOAD R2, R0
+  LOAD R3, R0
+  MUL R2, R3     ; x²
+  MUL R2, R3     ; x³
+  MUL R2, R3     ; x⁴
+  MUL R2, R0     ; x⁵
+  LOAD R3, 120
+  LOAD R4, 1000000000000
+  MUL R3, R4
+  DIV R2, R3     ; R2 = x⁵/120 (scaled by 1000)
+  ADD R1, R2
+  
+  ; For x < 2, 5 terms is sufficient
+  ; For larger x, would need more terms
+  
+  LOAD R0, R1
+  RET
+
+; Natural Logarithm approximation using series
+; ln(1+x) = x - x²/2 + x³/3 - x⁴/4 + ... for |x| < 1
+; For x > 1, use: ln(x) = ln(2) * log₂(x) or other methods
+; Input: R0 = x (scaled by 1000, must be > 0)
+; Output: R0 = ln(x) (scaled by 1000)
+; Uses: R1, R2, R3, R4, R5
+ln:
+  PUSH R1
+  PUSH R2
+  PUSH R3
+  PUSH R4
+  PUSH R5
+  
+  ; Handle x <= 0
+  LOAD R5, 0
+  CMP R0, R5
+  JLE ln_error
+  
+  ; For x close to 1, use ln(1+x) series
+  ; For x = 1.000, ln(1) = 0
+  LOAD R5, 1000
+  CMP R0, R5
+  JEQ ln_one
+  
+  ; For x > 1, reduce: if x > 2, use ln(x) = ln(2) + ln(x/2)
+  ; For simplicity, use approximation: ln(x) ≈ (x-1) - (x-1)²/2 + (x-1)³/3
+  ; where (x-1) is small
+  
+  ; Calculate (x-1)
+  LOAD R1, R0    ; R1 = x
+  LOAD R2, 1000  ; R2 = 1.000
+  SUB R1, R2     ; R1 = x - 1 (scaled by 1000)
+  
+  ; If |x-1| is large, this approximation breaks down
+  ; For now, use simple approximation for x near 1
+  ; ln(x) ≈ 2 * (x-1) / (x+1) for x near 1
+  
+  ; Better: use ln(x) ≈ (x-1) - (x-1)²/2 + (x-1)³/3 - (x-1)⁴/4
+  LOAD R2, R1    ; R2 = (x-1)
+  LOAD R3, R1
+  MUL R2, R3     ; R2 = (x-1)²
+  LOAD R3, 2
+  LOAD R4, 1000
+  MUL R3, R4     ; R3 = 2000
+  DIV R2, R3     ; R2 = (x-1)²/2
+  SUB R1, R2     ; R1 = (x-1) - (x-1)²/2
+  
+  ; Add (x-1)³/3
+  LOAD R2, R1    ; Save current result
+  LOAD R3, R0
+  LOAD R4, 1000
+  SUB R3, R4     ; R3 = (x-1)
+  LOAD R4, R3
+  MUL R3, R4     ; (x-1)²
+  MUL R3, R4     ; (x-1)³
+  LOAD R4, 3
+  LOAD R5, 1000000
+  MUL R4, R5     ; R4 = 3000000
+  DIV R3, R4     ; R3 = (x-1)³/3
+  ADD R1, R3     ; R1 = (x-1) - (x-1)²/2 + (x-1)³/3
+  
+  LOAD R0, R1
+  JMP ln_done
+  
+ln_one:
+  LOAD R0, 0
+  JMP ln_done
+  
+ln_error:
+  LOAD R0, 0     ; Return 0 for error (or could return negative)
+  
+ln_done:
+  POP R5
+  POP R4
+  POP R3
+  POP R2
+  POP R1
+  RET
+

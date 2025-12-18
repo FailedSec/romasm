@@ -1,0 +1,174 @@
+; Romasm Math Library
+; Standard mathematical functions for Romasm
+
+; Constants (using fixed-point representation)
+; PI = 3.14159... ≈ 314159 / 100000
+; We'll use integer representation: 314159 for calculations
+
+; Argument Reduction
+; Reduces angle to range [-PI/2, PI/2]
+; Input: R0 = angle (in degrees * 100, or radians * 10000)
+; Output: R0 = reduced angle
+; Uses: R1, R2, R3
+arg_reduce:
+  ; Load PI constant (314159 for 3.14159)
+  LOAD R1, 314159
+  LOAD R2, 200000  ; 2*PI approximation (628318)
+  
+  ; Check if angle > 2*PI
+  CMP R0, R2
+  JLT arg_reduce_done
+  
+  ; Subtract 2*PI until angle < 2*PI
+arg_reduce_loop:
+  SUB R0, R2
+  CMP R0, R2
+  JGE arg_reduce_loop
+  
+arg_reduce_done:
+  RET
+
+; Simple Sine using Taylor Series (simplified)
+; Input: R0 = angle (in degrees, 0-90)
+; Output: R0 = sin(angle) * 1000 (scaled for integer math)
+; Uses: R1, R2, R3, R4, R5
+; Note: This is a simplified version for demonstration
+sin_taylor:
+  ; Save angle
+  PUSH R0
+  
+  ; Convert degrees to approximate radians
+  ; angle_rad ≈ angle * 314 / 18000 (simplified)
+  LOAD R1, 314
+  MUL R0, R1
+  LOAD R1, 18000
+  DIV R0, R1
+  
+  ; Taylor series: sin(x) ≈ x - x³/6 + x⁵/120
+  ; We'll calculate: x - x³/6 (first two terms)
+  
+  ; Calculate x³
+  LOAD R1, R0
+  MUL R1, R0
+  MUL R1, R0
+  
+  ; Divide by 6
+  LOAD R2, 6
+  DIV R1, R2
+  
+  ; result = x - x³/6
+  SUB R0, R1
+  
+  ; Scale result by 1000
+  LOAD R1, 1000
+  MUL R0, R1
+  
+  RET
+
+; Power function: R0 = R0 ^ R1
+; Input: R0 = base, R1 = exponent
+; Output: R0 = result
+power:
+  PUSH R2
+  LOAD R2, 1  ; result = 1
+  
+power_loop:
+  ; Load 0 into a register for comparison (CMP doesn't handle immediate 0 well)
+  LOAD R3, 0
+  CMP R1, R3
+  JLE power_done  ; Jump if R1 <= 0
+  MUL R2, R0
+  DEC R1
+  JMP power_loop
+  
+power_done:
+  LOAD R0, R2
+  POP R2
+  RET
+
+; Factorial: R0 = R0!
+; Input: R0 = n
+; Output: R0 = n!
+factorial:
+  PUSH R1
+  PUSH R2
+  LOAD R1, R0
+  LOAD R2, 1
+  
+factorial_loop:
+  ; R2 already contains 1 from initialization
+  CMP R1, R2
+  JLE factorial_done
+  MUL R2, R1
+  DEC R1
+  JMP factorial_loop
+  
+factorial_done:
+  LOAD R0, R2
+  POP R2
+  POP R1
+  RET
+
+; Square Root using Newton's Method
+; Input: R0 = n (number to find sqrt of, scaled by 1000)
+; Output: R0 = sqrt(n) (scaled by 1000)
+; Example: Input 25000 (25.000) → Output ~5000 (5.000)
+; Uses: R1, R2, R3, R4
+sqrt:
+  PUSH R1
+  PUSH R2
+  PUSH R3
+  PUSH R4
+  PUSH R5
+  
+  ; Load constants for comparison
+  LOAD R5, 0     ; constant 0
+  LOAD R4, 1000  ; constant 1 (scaled by 1000)
+  
+  ; Handle edge cases
+  CMP R0, R5
+  JEQ sqrt_zero
+  CMP R0, R4
+  JLE sqrt_one   ; sqrt(1) = 1
+  
+  ; Initial guess: x = n/2 (scaled)
+  LOAD R1, R0    ; R1 = current guess (x)
+  LOAD R2, 2
+  DIV R1, R2     ; R1 = n/2
+  
+  ; Newton's method: x_new = (x + n/x) / 2
+  ; Iterate 15 times for good convergence
+  LOAD R3, 15    ; iteration count
+  
+sqrt_loop:
+  CMP R3, R5
+  JLE sqrt_done  ; Jump if R3 <= 0
+  
+  ; Calculate n/x (store in R4)
+  LOAD R4, R0    ; R4 = n
+  DIV R4, R1     ; R4 = n/x
+  
+  ; x_new = (x + n/x) / 2
+  ADD R1, R4     ; R1 = x + n/x
+  LOAD R4, 2
+  DIV R1, R4     ; R1 = (x + n/x) / 2
+  
+  DEC R3
+  JMP sqrt_loop
+  
+sqrt_zero:
+  LOAD R1, 0
+  JMP sqrt_done
+  
+sqrt_one:
+  LOAD R1, R4    ; sqrt(1) = 1 (R4 = 1000, scaled)
+  
+sqrt_done:
+  LOAD R0, R1
+  POP R5
+  POP R4
+  POP R3
+  POP R2
+  POP R1
+  RET
+

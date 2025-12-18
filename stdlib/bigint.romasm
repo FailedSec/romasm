@@ -1,0 +1,38 @@
+; Big Integer Operations for Romasm
+; Handles arbitrarily large numbers using string/digit array representation
+; This bypasses JavaScript's floating-point limits
+
+; Note: These are conceptual implementations
+; Full Big Integer support requires string manipulation in the VM
+
+; Big Integer Addition
+; Input: Two big integers as digit arrays
+; Output: Sum as digit array
+bigint_add:
+  ; Implementation would handle carry operations digit by digit
+  ; Similar to grade-school addition
+  RET
+
+; Big Integer Multiplication
+; Input: Two big integers
+; Output: Product as digit array
+bigint_mul:
+  ; Implementation would use grade-school multiplication
+  ; Or Karatsuba algorithm for efficiency
+  RET
+
+; Big Integer Division
+; Input: Dividend and divisor
+; Output: Quotient and remainder
+bigint_div:
+  ; Long division algorithm
+  RET
+
+; Big Integer Modulo (for odd/even checking)
+; Input: Number and modulus (typically 2)
+; Output: Remainder
+bigint_mod:
+  ; Check last digit for mod 2
+  ; For mod 2, only need to check if last digit is even
+  RET
+

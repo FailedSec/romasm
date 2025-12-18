@@ -1,0 +1,38 @@
+; Example programs using the math library
+
+; Example 1: Calculate sin(30 degrees)
+example_sin:
+  LOAD R0, 30
+  CALL sin
+  PRINT R0  ; Should output approximately 500 (sin(30) ≈ 0.5 * 1000)
+  RET
+
+; Example 2: Calculate cos(60 degrees)
+example_cos:
+  LOAD R0, 60
+  CALL cos
+  PRINT R0  ; Should output approximately 500 (cos(60) = 0.5 * 1000)
+  RET
+
+; Example 3: Argument reduction
+example_arg_reduce:
+  LOAD R0, 450  ; 450 degrees
+  CALL arg_reduce
+  PRINT R0  ; Should output reduced angle
+  RET
+
+; Example 4: Calculate 5!
+example_factorial:
+  LOAD R0, 5
+  CALL factorial
+  PRINT R0  ; Should output 120
+  RET
+
+; Example 5: Calculate 2^8
+example_power:
+  LOAD R0, 2
+  LOAD R1, 8
+  CALL power
+  PRINT R0  ; Should output 256
+  RET
+

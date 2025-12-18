@@ -1,0 +1,97 @@
+; Trigonometric Functions for Romasm
+; Based on Taylor Series and CORDIC algorithms
+
+; Sine function using Taylor Series
+; Input: R0 = angle in degrees (0-90)
+; Output: R0 = sin(angle) * 1000
+sin:
+  ; Argument reduction: ensure 0-90 degrees
+  LOAD R1, 90
+  CMP R0, R1
+  JLE sin_ok
+  ; For angles > 90, use identity: sin(x) = sin(180-x)
+  LOAD R1, 180
+  SUB R1, R0
+  LOAD R0, R1
+sin_ok:
+  
+  ; Convert to approximate radians (degrees * 1745 / 100000)
+  ; This approximates degrees * PI / 180
+  LOAD R1, 1745
+  MUL R0, R1
+  LOAD R1, 100000
+  DIV R0, R1
+  
+  ; Taylor series: sin(x) = x - x³/6 + x⁵/120 - x⁷/5040 + ...
+  ; We'll use first 3 terms for reasonable accuracy
+  
+  PUSH R0  ; Save x
+  PUSH R1
+  PUSH R2
+  PUSH R3
+  
+  ; Calculate x³
+  LOAD R1, R0
+  LOAD R2, R0
+  MUL R1, R2
+  MUL R1, R0
+  
+  ; x³/6
+  LOAD R2, 6
+  DIV R1, R2
+  
+  ; Calculate x⁵
+  LOAD R2, R0
+  LOAD R3, R0
+  MUL R2, R3
+  MUL R2, R1  ; R2 = x⁵
+  
+  ; x⁵/120
+  LOAD R3, 120
+  DIV R2, R3
+  
+  ; result = x - x³/6 + x⁵/120
+  SUB R0, R1
+  ADD R0, R2
+  
+  ; Scale by 1000 for integer representation
+  LOAD R1, 1000
+  MUL R0, R1
+  
+  POP R3
+  POP R2
+  POP R1
+  RET
+
+; Cosine: cos(x) = sin(90 - x)
+; Input: R0 = angle in degrees
+; Output: R0 = cos(angle) * 1000
+cos:
+  LOAD R1, 90
+  SUB R1, R0
+  LOAD R0, R1
+  CALL sin
+  RET
+
+; CORDIC-based sine (simplified)
+; More efficient for hardware implementation
+; Input: R0 = angle in degrees (0-45)
+; Output: R0 = sin(angle) * 1000
+sin_cordic:
+  ; This is a simplified CORDIC implementation
+  ; Full CORDIC requires lookup tables and iterative rotations
+  ; For now, we'll use a simplified approximation
+  
+  ; For small angles: sin(x) ≈ x (in radians)
+  ; Convert degrees to radians
+  LOAD R1, 1745
+  MUL R0, R1
+  LOAD R1, 100000
+  DIV R0, R1
+  
+  ; Scale result
+  LOAD R1, 1000
+  MUL R0, R1
+  
+  RET
+

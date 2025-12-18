@@ -1,0 +1,100 @@
+; 6-term Taylor Series for sin(x)
+; sin(x) ≈ x - x³/6 + x⁵/120 - x⁷/5040 + x⁹/362880 - x¹¹/39916800
+; Input: R0 = angle in degrees
+; Output: R0 = sin(angle) scaled by 1000
+; Example: sin(30°) ≈ 0.5, output = 500
+
+; Convert degrees to radians (scaled by 1000)
+; π/180 ≈ 0.0174533, scaled: 17.4533
+; For 30°: 30 * 17.4533 = 523.599 ≈ 524
+LOAD R1, 17        ; π/180 * 1000 ≈ 17.4533
+MUL R0, R1         ; R0 = degrees * 17
+LOAD R1, 1000
+DIV R0, R1         ; R0 = x in radians (scaled by 1000)
+
+; Now R0 contains x (scaled by 1000)
+; We'll build the result term by term
+LOAD R2, R0        ; R2 = result, start with x
+
+; Calculate x² (scaled by 1000² = 1,000,000)
+LOAD R3, R0
+LOAD R4, R0
+MUL R3, R4         ; R3 = x²
+
+; Term 2: -x³/6
+; x³ = x * x², but this gives us x³ scaled by 1000³
+; We want x³/6 scaled by 1000, so:
+; (x³ scaled by 1000³) / 6 / 1000² = x³/6 scaled by 1000
+LOAD R4, R0        ; R4 = x
+MUL R4, R3         ; R4 = x³ (scaled by 1000³)
+LOAD R5, 6
+DIV R4, R5         ; R4 = x³/6 (scaled by 1000³/6)
+LOAD R5, 1000
+DIV R4, R5
+DIV R4, R5         ; R4 = x³/6 (scaled by 1000)
+SUB R2, R4         ; R2 = x - x³/6
+
+; Term 3: +x⁵/120
+; x⁵ = x³ * x² = (x * x²) * x²
+LOAD R4, R0
+MUL R4, R3         ; R4 = x³
+MUL R4, R3         ; R4 = x⁵ (scaled by 1000⁵)
+LOAD R5, 120
+DIV R4, R5         ; R4 = x⁵/120 (scaled by 1000⁵/120)
+LOAD R5, 1000
+DIV R4, R5
+DIV R4, R5
+DIV R4, R5         ; R4 = x⁵/120 (scaled by 1000)
+ADD R2, R4         ; R2 = x - x³/6 + x⁵/120
+
+; Term 4: -x⁷/5040
+LOAD R4, R0
+MUL R4, R3         ; x³
+MUL R4, R3         ; x⁵
+MUL R4, R3         ; x⁷
+LOAD R5, 5040
+DIV R4, R5
+LOAD R5, 1000
+DIV R4, R5
+DIV R4, R5
+DIV R4, R5
+DIV R4, R5         ; R4 = x⁷/5040 (scaled by 1000)
+SUB R2, R4
+
+; Term 5: +x⁹/362880
+LOAD R4, R0
+MUL R4, R3         ; x³
+MUL R4, R3         ; x⁵
+MUL R4, R3         ; x⁷
+MUL R4, R3         ; x⁹
+LOAD R5, 362880
+DIV R4, R5
+LOAD R5, 1000
+DIV R4, R5
+DIV R4, R5
+DIV R4, R5
+DIV R4, R5
+DIV R4, R5         ; R4 = x⁹/362880 (scaled by 1000)
+ADD R2, R4
+
+; Term 6: -x¹¹/39916800
+LOAD R4, R0
+MUL R4, R3         ; x³
+MUL R4, R3         ; x⁵
+MUL R4, R3         ; x⁷
+MUL R4, R3         ; x⁹
+MUL R4, R3         ; x¹¹
+LOAD R5, 39916800
+DIV R4, R5
+LOAD R5, 1000
+DIV R4, R5
+DIV R4, R5
+DIV R4, R5
+DIV R4, R5
+DIV R4, R5
+DIV R4, R5         ; R4 = x¹¹/39916800 (scaled by 1000)
+SUB R2, R4
+
+LOAD R0, R2        ; Move result to R0
+RET
+
