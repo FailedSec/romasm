@@ -31,7 +31,11 @@ class RomasmAssembler {
             'RET': 'R',
             'PUSH': 'P',
             'POP': 'PO',
-            'PRINT': 'PR'
+            'PRINT': 'PR',
+            'MOVE': 'MOV',  // Canvas: moveTo(x, y)
+            'DRAW': 'DRW',  // Canvas: lineTo(x, y)
+            'STROKE': 'STR', // Canvas: stroke()
+            'CLEAR': 'CLR'  // Canvas: clearRect()
         };
 
         // Register mappings
@@ -215,6 +219,32 @@ class RomasmAssembler {
                 instruction.operands.push(this.parseOperand(operands[0], labels));
                 break;
 
+            case 'MOVE':
+                // Two register operands: MOVE R0, R1 (x, y)
+                if (operands.length !== 2) {
+                    throw new Error(`${mnemonic} requires 2 operands`);
+                }
+                instruction.operands.push(this.parseOperand(operands[0], labels));
+                instruction.operands.push(this.parseOperand(operands[1], labels));
+                break;
+
+            case 'DRAW':
+                // Two register operands: DRAW R0, R1 (x, y)
+                if (operands.length !== 2) {
+                    throw new Error(`${mnemonic} requires 2 operands`);
+                }
+                instruction.operands.push(this.parseOperand(operands[0], labels));
+                instruction.operands.push(this.parseOperand(operands[1], labels));
+                break;
+
+            case 'STROKE':
+            case 'CLEAR':
+                // No operands
+                if (operands.length !== 0) {
+                    throw new Error(`${mnemonic} takes no operands`);
+                }
+                break;
+
             default:
                 throw new Error(`Unhandled instruction: ${mnemonic}`);
         }
@@ -263,7 +293,15 @@ class RomasmAssembler {
             };
         }
 
-        throw new Error(`Invalid operand: ${operand}`);
+        // If it's not a number and not a register, treat it as an unresolved label
+        // This allows CALL sin, CALL cos, etc. to work - linker will resolve them
+        // Store the label name so linker can resolve it later
+        return {
+            type: 'label',
+            value: 0, // Placeholder - linker will fix this
+            labelName: operand, // Store the label name for linker resolution
+            isMemory
+        };
     }
 
     /**

@@ -5,7 +5,8 @@
  */
 
 class RomasmVM {
-    constructor() {
+    constructor(canvasContext = null) {
+        this.canvasContext = canvasContext; // Canvas 2D context for drawing
         this.reset();
     }
 
@@ -26,6 +27,8 @@ class RomasmVM {
             lessThan: false,
             greaterThan: false
         };
+        // Canvas drawing state
+        this.pathStarted = false;
     }
 
     /**
@@ -308,6 +311,61 @@ class RomasmVM {
                     const reg = operands[0].value;
                     const value = this.registers[reg];
                     this.output.push(value);
+                }
+                break;
+
+            // Canvas drawing opcodes (for graphics calculator)
+            case 'MOV': // MOVE - Move to point (x, y) from registers
+                {
+                    if (!this.canvasContext) {
+                        throw new Error('Canvas context not provided');
+                    }
+                    const xReg = operands[0].value;
+                    const yReg = operands[1].value;
+                    const x = this.registers[xReg];
+                    const y = this.registers[yReg];
+                    this.canvasContext.moveTo(x, y);
+                    this.pathStarted = true;
+                }
+                break;
+
+            case 'DRW': // DRAW - Line to point (x, y) from registers
+                {
+                    if (!this.canvasContext) {
+                        throw new Error('Canvas context not provided');
+                    }
+                    const xReg = operands[0].value;
+                    const yReg = operands[1].value;
+                    const x = this.registers[xReg];
+                    const y = this.registers[yReg];
+                    if (!this.pathStarted) {
+                        this.canvasContext.moveTo(x, y);
+                        this.pathStarted = true;
+                    } else {
+                        this.canvasContext.lineTo(x, y);
+                    }
+                }
+                break;
+
+            case 'STR': // STROKE - Render the path
+                {
+                    if (!this.canvasContext) {
+                        throw new Error('Canvas context not provided');
+                    }
+                    this.canvasContext.stroke();
+                    this.pathStarted = false;
+                }
+                break;
+
+            case 'CLR': // CLEAR - Clear canvas and begin new path
+                {
+                    if (!this.canvasContext) {
+                        throw new Error('Canvas context not provided');
+                    }
+                    const width = this.canvasContext.canvas.width;
+                    const height = this.canvasContext.canvas.height;
+                    this.canvasContext.clearRect(0, 0, width, height);
+                    this.pathStarted = false;
                 }
                 break;
 
