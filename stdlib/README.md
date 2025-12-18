@@ -7,6 +7,7 @@ Mathematical functions and utilities for Romasm programs.
 - `math.romasm` - Basic math functions (factorial, power, sqrt, argument reduction)
 - `trig.romasm` - Trigonometric functions (sine, cosine using Taylor series and CORDIC)
 - `calculus.romasm` - Calculus functions (derivatives and integrals)
+- `binary.romasm` - Bitwise operations (AND, OR, XOR, NOT)
 - `constants.romasm` - Standard scaling constants
 - `examples.romasm` - Example programs using the math library
 
@@ -129,6 +130,24 @@ PRINT R0     ; Outputs sin(30°) * 1000 ≈ 500
 - **ln** - Natural logarithm approximation
   - Input: R0 = x (scaled by 1000, must be > 0)
   - Output: R0 = ln(x) (scaled by 1000)
+
+### Binary/Bitwise Functions (`binary.romasm`)
+
+- **bitwise_and** - Bitwise AND operation
+  - Input: R0 = value1, R1 = value2
+  - Output: R0 = value1 & value2
+
+- **bitwise_or** - Bitwise OR operation
+  - Input: R0 = value1, R1 = value2
+  - Output: R0 = value1 | value2
+
+- **bitwise_xor** - Bitwise XOR operation
+  - Input: R0 = value1, R1 = value2
+  - Output: R0 = value1 ^ value2
+
+- **bitwise_not** - Bitwise NOT operation (complement)
+  - Input: R0 = value
+  - Output: R0 = ~value
 
 ## Implementation Notes
 

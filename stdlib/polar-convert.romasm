@@ -1,0 +1,107 @@
+; Polar to Cartesian Conversion in Pure Romasm
+; This function converts polar coordinates (r, θ) to Cartesian (x, y)
+; All math done in Romasm - no JavaScript Math.cos/Math.sin
+;
+; Input: R0 = r (radius, scaled by 100)
+;        R1 = θ (angle in degrees, scaled by 100)
+; Output: R0 = x (scaled by 100)
+;         R1 = y (scaled by 100)
+;
+; Uses: R2-R8 for calculations
+polar_to_cartesian:
+  PUSH R2
+  PUSH R3
+  PUSH R4
+  PUSH R5
+  PUSH R6
+  PUSH R7
+  PUSH R8
+  
+  ; Save inputs
+  LOAD R2, R0  ; R2 = r (scaled by 100)
+  LOAD R3, R1  ; R3 = θ (scaled by 100)
+  
+  ; Calculate cos(θ) using Romasm
+  ; cos(θ) = sin(90° - θ)
+  LOAD R4, 9000  ; 90° scaled by 100
+  SUB R4, R3     ; R4 = 90° - θ (scaled by 100)
+  
+  ; Convert (90° - θ) to radians for sin calculation
+  ; First, convert scaled degrees to actual degrees
+  LOAD R5, R4
+  LOAD R6, 100
+  DIV R5, R6     ; R5 = (90° - θ) in degrees
+  
+  ; Convert to radians: degrees * π/180 ≈ degrees * 1745/100000
+  LOAD R6, 1745
+  MUL R5, R6
+  LOAD R6, 100000
+  DIV R5, R6     ; R5 = angle in radians (scaled by 1000)
+  
+  ; Calculate sin using Taylor: sin(x) ≈ x - x³/6
+  ; x is in R5, scaled by 1000
+  LOAD R6, R5    ; R6 = x
+  LOAD R7, R5    ; R7 = x
+  LOAD R8, R5    ; R8 = x
+  MUL R7, R8     ; R7 = x²
+  MUL R7, R5     ; R7 = x³ (scaled by 1000³)
+  LOAD R8, 6
+  DIV R7, R8     ; R7 = x³/6 (scaled by 1000³/6)
+  LOAD R8, 1000
+  DIV R7, R8
+  DIV R7, R8     ; R7 = x³/6 (scaled by 1000)
+  SUB R6, R7     ; R6 = sin(x) = cos(θ) (scaled by 1000)
+  
+  ; R6 = cos(θ) scaled by 1000
+  LOAD R4, R6    ; R4 = cos(θ) scaled by 1000
+  
+  ; Calculate sin(θ) using Romasm
+  ; Convert θ to radians
+  LOAD R5, R3    ; R5 = θ (scaled by 100)
+  LOAD R6, 100
+  DIV R5, R6     ; R5 = θ in degrees
+  LOAD R6, 1745
+  MUL R5, R6
+  LOAD R6, 100000
+  DIV R5, R6     ; R5 = θ in radians (scaled by 1000)
+  
+  ; Calculate sin using Taylor: sin(x) ≈ x - x³/6
+  LOAD R6, R5    ; R6 = x
+  LOAD R7, R5    ; R7 = x
+  LOAD R8, R5    ; R8 = x
+  MUL R7, R8     ; R7 = x²
+  MUL R7, R5     ; R7 = x³ (scaled by 1000³)
+  LOAD R8, 6
+  DIV R7, R8     ; R7 = x³/6 (scaled by 1000³/6)
+  LOAD R8, 1000
+  DIV R7, R8
+  DIV R7, R8     ; R7 = x³/6 (scaled by 1000)
+  SUB R6, R7     ; R6 = sin(θ) (scaled by 1000)
+  
+  ; R6 = sin(θ) scaled by 1000
+  
+  ; Calculate x = r * cos(θ)
+  ; r is scaled by 100, cos is scaled by 1000
+  ; x = (r * cos) / 10 to get scaled by 100
+  LOAD R0, R2    ; R0 = r (scaled by 100)
+  MUL R0, R4     ; R0 = r * cos (scaled by 100000)
+  LOAD R7, 1000
+  DIV R0, R7     ; R0 = x (scaled by 100)
+  
+  ; Calculate y = r * sin(θ)
+  ; r is scaled by 100, sin is scaled by 1000
+  ; y = (r * sin) / 10 to get scaled by 100
+  LOAD R1, R2    ; R1 = r (scaled by 100)
+  MUL R1, R6     ; R1 = r * sin (scaled by 100000)
+  LOAD R7, 1000
+  DIV R1, R7     ; R1 = y (scaled by 100)
+  
+  POP R8
+  POP R7
+  POP R6
+  POP R5
+  POP R4
+  POP R3
+  POP R2
+  RET
+

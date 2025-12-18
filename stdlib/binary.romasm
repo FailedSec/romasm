@@ -1,0 +1,210 @@
+; Binary/Bitwise Operations Library for Romasm
+; Provides bitwise AND, OR, XOR, NOT operations
+
+; Bitwise AND: R0 = R0 & R1
+; Input: R0 = value1, R1 = value2
+; Output: R0 = value1 & value2
+bitwise_and:
+    ; Save original values
+    PUSH R0
+    PUSH R1
+    PUSH R2
+    PUSH R3
+    
+    ; Result in R2 (start at 0)
+    LOAD R2, 0
+    LOAD R3, 1      ; Bit mask (starts at 1)
+    LOAD R4, 0      ; Counter (32 bits max)
+    LOAD R5, 32     ; Max bits
+    
+and_loop:
+    ; Check if we've processed all bits
+    CMP R4, R5
+    JGE and_done
+    
+    ; Extract bit from R0
+    LOAD R6, R0
+    MOD R6, R3      ; R6 = R0 % 2 (lowest bit)
+    LOAD R7, R6     ; Save R0's bit
+    
+    ; Extract bit from R1
+    LOAD R6, R1
+    MOD R6, R3      ; R6 = R1 % 2 (lowest bit)
+    
+    ; AND operation: both bits must be 1
+    CMP R7, 0
+    JEQ and_next    ; If R0 bit is 0, skip
+    CMP R6, 0
+    JEQ and_next    ; If R1 bit is 0, skip
+    
+    ; Both bits are 1, add to result
+    ADD R2, R3      ; Add current bit value to result
+    
+and_next:
+    ; Shift both values right
+    LOAD R6, 1
+    SHR R0, R6      ; R0 = R0 >> 1
+    SHR R1, R6      ; R1 = R1 >> 1
+    
+    ; Shift mask left
+    SHL R3, R6      ; R3 = R3 << 1 (next bit position)
+    
+    ; Increment counter
+    INC R4
+    JMP and_loop
+    
+and_done:
+    ; Restore R0 with result
+    LOAD R0, R2
+    
+    ; Restore other registers
+    POP R3
+    POP R2
+    POP R1
+    RET
+
+; Bitwise OR: R0 = R0 | R1
+; Input: R0 = value1, R1 = value2
+; Output: R0 = value1 | R1
+bitwise_or:
+    ; Save original values
+    PUSH R0
+    PUSH R1
+    PUSH R2
+    PUSH R3
+    
+    ; Result in R2 (start at 0)
+    LOAD R2, 0
+    LOAD R3, 1      ; Bit mask
+    LOAD R4, 0      ; Counter
+    LOAD R5, 32     ; Max bits
+    
+or_loop:
+    ; Check if we've processed all bits
+    CMP R4, R5
+    JGE or_done
+    
+    ; Extract bit from R0
+    LOAD R6, R0
+    MOD R6, R3      ; R6 = R0 % 2
+    LOAD R7, R6     ; Save R0's bit
+    
+    ; Extract bit from R1
+    LOAD R6, R1
+    MOD R6, R3      ; R6 = R1 % 2
+    
+    ; OR operation: either bit is 1
+    CMP R7, 0
+    JNE or_set      ; If R0 bit is 1, set
+    CMP R6, 0
+    JNE or_set      ; If R1 bit is 1, set
+    JMP or_next     ; Both are 0, skip
+    
+or_set:
+    ; At least one bit is 1, add to result
+    ADD R2, R3      ; Add current bit value to result
+    
+or_next:
+    ; Shift both values right
+    LOAD R6, 1
+    SHR R0, R6      ; R0 = R0 >> 1
+    SHR R1, R6      ; R1 = R1 >> 1
+    
+    ; Shift mask left
+    SHL R3, R6      ; R3 = R3 << 1
+    
+    ; Increment counter
+    INC R4
+    JMP or_loop
+    
+or_done:
+    ; Restore R0 with result
+    LOAD R0, R2
+    
+    ; Restore other registers
+    POP R3
+    POP R2
+    POP R1
+    RET
+
+; Bitwise XOR: R0 = R0 ^ R1
+; Input: R0 = value1, R1 = value2
+; Output: R0 = value1 ^ R1
+bitwise_xor:
+    ; Save original values
+    PUSH R0
+    PUSH R1
+    PUSH R2
+    PUSH R3
+    
+    ; Result in R2 (start at 0)
+    LOAD R2, 0
+    LOAD R3, 1      ; Bit mask
+    LOAD R4, 0      ; Counter
+    LOAD R5, 32     ; Max bits
+    
+xor_loop:
+    ; Check if we've processed all bits
+    CMP R4, R5
+    JGE xor_done
+    
+    ; Extract bit from R0
+    LOAD R6, R0
+    MOD R6, R3      ; R6 = R0 % 2
+    LOAD R7, R6     ; Save R0's bit
+    
+    ; Extract bit from R1
+    LOAD R6, R1
+    MOD R6, R3      ; R6 = R1 % 2
+    
+    ; XOR operation: bits are different
+    CMP R7, R6
+    JEQ xor_next    ; If bits are same, skip
+    
+    ; Bits are different, add to result
+    ADD R2, R3      ; Add current bit value to result
+    
+xor_next:
+    ; Shift both values right
+    LOAD R6, 1
+    SHR R0, R6      ; R0 = R0 >> 1
+    SHR R1, R6      ; R1 = R1 >> 1
+    
+    ; Shift mask left
+    SHL R3, R6      ; R3 = R3 << 1
+    
+    ; Increment counter
+    INC R4
+    JMP xor_loop
+    
+xor_done:
+    ; Restore R0 with result
+    LOAD R0, R2
+    
+    ; Restore other registers
+    POP R3
+    POP R2
+    POP R1
+    RET
+
+; Bitwise NOT: R0 = ~R0
+; Input: R0 = value
+; Output: R0 = ~value (bitwise complement)
+bitwise_not:
+    ; For a 32-bit complement, we flip all bits
+    ; ~x = (2^32 - 1) - x (for 32-bit)
+    ; Simplified: use maximum value minus input
+    PUSH R1
+    PUSH R2
+    
+    ; Maximum 32-bit value (2^32 - 1 = 4294967295)
+    ; We'll use a smaller max for practical purposes
+    LOAD R1, 65535  ; 16-bit max (2^16 - 1)
+    LOAD R2, R0
+    SUB R1, R2      ; R1 = max - value
+    LOAD R0, R1     ; Result in R0
+    
+    POP R2
+    POP R1
+    RET
+
