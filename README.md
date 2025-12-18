@@ -10,6 +10,22 @@ Romasm is a custom assembly language where:
 - **All math** is performed in Romasm assembly (not JavaScript)
 - **Runs entirely in the browser** via a JavaScript-based virtual machine
 
+### The "Nulla" (N) for Zero
+
+One of the coolest features of Romasm is how we represent **zero**! In the Positional Roman Numeral System, we use **`N`** (nulla, Latin for "nothing") to represent the digit 0.
+
+**Why is this special?**
+- Standard Roman numerals had **no symbol for zero** - it was a major limitation!
+- The Romans used words like "nulla" but had no written symbol
+- Our Positional Roman system gives zero its own symbol: **`N`**
+
+**Examples:**
+- `2025` = `II N II V` (the `N` represents the 0 in the hundreds place)
+- `101` = `I N I` (zero in the tens place)
+- `1000` = `I N N N` (zeros in hundreds, tens, and ones places)
+
+This makes Romasm a **complete positional system** - just like modern decimal, but with Roman aesthetic! 🏛️
+
 ### Key Features
 
 ✅ **Full Assembly Language** - Complete instruction set with arithmetic, control flow, memory, and I/O  
@@ -329,11 +345,12 @@ This project is open source and available for educational and experimental purpo
 ## 🎯 What Makes Romasm Unique?
 
 1. **Roman Numeral Aesthetic** - Registers and opcodes use Roman numerals
-2. **Pure Romasm Math** - All calculations done in assembly, not JavaScript
-3. **Complete Ecosystem** - IDE, calculators, explorers, documentation
-4. **Educational Focus** - Learn assembly concepts with a unique twist
-5. **Web-Based** - Runs entirely in the browser, no installation needed
-6. **Advanced Math** - Calculus, trigonometry, binary operations all in assembly
+2. **"Nulla" (N) for Zero** - The first Roman numeral system with a proper zero symbol! 🏛️
+3. **Pure Romasm Math** - All calculations done in assembly, not JavaScript
+4. **Complete Ecosystem** - IDE, calculators, explorers, documentation
+5. **Educational Focus** - Learn assembly concepts with a unique twist
+6. **Web-Based** - Runs entirely in the browser, no installation needed
+7. **Advanced Math** - Calculus, trigonometry, binary operations all in assembly
 
 ---
 
