@@ -56,22 +56,22 @@ function createNavigation() {
         <div class="nav-section">
             <h3 class="nav-section-title">Problem Solving</h3>
             <ul class="nav-links">
-                <li><a href="collatz.html" class="${isActive('collatz.html') ? 'active' : ''}">Collatz Conjecture</a></li>
-                <li><a href="twin-primes.html" class="${isActive('twin-primes.html') ? 'active' : ''}">Twin Primes</a></li>
-                <li><a href="goldbach.html" class="${isActive('goldbach.html') ? 'active' : ''}">Goldbach Conjecture</a></li>
-                <li><a href="erdos-straus.html" class="${isActive('erdos-straus.html') ? 'active' : ''}">Erdos-Straus</a></li>
-                <li><a href="beal-conjecture.html" class="${isActive('beal-conjecture.html') ? 'active' : ''}">Beal Conjecture</a></li>
-                <li><a href="legendre-conjecture.html" class="${isActive('legendre-conjecture.html') ? 'active' : ''}">Legendre's Conjecture</a></li>
-                <li><a href="mersenne-primes.html" class="${isActive('mersenne-primes.html') ? 'active' : ''}">Mersenne Primes</a></li>
-                <li><a href="brocard-problem.html" class="${isActive('brocard-problem.html') ? 'active' : ''}">Brocard's Problem</a></li>
-                <li><a href="perfect-numbers.html" class="${isActive('perfect-numbers.html') ? 'active' : ''}">Perfect Numbers</a></li>
-                <li><a href="pascal.html" class="${isActive('pascal.html') ? 'active' : ''}">Pascal's Triangle</a></li>
+                <li><a href="${pathPrefix}collatz.html" class="${isActive('collatz.html') ? 'active' : ''}">Collatz Conjecture</a></li>
+                <li><a href="${pathPrefix}twin-primes.html" class="${isActive('twin-primes.html') ? 'active' : ''}">Twin Primes</a></li>
+                <li><a href="${pathPrefix}goldbach.html" class="${isActive('goldbach.html') ? 'active' : ''}">Goldbach Conjecture</a></li>
+                <li><a href="${pathPrefix}erdos-straus.html" class="${isActive('erdos-straus.html') ? 'active' : ''}">Erdos-Straus</a></li>
+                <li><a href="${pathPrefix}beal-conjecture.html" class="${isActive('beal-conjecture.html') ? 'active' : ''}">Beal Conjecture</a></li>
+                <li><a href="${pathPrefix}legendre-conjecture.html" class="${isActive('legendre-conjecture.html') ? 'active' : ''}">Legendre's Conjecture</a></li>
+                <li><a href="${pathPrefix}mersenne-primes.html" class="${isActive('mersenne-primes.html') ? 'active' : ''}">Mersenne Primes</a></li>
+                <li><a href="${pathPrefix}brocard-problem.html" class="${isActive('brocard-problem.html') ? 'active' : ''}">Brocard's Problem</a></li>
+                <li><a href="${pathPrefix}perfect-numbers.html" class="${isActive('perfect-numbers.html') ? 'active' : ''}">Perfect Numbers</a></li>
+                <li><a href="${pathPrefix}pascal.html" class="${isActive('pascal.html') ? 'active' : ''}">Pascal's Triangle</a></li>
             </ul>
         </div>
         <div class="nav-section">
             <h3 class="nav-section-title">Distributed Computing</h3>
             <ul class="nav-links">
-                <li><a href="contribute.html" class="${isActive('contribute.html') ? 'active' : ''}">Contribute</a></li>
+                <li><a href="${pathPrefix}contribute.html" class="${isActive('contribute.html') ? 'active' : ''}">Contribute</a></li>
             </ul>
         </div>
     `;
