@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expression Parser - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .parser-box {
+            background: var(--surface);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Expression Parser</h1>
+            <p class="subtitle">Converting mathematical expressions to Romasm assembly</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section>
+                <h2>Overview</h2>
+                <p>The Romasm Expression Parser (<code>calcengine/romasm-expression-parser.js</code>) converts mathematical expressions like <code>"2+2"</code> or <code>"sin(30)"</code> into Romasm assembly code that can be executed by the VM.</p>
+            </section>
+
+            <section>
+                <h2>Supported Expressions</h2>
+
+                <div class="parser-box">
+                    <h3>Arithmetic Operations</h3>
+                    <ul>
+                        <li><code>+</code> - Addition</li>
+                        <li><code>-</code> - Subtraction</li>
+                        <li><code>*</code> - Multiplication</li>
+                        <li><code>/</code> - Division</li>
+                        <li><code>^</code> - Exponentiation (power)</li>
+                    </ul>
+                    <p><strong>Examples:</strong></p>
+                    <pre><code>"2+2"      → ADD R0, R1
+"5*3"      → MUL R0, R1
+"10/2"     → DIV R0, R1
+"2^8"      → CALL power</code></pre>
+                </div>
+
+                <div class="parser-box">
+                    <h3>Functions</h3>
+                    <ul>
+                        <li><code>sin(x)</code> - Sine</li>
+                        <li><code>cos(x)</code> - Cosine</li>
+                        <li><code>tan(x)</code> - Tangent</li>
+                        <li><code>sqrt(x)</code> - Square root</li>
+                        <li><code>exp(x)</code> - Exponential</li>
+                        <li><code>ln(x)</code> - Natural logarithm</li>
+                    </ul>
+                    <p><strong>Examples:</strong></p>
+                    <pre><code>"sin(30)"  → CALL sin
+"sqrt(25)" → CALL sqrt
+"exp(1)"   → CALL exp</code></pre>
+                </div>
+
+                <div class="parser-box">
+                    <h3>Parentheses</h3>
+                    <p>Parentheses are supported for grouping:</p>
+                    <pre><code>"(2+3)*4"  → Evaluates 2+3 first, then multiplies by 4
+"sin(30+10)" → Evaluates 30+10, then takes sine</code></pre>
+                </div>
+
+                <div class="parser-box">
+                    <h3>Numbers</h3>
+                    <p>Integers and decimals are supported:</p>
+                    <pre><code>"42"       → Integer
+"3.14"     → Decimal (converted to scaled integer)</code></pre>
+                </div>
+            </section>
+
+            <section>
+                <h2>How It Works</h2>
+
+                <div class="parser-box">
+                    <h3>Step 1: Tokenization</h3>
+                    <p>The expression is broken down into tokens (numbers, operators, functions, parentheses):</p>
+                    <pre><code>"2+3*4" → ["2", "+", "3", "*", "4"]</code></pre>
+                </div>
+
+                <div class="parser-box">
+                    <h3>Step 2: Parsing</h3>
+                    <p>Tokens are parsed into an abstract syntax tree (AST) respecting operator precedence:</p>
+                    <pre><code>"2+3*4" → 
+  +
+ / \
+2   *
+   / \
+  3   4</code></pre>
+                </div>
+
+                <div class="parser-box">
+                    <h3>Step 3: Code Generation</h3>
+                    <p>The AST is converted to Romasm assembly instructions:</p>
+                    <pre><code>LOAD R0, 3
+LOAD R1, 4
+MUL R0, R1    ; 3*4 = 12
+LOAD R1, 2
+ADD R0, R1    ; 12+2 = 14</code></pre>
+                </div>
+            </section>
+
+            <section>
+                <h2>Usage in Calculator</h2>
+                <p>In the Romasm Calculator's "calculator" mode, you can enter expressions directly:</p>
+                <ul>
+                    <li>Type an expression like <code>"2+2"</code></li>
+                    <li>Press ENTER</li>
+                    <li>The parser converts it to Romasm</li>
+                    <li>The result is calculated and displayed</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Limitations</h2>
+                <div class="parser-box">
+                    <h3>Current Limitations</h3>
+                    <ul>
+                        <li>No variables (only constants and function calls)</li>
+                        <li>Limited function set (extensible)</li>
+                        <li>Fixed-point arithmetic scaling</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section>
+                <h2>Related Documentation</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="calculator.html">Romasm Calculator</a> - Where the parser is used</li>
+                    <li><a href="stdlib-math.html">Standard Library</a> - Functions available to parser</li>
+                    <li><a href="syntax.html">Syntax & Conventions</a> - Romasm assembly syntax</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+

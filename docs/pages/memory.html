@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory System - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .memory-box {
+            background: var(--surface);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Memory System</h1>
+            <p class="subtitle">Understanding Romasm's memory addressing and storage</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section>
+                <h2>Overview</h2>
+                <p>Romasm uses a sparse memory system where you can store and retrieve values at specific addresses. Memory is accessed using square bracket notation <code>[address]</code>.</p>
+            </section>
+
+            <section>
+                <h2>Memory Addressing</h2>
+                <div class="memory-box">
+                    <h3>Syntax</h3>
+                    <p>Access memory using square brackets:</p>
+                    <pre><code>LOAD R0, [100]    ; Load from memory address 100
+STORE R1, [200]   ; Store to memory address 200</code></pre>
+                </div>
+
+                <div class="memory-box">
+                    <h3>Addresses</h3>
+                    <ul>
+                        <li>Memory addresses are integers (0, 1, 2, 3, ...)</li>
+                        <li>No upper limit (limited only by available memory)</li>
+                        <li>Addresses can be immediate values or stored in registers</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section>
+                <h2>Memory Characteristics</h2>
+                <div class="memory-box">
+                    <h3>Sparse Allocation</h3>
+                    <p>Memory is <strong>sparse</strong> - only accessed addresses are allocated:</p>
+                    <ul>
+                        <li>If you never access address 5000, it doesn't exist</li>
+                        <li>Memory is allocated on-demand</li>
+                        <li>Uninitialized memory returns 0</li>
+                    </ul>
+                </div>
+
+                <div class="memory-box">
+                    <h3>Persistence</h3>
+                    <p>Memory persists for the duration of program execution:</p>
+                    <ul>
+                        <li>Values remain until overwritten</li>
+                        <li>Memory is cleared when a new program is loaded</li>
+                        <li>Each program execution starts with fresh memory</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section>
+                <h2>Examples</h2>
+                <div class="memory-box">
+                    <h3>Basic Memory Operations</h3>
+                    <pre><code>; Store and retrieve values
+LOAD R0, 42
+STORE R0, [100]    ; Store 42 to address 100
+LOAD R1, [100]     ; Load from address 100
+PRINT R1           ; Output: 42</code></pre>
+                </div>
+
+                <div class="memory-box">
+                    <h3>Array-Like Storage</h3>
+                    <pre><code>; Store multiple values
+LOAD R0, 10
+STORE R0, [0]      ; array[0] = 10
+LOAD R0, 20
+STORE R0, [1]      ; array[1] = 20
+LOAD R0, 30
+STORE R0, [2]      ; array[2] = 30
+
+; Retrieve values
+LOAD R1, [0]       ; R1 = array[0] = 10
+LOAD R2, [1]       ; R2 = array[1] = 20</code></pre>
+                </div>
+
+                <div class="memory-box">
+                    <h3>Using Registers for Addresses</h3>
+                    <pre><code>; Calculate address dynamically
+LOAD R0, 100       ; Base address
+LOAD R1, 5         ; Index
+ADD R0, R1         ; R0 = 100 + 5 = 105
+LOAD R2, 42
+STORE R2, [R0]     ; Store to address 105</code></pre>
+                    <p><strong>Note:</strong> Register-based addressing may require special handling depending on the assembler implementation.</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>Memory Visualization</h2>
+                <p>In the Romasm IDE, you can view memory contents:</p>
+                <ul>
+                    <li>See all allocated memory addresses</li>
+                    <li>View values stored at each address</li>
+                    <li>Track memory changes during execution</li>
+                    <li>Debug memory-related issues</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Best Practices</h2>
+                <div class="memory-box">
+                    <h3>Memory Management</h3>
+                    <ul>
+                        <li>Use consistent address ranges for related data</li>
+                        <li>Document what each address stores</li>
+                        <li>Consider using offsets for arrays (e.g., [100], [101], [102])</li>
+                        <li>Be mindful of memory usage for large programs</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section>
+                <h2>Related Documentation</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="registers.html">Registers & Memory</a> - Register system overview</li>
+                    <li><a href="instruction-set.html">Instruction Set</a> - LOAD and STORE instructions</li>
+                    <li><a href="ide.html">IDE</a> - View memory in the IDE</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+

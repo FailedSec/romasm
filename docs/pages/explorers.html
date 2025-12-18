@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Problem Explorers - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .explorer-box {
+            background: var(--surface);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+        .explorer-box h3 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Problem Explorers</h1>
+            <p class="subtitle">Exploring unsolved mathematical problems with Romasm</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section>
+                <h2>Overview</h2>
+                <p>Romasm includes interactive explorers for various unsolved mathematical problems. Each explorer uses Romasm assembly to perform computations, demonstrating the language's capabilities while contributing to mathematical research.</p>
+            </section>
+
+            <section>
+                <h2>Available Explorers</h2>
+
+                <div class="explorer-box">
+                    <h3>Collatz Conjecture</h3>
+                    <p>The 3n+1 problem: Does every positive integer eventually reach 1?</p>
+                    <ul>
+                        <li>Test starting numbers of any size (BigInt support)</li>
+                        <li>View the complete sequence</li>
+                        <li>Count steps to reach 1</li>
+                    </ul>
+                    <p><a href="explorer-collatz.html">Documentation</a> | <a href="../../collatz.html">Try it</a></p>
+                </div>
+
+                <div class="explorer-box">
+                    <h3>Twin Primes</h3>
+                    <p>Search for large pairs of primes that differ by 2.</p>
+                    <ul>
+                        <li>Find twin prime pairs</li>
+                        <li>Use Romasm prime checking algorithms</li>
+                        <li>BigInt support for very large numbers</li>
+                    </ul>
+                    <p><a href="../../twin-primes.html">Try it</a></p>
+                </div>
+
+                <div class="explorer-box">
+                    <h3>Goldbach Conjecture</h3>
+                    <p>Verify that every even number > 2 is the sum of two primes.</p>
+                    <ul>
+                        <li>Test even numbers</li>
+                        <li>Find prime pair decompositions</li>
+                        <li>Push verification limits</li>
+                    </ul>
+                    <p><a href="../../goldbach.html">Try it</a></p>
+                </div>
+
+                <div class="explorer-box">
+                    <h3>Erdos-Straus Conjecture</h3>
+                    <p>Find unit fraction decompositions of 4/n.</p>
+                    <ul>
+                        <li>Search for solutions</li>
+                        <li>Test various values of n</li>
+                    </ul>
+                    <p><a href="../../erdos-straus.html">Try it</a></p>
+                </div>
+
+                <div class="explorer-box">
+                    <h3>Beal Conjecture</h3>
+                    <p>Search for counterexamples to A^x + B^y = C^z.</p>
+                    <ul>
+                        <li>Test various combinations</li>
+                        <li>Use Romasm power calculations</li>
+                    </ul>
+                    <p><a href="../../beal-conjecture.html">Try it</a></p>
+                </div>
+
+                <div class="explorer-box">
+                    <h3>Legendre's Conjecture</h3>
+                    <p>Verify that there's always a prime between n² and (n+1)².</p>
+                    <ul>
+                        <li>Test for various values of n</li>
+                        <li>Find primes in the range</li>
+                    </ul>
+                    <p><a href="../../legendre-conjecture.html">Try it</a></p>
+                </div>
+
+                <div class="explorer-box">
+                    <h3>Mersenne Primes</h3>
+                    <p>Search for Mersenne primes (2^p - 1 where p is prime).</p>
+                    <ul>
+                        <li>Test various prime exponents</li>
+                        <li>Check against known Mersenne primes</li>
+                    </ul>
+                    <p><a href="../../mersenne-primes.html">Try it</a></p>
+                </div>
+
+                <div class="explorer-box">
+                    <h3>Brocard's Problem</h3>
+                    <p>Find solutions to n! + 1 = m².</p>
+                    <ul>
+                        <li>Test factorials</li>
+                        <li>Check for perfect squares</li>
+                    </ul>
+                    <p><a href="../../brocard-problem.html">Try it</a></p>
+                </div>
+
+                <div class="explorer-box">
+                    <h3>Perfect Numbers</h3>
+                    <p>Search for perfect numbers (sum of divisors equals the number).</p>
+                    <ul>
+                        <li>Test various numbers</li>
+                        <li>Calculate divisors using Romasm</li>
+                    </ul>
+                    <p><a href="../../perfect-numbers.html">Try it</a></p>
+                </div>
+
+                <div class="explorer-box">
+                    <h3>Pascal's Triangle</h3>
+                    <p>Generate and analyze Pascal's Triangle.</p>
+                    <ul>
+                        <li>Calculate triangle rows</li>
+                        <li>Count number occurrences (Singmaster's Conjecture)</li>
+                    </ul>
+                    <p><a href="../../pascal.html">Try it</a></p>
+                </div>
+            </section>
+
+            <section>
+                <h2>Common Features</h2>
+                <p>All explorers share common features:</p>
+                <ul>
+                    <li><strong>Romasm Implementation:</strong> Core computations done in Romasm assembly</li>
+                    <li><strong>BigInt Support:</strong> Handle numbers beyond JavaScript's limit</li>
+                    <li><strong>Interactive UI:</strong> Enter values and view results</li>
+                    <li><strong>Code Display:</strong> See the Romasm code being executed</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Related Documentation</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="explorer-collatz.html">Collatz Conjecture</a> - Detailed documentation</li>
+                    <li><a href="stdlib-bigint.html">Big Integer Support</a> - For large numbers</li>
+                    <li><a href="stdlib-math.html">Standard Library</a> - Math functions used</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+

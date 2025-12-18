@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Standard Library - Big Integer Support - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .info-box {
+            background: var(--surface);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+        .warning-box {
+            background: var(--surface);
+            border-left: 4px solid var(--error);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Standard Library - Big Integer Support</h1>
+            <p class="subtitle">Arbitrary-precision arithmetic for massive numbers</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section>
+                <h2>Overview</h2>
+                <p>JavaScript's native number type can only safely represent integers up to 2^53 (about 9 quadrillion). For larger numbers, Romasm uses <strong>BigInt</strong> support through the <code>stdlib/bigint.js</code> library.</p>
+            </section>
+
+            <section>
+                <h2>Why Big Integers?</h2>
+                <div class="warning-box">
+                    <h3>JavaScript Number Limits</h3>
+                    <ul>
+                        <li><strong>Maximum safe integer:</strong> 2^53 - 1 = 9,007,199,254,740,991</li>
+                        <li><strong>Problem:</strong> Numbers larger than this lose precision</li>
+                        <li><strong>Solution:</strong> Use BigInt for arbitrary-precision arithmetic</li>
+                    </ul>
+                </div>
+
+                <div class="info-box">
+                    <h3>Use Cases</h3>
+                    <ul>
+                        <li><strong>Collatz Conjecture:</strong> Testing very large starting numbers</li>
+                        <li><strong>Prime Searching:</strong> Finding large primes beyond JavaScript's limit</li>
+                        <li><strong>Cryptography:</strong> Working with large keys and modular arithmetic</li>
+                        <li><strong>Mathematical Research:</strong> Exploring unsolved problems with massive numbers</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section>
+                <h2>BigIntRomasm Class</h2>
+                <p>The <code>BigIntRomasm</code> class provides arbitrary-precision operations:</p>
+
+                <div class="info-box">
+                    <h3>Available Operations</h3>
+                    <ul>
+                        <li><code>add(a, b)</code> - Addition</li>
+                        <li><code>subtract(a, b)</code> - Subtraction</li>
+                        <li><code>multiply(a, b)</code> - Multiplication</li>
+                        <li><code>divide(a, b)</code> - Division</li>
+                        <li><code>modulo(a, b)</code> - Modulo</li>
+                        <li><code>compare(a, b)</code> - Comparison</li>
+                        <li><code>isEven(n)</code> - Check if even</li>
+                        <li><code>multiply3Add1(n)</code> - 3n+1 (for Collatz)</li>
+                        <li><code>divideBy2(n)</code> - Divide by 2</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section>
+                <h2>Usage in Problem Explorers</h2>
+                <p>BigInt support is automatically used in problem explorer pages like:</p>
+                <ul>
+                    <li><strong>Collatz Conjecture:</strong> Test starting numbers with hundreds of digits</li>
+                    <li><strong>Twin Primes:</strong> Search for very large prime pairs</li>
+                    <li><strong>Goldbach Conjecture:</strong> Verify even numbers beyond JavaScript's limit</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Implementation Details</h2>
+                <div class="info-box">
+                    <h3>How It Works</h3>
+                    <p>BigInt values are stored as strings and operations are performed digit-by-digit, similar to how you'd do arithmetic by hand. This allows for numbers of arbitrary size, limited only by available memory.</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>Related Documentation</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="explorer-collatz.html">Collatz Conjecture Explorer</a> - Uses BigInt for large numbers</li>
+                    <li><a href="explorer-twin-primes.html">Twin Primes Explorer</a> - Prime searching with BigInt</li>
+                    <li><a href="stdlib-math.html">Basic Math Functions</a> - Standard integer operations</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+

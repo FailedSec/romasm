@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Romasm IDE - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .feature-box {
+            background: var(--surface);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Romasm IDE</h1>
+            <p class="subtitle">Integrated Development Environment for writing and debugging Romasm code</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section>
+                <h2>Overview</h2>
+                <p>The Romasm IDE (<code>ide.html</code>) is a web-based development environment for writing, assembling, and executing Romasm assembly code. It provides a complete coding experience in your browser.</p>
+            </section>
+
+            <section>
+                <h2>Features</h2>
+
+                <div class="feature-box">
+                    <h3>Code Editor</h3>
+                    <p>A text area for writing Romasm assembly code with syntax highlighting support.</p>
+                    <ul>
+                        <li>Write your Romasm programs</li>
+                        <li>Save and load code examples</li>
+                        <li>Pre-defined examples in dropdown</li>
+                    </ul>
+                </div>
+
+                <div class="feature-box">
+                    <h3>Assemble & Run</h3>
+                    <p>One-click assembly and execution:</p>
+                    <ul>
+                        <li><strong>Assemble:</strong> Converts your code to instructions</li>
+                        <li><strong>Run:</strong> Executes the program in the VM</li>
+                        <li><strong>Step:</strong> Execute one instruction at a time (debugging)</li>
+                    </ul>
+                </div>
+
+                <div class="feature-box">
+                    <h3>Output Console</h3>
+                    <p>View program output and errors:</p>
+                    <ul>
+                        <li>PRINT instruction output</li>
+                        <li>Assembly errors</li>
+                        <li>Runtime errors</li>
+                        <li>Final register states</li>
+                    </ul>
+                </div>
+
+                <div class="feature-box">
+                    <h3>Memory Visualization</h3>
+                    <p>View the contents of VM memory:</p>
+                    <ul>
+                        <li>See all memory addresses and values</li>
+                        <li>Track memory changes during execution</li>
+                        <li>Debug memory-related issues</li>
+                    </ul>
+                </div>
+
+                <div class="feature-box">
+                    <h3>Example Programs</h3>
+                    <p>Pre-loaded examples covering:</p>
+                    <ul>
+                        <li>Basic arithmetic</li>
+                        <li>Loops and conditionals</li>
+                        <li>Mathematical functions (factorial, power, sqrt)</li>
+                        <li>Trigonometric functions (sine, cosine)</li>
+                        <li>Calculus operations (derivatives, integrals)</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section>
+                <h2>Using the IDE</h2>
+
+                <div class="feature-box">
+                    <h3>Step 1: Write Your Code</h3>
+                    <p>Type or paste your Romasm assembly code into the editor:</p>
+                    <pre><code>LOAD R0, 10
+LOAD R1, 20
+ADD R0, R1
+PRINT R0</code></pre>
+                </div>
+
+                <div class="feature-box">
+                    <h3>Step 2: Assemble</h3>
+                    <p>Click the "Assemble" button to convert your code to instructions. Check for any assembly errors.</p>
+                </div>
+
+                <div class="feature-box">
+                    <h3>Step 3: Run</h3>
+                    <p>Click "Run" to execute your program. View the output in the console below.</p>
+                </div>
+
+                <div class="feature-box">
+                    <h3>Step 4: Debug</h3>
+                    <p>Use "Step" to execute one instruction at a time, or check the memory visualization to see what's stored.</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>Example Programs</h2>
+                <p>The IDE includes several example programs you can load from the dropdown:</p>
+                <ul>
+                    <li><strong>Basic Arithmetic</strong> - Simple addition and multiplication</li>
+                    <li><strong>Factorial</strong> - Calculate n! using a loop</li>
+                    <strong>Power Function</strong> - Calculate base^exponent</li>
+                    <li><strong>Square Root</strong> - Newton's method for √n</li>
+                    <li><strong>Sine Function</strong> - Taylor series sine calculation</li>
+                    <li><strong>Derivative</strong> - Numerical differentiation</li>
+                    <li><strong>Integral</strong> - Numerical integration (trapezoidal rule, Simpson's rule)</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Tips & Tricks</h2>
+
+                <div class="feature-box">
+                    <h3>Using Standard Library</h3>
+                    <p>To use stdlib functions in the IDE, you may need to:</p>
+                    <ul>
+                        <li>Include stdlib code directly in your program, or</li>
+                        <li>Use the linker system (if enabled)</li>
+                    </ul>
+                    <p>For easier stdlib usage, try the <a href="calculator.html">Romasm Calculator</a> which has automatic linking.</p>
+                </div>
+
+                <div class="feature-box">
+                    <h3>Debugging</h3>
+                    <ul>
+                        <li>Use <code>PRINT</code> statements to output intermediate values</li>
+                        <li>Check the memory visualization to see stored values</li>
+                        <li>Use "Step" mode to execute one instruction at a time</li>
+                        <li>Check final register states after execution</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section>
+                <h2>Related Documentation</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="quickstart.html">Quick Start</a> - Write your first program</li>
+                    <li><a href="instruction-set.html">Instruction Set</a> - All available instructions</li>
+                    <li><a href="syntax.html">Syntax & Conventions</a> - Writing correct code</li>
+                    <li><a href="../../ide.html">Try the IDE</a> - Open it now!</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Romasm Language Overview - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .feature-box {
+            background: var(--surface);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+        .architecture-diagram {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 8px;
+            margin: 2rem 0;
+            text-align: center;
+        }
+        .flow-box {
+            display: inline-block;
+            background: var(--surface-light);
+            padding: 1rem 2rem;
+            margin: 0.5rem;
+            border-radius: 4px;
+            border: 2px solid var(--primary-color);
+        }
+        .arrow {
+            display: inline-block;
+            margin: 0 1rem;
+            font-size: 1.5rem;
+            color: var(--accent);
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Romasm Language Overview</h1>
+            <p class="subtitle">Understanding the Romasm assembly language and virtual machine</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section>
+                <h2>What is Romasm?</h2>
+                <p>Romasm is a custom assembly language that uses <strong>Roman numerals for registers and instruction opcodes</strong>. It's designed to be:</p>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><strong>Educational:</strong> Learn assembly language concepts with a unique twist</li>
+                    <li><strong>Functional:</strong> Full-featured instruction set with arithmetic, control flow, and I/O</li>
+                    <li><strong>Web-based:</strong> Runs entirely in the browser using a JavaScript virtual machine</li>
+                    <li><strong>Mathematical:</strong> Includes standard library for advanced math (trig, calculus, etc.)</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Architecture Overview</h2>
+                <div class="architecture-diagram">
+                    <div class="flow-box">Romasm Assembly Code<br/>(Text)</div>
+                    <span class="arrow">→</span>
+                    <div class="flow-box">Assembler<br/>(romasm-assembler.js)</div>
+                    <span class="arrow">→</span>
+                    <div class="flow-box">Instruction Objects<br/>(JSON)</div>
+                    <span class="arrow">→</span>
+                    <div class="flow-box">Virtual Machine<br/>(romasm-vm.js)</div>
+                    <span class="arrow">→</span>
+                    <div class="flow-box">Execution Results</div>
+                </div>
+                <p style="text-align: center; color: var(--text-secondary); margin-top: 1rem;">
+                    Romasm code is assembled into instruction objects, then executed by a JavaScript-based virtual machine
+                </p>
+            </section>
+
+            <section>
+                <h2>Key Features</h2>
+                
+                <div class="feature-box">
+                    <h3>🏛️ Roman Numeral Registers</h3>
+                    <p>Registers use Roman numerals: <code>R0</code> = <code>I</code>, <code>R1</code> = <code>II</code>, <code>R2</code> = <code>III</code>, etc.</p>
+                    <pre><code>LOAD R0, 10    ; R0 (register I) = 10
+LOAD R1, 20    ; R1 (register II) = 20
+ADD R0, R1     ; R0 = R0 + R1 = 30</code></pre>
+                </div>
+
+                <div class="feature-box">
+                    <h3>📚 Standard Library</h3>
+                    <p>Pre-built functions for common operations:</p>
+                    <ul>
+                        <li><strong>Math:</strong> factorial, power, square root</li>
+                        <li><strong>Trigonometry:</strong> sin, cos, tan (Taylor series)</li>
+                        <li><strong>Calculus:</strong> derivatives, integrals (numerical methods)</li>
+                        <li><strong>Advanced:</strong> exponential, logarithm</li>
+                    </ul>
+                    <pre><code>LOAD R0, 3000        ; 30 degrees (scaled by 100)
+CALL sin              ; Call stdlib sin function
+; Result in R0</code></pre>
+                </div>
+
+                <div class="feature-box">
+                    <h3>🎨 Canvas Drawing</h3>
+                    <p>Direct canvas manipulation from Romasm code:</p>
+                    <pre><code>CLEAR
+MOVE R0, R1          ; Move to (x, y)
+DRAW R2, R3          ; Draw line to (x, y)
+STROKE               ; Render the path</code></pre>
+                </div>
+
+                <div class="feature-box">
+                    <h3>🔗 Linking System</h3>
+                    <p>Automatically links user code with standard library functions. Write <code>CALL sin</code> and the linker resolves it to the stdlib function address.</p>
+                </div>
+
+                <div class="feature-box">
+                    <h3>🔢 Big Integer Support</h3>
+                    <p>Handle numbers beyond JavaScript's safe integer limit (2^53) using arbitrary-precision arithmetic.</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>Virtual Machine Details</h2>
+                <p>The Romasm Virtual Machine is a <strong>JavaScript-based interpreter</strong> that executes Romasm instructions. It's not:</p>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li>❌ Compiled to machine code</li>
+                    <li>❌ WebAssembly</li>
+                    <li>❌ Running on actual hardware</li>
+                </ul>
+                <p>Instead, it's:</p>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li>✅ A JavaScript interpreter (like Python's interpreter or the JVM)</li>
+                    <li>✅ Executes instructions sequentially in a loop</li>
+                    <li>✅ Maintains registers, memory, stack, and program counter</li>
+                    <li>✅ All math operations are performed by executing Romasm instructions</li>
+                </ul>
+                <p>When you write <code>ADD R0, R1</code>, the VM actually executes:</p>
+                <pre><code>this.registers['I'] += this.registers['II'];</code></pre>
+                <p>So yes, it's "real" assembly - just interpreted by JavaScript instead of compiled to machine code!</p>
+            </section>
+
+            <section>
+                <h2>Fixed-Point Arithmetic</h2>
+                <p>Romasm uses <strong>fixed-point arithmetic</strong> for decimal numbers. Numbers are scaled by a factor (typically 100 or 1000) to represent decimals as integers.</p>
+                <div class="feature-box">
+                    <h4>Example: Sine Function</h4>
+                    <p>To represent 30.5 degrees:</p>
+                    <ul>
+                        <li>Scale by 100: <code>3050</code> (represents 30.50)</li>
+                        <li>Scale by 1000: <code>30500</code> (represents 30.500)</li>
+                    </ul>
+                    <p>When calling <code>sin(30)</code>, you pass <code>3000</code> (30 × 100), and the function returns a scaled result (e.g., <code>500</code> for sin(30°) ≈ 0.5, scaled by 1000).</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>Next Steps</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="quickstart.html">Quick Start Guide</a> - Write your first Romasm program</li>
+                    <li><a href="instruction-set.html">Instruction Set Reference</a> - Complete list of all instructions</li>
+                    <li><a href="registers.html">Registers & Memory</a> - Understanding the register system</li>
+                    <li><a href="stdlib-math.html">Standard Library</a> - Available functions and how to use them</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+

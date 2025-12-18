@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Drawing - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .drawing-box {
+            background: var(--surface);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Canvas Drawing Opcodes</h1>
+            <p class="subtitle">Drawing directly on HTML5 Canvas from Romasm code</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section>
+                <h2>Overview</h2>
+                <p>Romasm includes special opcodes for drawing directly on an HTML5 Canvas. These opcodes allow you to create graphics, plots, and visualizations entirely from Romasm assembly code.</p>
+            </section>
+
+            <section>
+                <h2>Drawing Opcodes</h2>
+
+                <div class="drawing-box">
+                    <h3>CLEAR</h3>
+                    <p>Clears the entire canvas.</p>
+                    <pre><code>CLEAR</code></pre>
+                    <p><strong>Opcode:</strong> CLR</p>
+                    <p><strong>Operands:</strong> None</p>
+                </div>
+
+                <div class="drawing-box">
+                    <h3>MOVE</h3>
+                    <p>Moves the drawing cursor to a position without drawing.</p>
+                    <pre><code>MOVE R0, R1    ; Move to (x, y) where R0=x, R1=y</code></pre>
+                    <p><strong>Opcode:</strong> MOV</p>
+                    <p><strong>Operands:</strong> reg_x, reg_y</p>
+                    <p><strong>Note:</strong> Coordinates are typically in graph space (scaled by 100), which is converted to screen pixels automatically.</p>
+                </div>
+
+                <div class="drawing-box">
+                    <h3>DRAW</h3>
+                    <p>Draws a line from the current position to a new position.</p>
+                    <pre><code>DRAW R0, R1    ; Draw line to (x, y) where R0=x, R1=y</code></pre>
+                    <p><strong>Opcode:</strong> DRW</p>
+                    <p><strong>Operands:</strong> reg_x, reg_y</p>
+                    <p><strong>Note:</strong> The line is added to the current path but not rendered until <code>STROKE</code> is called.</p>
+                </div>
+
+                <div class="drawing-box">
+                    <h3>STROKE</h3>
+                    <p>Renders (strokes) the current path, making all drawn lines visible.</p>
+                    <pre><code>STROKE</code></pre>
+                    <p><strong>Opcode:</strong> STR</p>
+                    <p><strong>Operands:</strong> None</p>
+                    <p><strong>Note:</strong> You must call <code>STROKE</code> after drawing lines to make them visible.</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>Complete Example</h2>
+                <div class="drawing-box">
+                    <h3>Drawing a Line</h3>
+                    <pre><code>; Draw a line from (-5, -5) to (5, 5)
+CLEAR
+; Start point: (-5, -5) scaled by 100
+LOAD R0, -500    ; x1
+LOAD R1, -500    ; y1
+MOVE R0, R1      ; Move to start point
+; End point: (5, 5) scaled by 100
+LOAD R0, 500     ; x2
+LOAD R1, 500     ; y2
+DRAW R0, R1      ; Draw line
+STROKE           ; Render it</code></pre>
+                </div>
+
+                <div class="drawing-box">
+                    <h3>Drawing a Square</h3>
+                    <pre><code>; Draw a square from (-3, -3) to (3, 3)
+CLEAR
+; Bottom-left
+LOAD R0, -300
+LOAD R1, -300
+MOVE R0, R1
+; Top-left
+LOAD R0, -300
+LOAD R1, 300
+DRAW R0, R1
+; Top-right
+LOAD R0, 300
+LOAD R1, 300
+DRAW R0, R1
+; Bottom-right
+LOAD R0, 300
+LOAD R1, -300
+DRAW R0, R1
+; Close square
+LOAD R0, -300
+LOAD R1, -300
+DRAW R0, R1
+STROKE</code></pre>
+                </div>
+            </section>
+
+            <section>
+                <h2>Coordinate Systems</h2>
+                <div class="drawing-box">
+                    <h3>Graph Coordinates</h3>
+                    <p>In the calculator console, coordinates are in <strong>graph space</strong> (scaled by 100):</p>
+                    <ul>
+                        <li><code>500</code> = 5.0 in graph units</li>
+                        <li><code>-300</code> = -3.0 in graph units</li>
+                    </ul>
+                    <p>These are automatically converted to screen pixels based on the graph window settings.</p>
+                </div>
+
+                <div class="drawing-box">
+                    <h3>Screen Coordinates</h3>
+                    <p>If drawing directly (not through calculator), coordinates are in screen pixels:</p>
+                    <ul>
+                        <li><code>0, 0</code> = top-left corner</li>
+                        <li><code>width, height</code> = bottom-right corner</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section>
+                <h2>Usage in Calculator</h2>
+                <p>In the Romasm Calculator console, drawing opcodes automatically:</p>
+                <ul>
+                    <li>Convert graph coordinates to screen pixels</li>
+                    <li>Respect the current graph window settings</li>
+                    <li>Render on the graph canvas</li>
+                </ul>
+                <p>You can use drawing opcodes in console scripts to create custom visualizations alongside plotted functions.</p>
+            </section>
+
+            <section>
+                <h2>Related Documentation</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="calculator.html">Romasm Calculator</a> - Using drawing in the calculator</li>
+                    <li><a href="instruction-set.html">Instruction Set</a> - All Romasm instructions</li>
+                    <li><a href="vm.html">Virtual Machine</a> - How drawing opcodes are executed</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+

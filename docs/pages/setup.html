@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup & Installation - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .setup-box {
+            background: var(--surface);
+            border-left: 4px solid var(--success);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+        .warning-box {
+            background: var(--surface);
+            border-left: 4px solid var(--error);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Setup & Installation</h1>
+            <p class="subtitle">Get Romasm running in your browser</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section>
+                <h2>No Installation Required!</h2>
+                <div class="setup-box">
+                    <p><strong>Romasm runs entirely in your web browser.</strong> No downloads, no installation, no configuration needed!</p>
+                    <p>Simply open any Romasm page in a modern web browser (Chrome, Firefox, Edge, Safari) and you're ready to go.</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>Running Locally</h2>
+                <p>If you want to run Romasm from your local filesystem, you have a few options:</p>
+
+                <h3>Option 1: Simple HTTP Server</h3>
+                <p>Romasm requires an HTTP server (not just opening files directly) because it loads external JavaScript modules. Here are easy ways to run a local server:</p>
+
+                <div class="setup-box">
+                    <h4>Python (if installed):</h4>
+                    <pre><code># Python 3
+python -m http.server 8000
+
+# Python 2
+python -m SimpleHTTPServer 8000</code></pre>
+                    <p>Then open <code>http://localhost:8000</code> in your browser.</p>
+                </div>
+
+                <div class="setup-box">
+                    <h4>Node.js (if installed):</h4>
+                    <pre><code># Install http-server globally
+npm install -g http-server
+
+# Run it
+http-server -p 8000</code></pre>
+                    <p>Then open <code>http://localhost:8000</code> in your browser.</p>
+                </div>
+
+                <div class="setup-box">
+                    <h4>Using the Included Server:</h4>
+                    <p>If you have Node.js installed, you can use the included server:</p>
+                    <pre><code>node server.js</code></pre>
+                    <p>This will start a server (usually on port 3000 or 6969). Check the console output for the exact URL.</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>Browser Requirements</h2>
+                <p>Romasm works in any modern web browser that supports:</p>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li>ES6 JavaScript (ES2015+)</li>
+                    <li>HTML5 Canvas API</li>
+                    <li>Fetch API (for loading stdlib files)</li>
+                </ul>
+                <p><strong>Recommended browsers:</strong></p>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li>Chrome/Edge (latest)</li>
+                    <li>Firefox (latest)</li>
+                    <li>Safari (latest)</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>File Structure</h2>
+                <p>If you're running Romasm locally, your file structure should look like:</p>
+                <pre><code>romasm/
+├── compiler/
+│   ├── romasm-assembler.js
+│   └── romasm-vm.js
+├── stdlib/
+│   ├── math.romasm
+│   ├── trig.romasm
+│   ├── calculus.romasm
+│   └── ...
+├── calcengine/
+│   ├── romasm-calculator-engine.js
+│   └── ...
+├── linker/
+│   └── romasm-linker.js
+├── ide.html
+├── romasm-calculator.html
+└── ...</code></pre>
+                <p>All files should be served from the same directory to ensure relative paths work correctly.</p>
+            </section>
+
+            <section>
+                <h2>Troubleshooting</h2>
+
+                <div class="warning-box">
+                    <h4>Error: "Failed to fetch" or CORS errors</h4>
+                    <p><strong>Solution:</strong> You must run Romasm from an HTTP server, not by opening files directly (file://). Use one of the server options above.</p>
+                </div>
+
+                <div class="warning-box">
+                    <h4>Error: "Cannot find module" or 404 errors</h4>
+                    <p><strong>Solution:</strong> Make sure all files are in the correct relative locations. Check the browser console for the exact file that's missing.</p>
+                </div>
+
+                <div class="warning-box">
+                    <h4>Functions not working (CALL sin, etc.)</h4>
+                    <p><strong>Solution:</strong> Make sure the linker is enabled. In the calculator, it's automatic. In the IDE, you may need to manually enable stdlib linking.</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>Next Steps</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="quickstart.html">Quick Start Guide</a> - Write your first program</li>
+                    <li><a href="../../ide.html">Try the IDE</a> - Start coding!</li>
+                    <li><a href="language-overview.html">Language Overview</a> - Understand Romasm</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+

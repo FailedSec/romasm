@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Romasm Instruction Set - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .instruction-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: var(--surface);
+        }
+        .instruction-table th,
+        .instruction-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .instruction-table th {
+            background: var(--surface-light);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        .instruction-table tr:hover {
+            background: var(--surface-light);
+        }
+        .opcode {
+            font-family: 'Courier New', monospace;
+            background: var(--background);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            color: var(--accent);
+        }
+        .category {
+            margin: 3rem 0;
+        }
+        .category h2 {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        code {
+            background: var(--background);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: var(--accent);
+        }
+        .example {
+            background: var(--surface);
+            border-left: 4px solid var(--primary-color);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Romasm Instruction Set</h1>
+            <p class="subtitle">Complete reference for all Romasm assembly instructions</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section class="category">
+                <h2>Arithmetic Instructions</h2>
+                <table class="instruction-table">
+                    <thead>
+                        <tr>
+                            <th>Instruction</th>
+                            <th>Opcode</th>
+                            <th>Operands</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>ADD</code></td>
+                            <td><span class="opcode">A</span></td>
+                            <td>reg1, reg2</td>
+                            <td>Adds reg2 to reg1: <code>reg1 = reg1 + reg2</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>SUB</code></td>
+                            <td><span class="opcode">S</span></td>
+                            <td>reg1, reg2</td>
+                            <td>Subtracts reg2 from reg1: <code>reg1 = reg1 - reg2</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>MUL</code></td>
+                            <td><span class="opcode">M</span></td>
+                            <td>reg1, reg2</td>
+                            <td>Multiplies reg1 by reg2: <code>reg1 = reg1 * reg2</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>DIV</code></td>
+                            <td><span class="opcode">DI</span></td>
+                            <td>reg1, reg2</td>
+                            <td>Divides reg1 by reg2 (integer division): <code>reg1 = reg1 / reg2</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>MOD</code></td>
+                            <td><span class="opcode">MO</span></td>
+                            <td>reg1, reg2</td>
+                            <td>Modulo operation: <code>reg1 = reg1 % reg2</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>INC</code></td>
+                            <td><span class="opcode">I</span></td>
+                            <td>reg</td>
+                            <td>Increments register by 1: <code>reg = reg + 1</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>DEC</code></td>
+                            <td><span class="opcode">D</span></td>
+                            <td>reg</td>
+                            <td>Decrements register by 1: <code>reg = reg - 1</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="example">
+                    <strong>Example:</strong>
+                    <pre><code>LOAD R0, 10
+LOAD R1, 5
+ADD R0, R1    ; R0 = 15
+MUL R0, R1    ; R0 = 75
+DIV R0, R1    ; R0 = 15</code></pre>
+                </div>
+            </section>
+
+            <section class="category">
+                <h2>Bitwise & Shift Instructions</h2>
+                <table class="instruction-table">
+                    <thead>
+                        <tr>
+                            <th>Instruction</th>
+                            <th>Opcode</th>
+                            <th>Operands</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>SHL</code></td>
+                            <td><span class="opcode">SL</span></td>
+                            <td>reg1, reg2</td>
+                            <td>Shift left (multiply by 2^n): <code>reg1 = reg1 << reg2</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>SHR</code></td>
+                            <td><span class="opcode">SR</span></td>
+                            <td>reg1, reg2</td>
+                            <td>Shift right (divide by 2^n): <code>reg1 = reg1 >> reg2</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="example">
+                    <strong>Example:</strong>
+                    <pre><code>LOAD R0, 8
+LOAD R1, 2
+SHL R0, R1    ; R0 = 32 (8 << 2 = 8 * 4)
+SHR R0, R1    ; R0 = 8 (32 >> 2 = 32 / 4)</code></pre>
+                </div>
+            </section>
+
+            <section class="category">
+                <h2>Memory Instructions</h2>
+                <table class="instruction-table">
+                    <thead>
+                        <tr>
+                            <th>Instruction</th>
+                            <th>Opcode</th>
+                            <th>Operands</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>LOAD</code></td>
+                            <td><span class="opcode">L</span></td>
+                            <td>reg, value/reg/[addr]</td>
+                            <td>Loads a value into a register. Can load immediate value, copy from another register, or load from memory address.</td>
+                        </tr>
+                        <tr>
+                            <td><code>STORE</code></td>
+                            <td><span class="opcode">X</span></td>
+                            <td>reg, reg/[addr]</td>
+                            <td>Stores register value to another register or memory address.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="example">
+                    <strong>Example:</strong>
+                    <pre><code>LOAD R0, 42           ; R0 = 42 (immediate)
+LOAD R1, R0            ; R1 = R0 (copy register)
+LOAD R2, [100]         ; R2 = memory[100]
+STORE R0, R1           ; R1 = R0
+STORE R0, [100]        ; memory[100] = R0</code></pre>
+                </div>
+            </section>
+
+            <section class="category">
+                <h2>Control Flow Instructions</h2>
+                <table class="instruction-table">
+                    <thead>
+                        <tr>
+                            <th>Instruction</th>
+                            <th>Opcode</th>
+                            <th>Operands</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>JMP</code></td>
+                            <td><span class="opcode">V</span></td>
+                            <td>label/address</td>
+                            <td>Unconditional jump to label or address</td>
+                        </tr>
+                        <tr>
+                            <td><code>JEQ</code></td>
+                            <td><span class="opcode">JE</span></td>
+                            <td>label/address</td>
+                            <td>Jump if equal (last CMP result was equal)</td>
+                        </tr>
+                        <tr>
+                            <td><code>JNE</code></td>
+                            <td><span class="opcode">JN</span></td>
+                            <td>label/address</td>
+                            <td>Jump if not equal</td>
+                        </tr>
+                        <tr>
+                            <td><code>JLT</code></td>
+                            <td><span class="opcode">JL</span></td>
+                            <td>label/address</td>
+                            <td>Jump if less than</td>
+                        </tr>
+                        <tr>
+                            <td><code>JGT</code></td>
+                            <td><span class="opcode">JG</span></td>
+                            <td>label/address</td>
+                            <td>Jump if greater than</td>
+                        </tr>
+                        <tr>
+                            <td><code>JLE</code></td>
+                            <td><span class="opcode">JLE</span></td>
+                            <td>label/address</td>
+                            <td>Jump if less than or equal</td>
+                        </tr>
+                        <tr>
+                            <td><code>JGE</code></td>
+                            <td><span class="opcode">JGE</span></td>
+                            <td>label/address</td>
+                            <td>Jump if greater than or equal</td>
+                        </tr>
+                        <tr>
+                            <td><code>CMP</code></td>
+                            <td><span class="opcode">C</span></td>
+                            <td>reg1, reg2/value</td>
+                            <td>Compares two values and sets flags for conditional jumps</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="example">
+                    <strong>Example:</strong>
+                    <pre><code>LOAD R0, 10
+LOAD R1, 5
+CMP R0, R1
+JGT greater        ; Jump if R0 > R1
+; R0 <= R1
+JMP end
+greater:
+; R0 > R1
+end:</code></pre>
+                </div>
+            </section>
+
+            <section class="category">
+                <h2>Function Call Instructions</h2>
+                <table class="instruction-table">
+                    <thead>
+                        <tr>
+                            <th>Instruction</th>
+                            <th>Opcode</th>
+                            <th>Operands</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>CALL</code></td>
+                            <td><span class="opcode">CA</span></td>
+                            <td>label/function</td>
+                            <td>Calls a function or subroutine. Pushes return address to stack.</td>
+                        </tr>
+                        <tr>
+                            <td><code>RET</code></td>
+                            <td><span class="opcode">R</span></td>
+                            <td>(none)</td>
+                            <td>Returns from function. Pops return address from stack.</td>
+                        </tr>
+                        <tr>
+                            <td><code>PUSH</code></td>
+                            <td><span class="opcode">P</span></td>
+                            <td>reg</td>
+                            <td>Pushes register value onto stack</td>
+                        </tr>
+                        <tr>
+                            <td><code>POP</code></td>
+                            <td><span class="opcode">PO</span></td>
+                            <td>reg</td>
+                            <td>Pops value from stack into register</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="example">
+                    <strong>Example:</strong>
+                    <pre><code>; Call stdlib function
+LOAD R0, 3000        ; angle in degrees (scaled by 100)
+CALL sin             ; Call sin function from stdlib
+; Result in R0
+
+; Custom function
+my_function:
+    PUSH R1
+    ; function body
+    POP R1
+    RET</code></pre>
+                </div>
+            </section>
+
+            <section class="category">
+                <h2>I/O Instructions</h2>
+                <table class="instruction-table">
+                    <thead>
+                        <tr>
+                            <th>Instruction</th>
+                            <th>Opcode</th>
+                            <th>Operands</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>PRINT</code></td>
+                            <td><span class="opcode">PR</span></td>
+                            <td>reg</td>
+                            <td>Prints register value to output console</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="example">
+                    <strong>Example:</strong>
+                    <pre><code>LOAD R0, 42
+PRINT R0             ; Outputs: 42</code></pre>
+                </div>
+            </section>
+
+            <section class="category">
+                <h2>Canvas Drawing Instructions</h2>
+                <table class="instruction-table">
+                    <thead>
+                        <tr>
+                            <th>Instruction</th>
+                            <th>Opcode</th>
+                            <th>Operands</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>CLEAR</code></td>
+                            <td><span class="opcode">CLR</span></td>
+                            <td>(none)</td>
+                            <td>Clears the canvas</td>
+                        </tr>
+                        <tr>
+                            <td><code>MOVE</code></td>
+                            <td><span class="opcode">MOV</span></td>
+                            <td>reg_x, reg_y</td>
+                            <td>Moves drawing cursor to (x, y) without drawing</td>
+                        </tr>
+                        <tr>
+                            <td><code>DRAW</code></td>
+                            <td><span class="opcode">DRW</span></td>
+                            <td>reg_x, reg_y</td>
+                            <td>Draws a line from current position to (x, y)</td>
+                        </tr>
+                        <tr>
+                            <td><code>STROKE</code></td>
+                            <td><span class="opcode">STR</span></td>
+                            <td>(none)</td>
+                            <td>Strokes the current path (renders the drawn lines)</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="example">
+                    <strong>Example:</strong>
+                    <pre><code>; Draw a line from (-5, -5) to (5, 5)
+CLEAR
+LOAD R0, -500        ; x1 (scaled by 100)
+LOAD R1, -500        ; y1
+MOVE R0, R1          ; Move to start point
+LOAD R0, 500         ; x2
+LOAD R1, 500         ; y2
+DRAW R0, R1          ; Draw line
+STROKE               ; Render it</code></pre>
+                </div>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+

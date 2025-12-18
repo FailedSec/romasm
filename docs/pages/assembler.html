@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assembler - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .process-box {
+            background: var(--surface);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Romasm Assembler</h1>
+            <p class="subtitle">How assembly code is converted to executable instructions</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section>
+                <h2>Overview</h2>
+                <p>The Romasm Assembler (<code>romasm-assembler.js</code>) translates human-readable Romasm assembly code into executable instruction objects that the VM can execute.</p>
+            </section>
+
+            <section>
+                <h2>Assembly Process</h2>
+
+                <div class="process-box">
+                    <h3>Step 1: Parse Source Code</h3>
+                    <p>The assembler reads the source code line by line, removing comments and whitespace.</p>
+                    <pre><code>; Input:
+LOAD R0, 10
+ADD R0, R1
+
+; After parsing:
+["LOAD R0, 10", "ADD R0, R1"]</code></pre>
+                </div>
+
+                <div class="process-box">
+                    <h3>Step 2: Extract Labels</h3>
+                    <p>Labels are identified and their addresses are recorded.</p>
+                    <pre><code>; Input:
+loop:
+    LOAD R0, 10
+    INC R0
+    CMP R0, R1
+    JLE loop
+
+; Labels map:
+{ "loop": 0 }</code></pre>
+                </div>
+
+                <div class="process-box">
+                    <h3>Step 3: Parse Instructions</h3>
+                    <p>Each line is parsed into an instruction object with opcode and operands.</p>
+                    <pre><code>; Input: "LOAD R0, 10"
+; Output:
+{
+    opcode: 'L',
+    operands: [
+        { type: 'register', value: 'I' },
+        { type: 'immediate', value: 10 }
+    ]
+}</code></pre>
+                </div>
+
+                <div class="process-box">
+                    <h3>Step 4: Resolve Labels</h3>
+                    <p>Label references are replaced with their actual addresses.</p>
+                    <pre><code>; Input: "JMP loop"
+; Output:
+{
+    opcode: 'V',
+    operands: [
+        { type: 'label', value: 0 }  // Address of 'loop'
+    ]
+}</code></pre>
+                </div>
+            </section>
+
+            <section>
+                <h2>Opcode Mapping</h2>
+                <p>Instructions are mapped to single-character or two-character opcodes:</p>
+                <table style="width: 100%; border-collapse: collapse; margin: 1.5rem 0; background: var(--surface);">
+                    <thead>
+                        <tr style="background: var(--surface-light);">
+                            <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--border-color);">Instruction</th>
+                            <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--border-color);">Opcode</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);"><code>ADD</code></td><td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);">A</td></tr>
+                        <tr><td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);"><code>SUB</code></td><td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);">S</td></tr>
+                        <tr><td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);"><code>MUL</code></td><td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);">M</td></tr>
+                        <tr><td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);"><code>DIV</code></td><td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);">DI</td></tr>
+                        <tr><td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);"><code>LOAD</code></td><td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);">L</td></tr>
+                        <tr><td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);"><code>CALL</code></td><td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);">CA</td></tr>
+                        <tr><td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);"><code>MOVE</code></td><td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);">MOV</td></tr>
+                        <tr><td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);"><code>DRAW</code></td><td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);">DRW</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section>
+                <h2>Operand Parsing</h2>
+                <p>The assembler recognizes three types of operands:</p>
+
+                <div class="process-box">
+                    <h3>Registers</h3>
+                    <pre><code>R0 → { type: 'register', value: 'I' }
+R1 → { type: 'register', value: 'II' }
+R8 → { type: 'register', value: 'IX' }</code></pre>
+                </div>
+
+                <div class="process-box">
+                    <h3>Immediate Values</h3>
+                    <pre><code>42 → { type: 'immediate', value: 42 }
+-10 → { type: 'immediate', value: -10 }</code></pre>
+                </div>
+
+                <div class="process-box">
+                    <h3>Memory Addresses</h3>
+                    <pre><code>[100] → { type: 'immediate', value: 100, isMemory: true }</code></pre>
+                </div>
+
+                <div class="process-box">
+                    <h3>Labels</h3>
+                    <pre><code>loop → { type: 'label', value: <address> }
+sin → { type: 'label', value: 0, labelName: 'sin' }  // Unresolved, for linker</code></pre>
+                </div>
+            </section>
+
+            <section>
+                <h2>Error Handling</h2>
+                <p>The assembler reports errors for:</p>
+                <ul>
+                    <li>Unknown instructions</li>
+                    <li>Invalid operands</li>
+                    <li>Missing operands</li>
+                    <li>Undefined labels (unless they'll be resolved by linker)</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Output Format</h2>
+                <p>The assembler returns an object with:</p>
+                <pre><code>{
+    success: true/false,
+    instructions: [...],  // Array of instruction objects
+    errors: [...]         // Array of error messages (if any)
+}</code></pre>
+            </section>
+
+            <section>
+                <h2>Related Documentation</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="vm.html">Virtual Machine</a> - How instructions are executed</li>
+                    <li><a href="linker.html">Linker</a> - How stdlib functions are linked</li>
+                    <li><a href="instruction-set.html">Instruction Set</a> - All available instructions</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+

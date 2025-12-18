@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Examples - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .example-box {
+            background: var(--surface);
+            border-left: 4px solid var(--accent);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+        .example-box h3 {
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Math Examples</h1>
+            <p class="subtitle">Mathematical computations in Romasm</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section>
+                <h2>Factorial</h2>
+                <div class="example-box">
+                    <h3>Calculate 5!</h3>
+                    <pre><code>; Calculate factorial of 5
+; 5! = 5 × 4 × 3 × 2 × 1 = 120
+LOAD R0, 5       ; n = 5
+LOAD R1, 1       ; result = 1
+LOAD R2, 1       ; constant 1
+
+factorial_loop:
+    MUL R1, R0   ; result = result * n
+    DEC R0       ; n = n - 1
+    CMP R0, R2   ; Compare n with 1
+    JGT factorial_loop  ; Continue if n > 1
+
+PRINT R1         ; Output: 120</code></pre>
+                </div>
+            </section>
+
+            <section>
+                <h2>Power Function</h2>
+                <div class="example-box">
+                    <h3>Calculate 2^8</h3>
+                    <pre><code>; Calculate 2^8 = 256
+LOAD R0, 2       ; base = 2
+LOAD R1, 8       ; exponent = 8
+LOAD R2, 1       ; result = 1
+LOAD R3, 1       ; constant 1
+
+power_loop:
+    MUL R2, R0   ; result = result * base
+    DEC R1       ; exponent = exponent - 1
+    CMP R1, R3   ; Compare exponent with 1
+    JGT power_loop  ; Continue if exponent > 1
+
+PRINT R2         ; Output: 256</code></pre>
+                </div>
+            </section>
+
+            <section>
+                <h2>Square Root (Newton's Method)</h2>
+                <div class="example-box">
+                    <h3>Calculate √25</h3>
+                    <pre><code>; Square root using Newton's method
+; x_{n+1} = (x_n + n/x_n) / 2
+LOAD R0, 25000   ; n = 25.000 (scaled by 1000)
+LOAD R1, 5000    ; x = 5.000 (initial guess, scaled)
+LOAD R2, 2       ; constant 2
+LOAD R3, 1000    ; scaling factor
+LOAD R4, 10      ; iteration limit
+
+sqrt_loop:
+    ; Calculate n/x
+    LOAD R5, R0
+    DIV R5, R1    ; R5 = n/x
+    
+    ; Calculate (x + n/x)
+    ADD R1, R5    ; R1 = x + n/x
+    
+    ; Divide by 2
+    DIV R1, R2    ; R1 = (x + n/x) / 2
+    
+    DEC R4
+    CMP R4, 0
+    JGT sqrt_loop
+
+PRINT R1         ; Output: ~5000 (5.000)</code></pre>
+                </div>
+            </section>
+
+            <section>
+                <h2>Using Standard Library</h2>
+                <div class="example-box">
+                    <h3>Calculate sin(30°) using stdlib</h3>
+                    <pre><code>; Calculate sin(30°) ≈ 0.5
+; Note: Requires linking with stdlib
+LOAD R0, 3000    ; 30 degrees (scaled by 100)
+CALL sin         ; Call stdlib sin function
+; Result in R0 (scaled by 1000)
+PRINT R0         ; Output: ~500 (0.5 × 1000)</code></pre>
+                </div>
+
+                <div class="example-box">
+                    <h3>Calculate √16 using stdlib</h3>
+                    <pre><code>; Calculate √16 = 4
+LOAD R0, 16000   ; 16.000 (scaled by 1000)
+CALL sqrt        ; Call stdlib sqrt function
+PRINT R0         ; Output: ~4000 (4.000)</code></pre>
+                </div>
+            </section>
+
+            <section>
+                <h2>Related Documentation</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="stdlib-math.html">Standard Library - Math</a> - Available math functions</li>
+                    <li><a href="stdlib-trig.html">Standard Library - Trigonometry</a> - sin, cos functions</li>
+                    <li><a href="examples-basic.html">Basic Examples</a> - Simple programs</li>
+                    <li><a href="examples-graphics.html">Graphics Examples</a> - Plotting and drawing</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+

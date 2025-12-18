@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Standard Library - Calculus - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .function-box {
+            background: var(--surface);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+        .function-box h3 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        .method-box {
+            background: var(--surface-light);
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Standard Library - Calculus</h1>
+            <p class="subtitle">Numerical differentiation and integration in Romasm</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section>
+                <h2>Overview</h2>
+                <p>Romasm's calculus library provides numerical differentiation and integration functions. All values use <strong>fixed-point scaling by 1000</strong> (e.g., 5000 = 5.000).</p>
+            </section>
+
+            <section>
+                <h2>Derivative Functions</h2>
+
+                <div class="function-box">
+                    <h3>derivative_x_squared</h3>
+                    <p>Calculates f'(x) = 2x for f(x) = x² using the central difference method.</p>
+                    <div class="method-box">
+                        <strong>Method:</strong> f'(x) ≈ (f(x+h) - f(x-h)) / (2h)
+                    </div>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <tr>
+                            <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Input</th>
+                            <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Output</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem;">R0 = x (scaled by 1000)</td>
+                            <td style="padding: 0.5rem;">R0 = 2x (scaled by 1000)</td>
+                        </tr>
+                    </table>
+                    <strong>Example:</strong>
+                    <pre><code>; Calculate f'(5) = 2*5 = 10
+LOAD R0, 5000    ; x = 5.000
+CALL derivative_x_squared
+PRINT R0         ; Outputs ~10000 (10.000)</code></pre>
+                </div>
+
+                <div class="function-box">
+                    <h3>derivative_x_cubed</h3>
+                    <p>Calculates f'(x) = 3x² for f(x) = x³.</p>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <tr>
+                            <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Input</th>
+                            <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Output</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem;">R0 = x (scaled by 1000)</td>
+                            <td style="padding: 0.5rem;">R0 = 3x² (scaled by 1000)</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="function-box">
+                    <h3>derivative_sin</h3>
+                    <p>Calculates the derivative of sin(x) where x is in degrees: d/dx sin(x) = cos(x) × (π/180).</p>
+                </div>
+
+                <div class="function-box">
+                    <h3>derivative_cos</h3>
+                    <p>Calculates the derivative of cos(x): d/dx cos(x) = -sin(x) × (π/180).</p>
+                </div>
+
+                <div class="function-box">
+                    <h3>derivative_exp</h3>
+                    <p>Calculates the derivative of e^x: d/dx e^x = e^x (the derivative of e^x is itself!).</p>
+                </div>
+
+                <div class="function-box">
+                    <h3>derivative_ln</h3>
+                    <p>Calculates the derivative of ln(x): d/dx ln(x) = 1/x.</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>Integral Functions</h2>
+
+                <div class="function-box">
+                    <h3>integral_x_squared</h3>
+                    <p>Calculates the definite integral ∫[a,b] x² dx analytically using the formula: (b³ - a³) / 3</p>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <tr>
+                            <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Input</th>
+                            <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Output</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem;">R0 = a (lower bound, scaled)<br/>R1 = b (upper bound, scaled)</td>
+                            <td style="padding: 0.5rem;">R0 = ∫[a,b] x² dx (scaled by 1000)</td>
+                        </tr>
+                    </table>
+                    <strong>Example:</strong>
+                    <pre><code>; Calculate ∫[0,5] x² dx = 125/3 ≈ 41.667
+LOAD R0, 0       ; a = 0
+LOAD R1, 5000    ; b = 5.000
+CALL integral_x_squared
+PRINT R0         ; Outputs ~41667 (41.667)</code></pre>
+                </div>
+
+                <div class="function-box">
+                    <h3>integral_trapezoidal_x_squared</h3>
+                    <p>Numerical integration using the trapezoidal rule (more accurate than rectangular rule).</p>
+                    <div class="method-box">
+                        <strong>Trapezoidal Rule:</strong> ∫[a,b] f(x) dx ≈ (b-a)/2 × [f(a) + f(b)] + Σ f(x_i)
+                    </div>
+                    <p><strong>Input:</strong> R0 = a, R1 = b, R2 = Δx (all scaled by 1000)</p>
+                </div>
+
+                <div class="function-box">
+                    <h3>integral_simpson_x_squared</h3>
+                    <p>Numerical integration using Simpson's rule (most accurate).</p>
+                    <div class="method-box">
+                        <strong>Simpson's Rule:</strong> ∫[a,b] f(x) dx ≈ (b-a)/6 × [f(a) + 4f((a+b)/2) + f(b)]
+                    </div>
+                    <p><strong>Input:</strong> R0 = a, R1 = b, R2 = Δx (all scaled by 1000)</p>
+                </div>
+
+                <div class="function-box">
+                    <h3>integral_sin</h3>
+                    <p>Definite integral of sin(x) from a to b (x in degrees).</p>
+                </div>
+
+                <div class="function-box">
+                    <h3>integral_cos</h3>
+                    <p>Definite integral of cos(x) from a to b (x in degrees).</p>
+                </div>
+
+                <div class="function-box">
+                    <h3>integral_exp</h3>
+                    <p>Definite integral of e^x: ∫[a,b] e^x dx = e^b - e^a</p>
+                </div>
+
+                <div class="function-box">
+                    <h3>integral_ln</h3>
+                    <p>Definite integral of 1/x: ∫[a,b] 1/x dx = ln(b) - ln(a)</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>Numerical Methods</h2>
+                <p>Romasm uses several numerical methods for calculus operations:</p>
+
+                <div class="function-box">
+                    <h3>Central Difference (Derivatives)</h3>
+                    <p>f'(x) ≈ (f(x+h) - f(x-h)) / (2h)</p>
+                    <p>More accurate than forward difference, uses values on both sides of x.</p>
+                </div>
+
+                <div class="function-box">
+                    <h3>Rectangular Rule (Integration)</h3>
+                    <p>∫[a,b] f(x) dx ≈ Σ f(x_i) × Δx</p>
+                    <p>Simplest method, approximates area as rectangles.</p>
+                </div>
+
+                <div class="function-box">
+                    <h3>Trapezoidal Rule (Integration)</h3>
+                    <p>More accurate than rectangular rule, uses trapezoids instead of rectangles.</p>
+                </div>
+
+                <div class="function-box">
+                    <h3>Simpson's Rule (Integration)</h3>
+                    <p>Most accurate numerical integration method, uses parabolic approximations.</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>Related Documentation</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="stdlib-math.html">Basic Math Functions</a> - Fundamental operations</li>
+                    <li><a href="stdlib-trig.html">Trigonometric Functions</a> - sin, cos</li>
+                    <li><a href="stdlib-advanced.html">Advanced Math</a> - exp, ln</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Standard Library - Binary Operations - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .function-box {
+            background: var(--surface);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+        .function-box h3 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Standard Library - Binary Operations</h1>
+            <p class="subtitle">Bitwise operations for Romasm assembly</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section>
+                <h2>Overview</h2>
+                <p>The Romasm binary operations library (<code>stdlib/binary.romasm</code>) provides bitwise operations: AND, OR, XOR, and NOT. These operations work on the binary representation of integers.</p>
+                <p><strong>Note:</strong> These are different from the Basic Romasm binary operations (which work on Roman symbol states). These operate on standard integer bit patterns.</p>
+            </section>
+
+            <section>
+                <h2>Available Functions</h2>
+
+                <div class="function-box">
+                    <h3>bitwise_and</h3>
+                    <p>Performs bitwise AND operation: result = value1 & value2</p>
+                    <p>Each bit in the result is 1 only if both corresponding bits in the inputs are 1.</p>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <tr>
+                            <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Input</th>
+                            <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Output</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem;">R0 = value1<br/>R1 = value2</td>
+                            <td style="padding: 0.5rem;">R0 = value1 & value2</td>
+                        </tr>
+                    </table>
+                    <strong>Example:</strong>
+                    <pre><code>; Calculate 5 & 3 = 1
+; 5 = 101₂, 3 = 011₂
+; AND = 001₂ = 1
+LOAD R0, 5
+LOAD R1, 3
+CALL bitwise_and
+PRINT R0         ; Outputs: 1</code></pre>
+                </div>
+
+                <div class="function-box">
+                    <h3>bitwise_or</h3>
+                    <p>Performs bitwise OR operation: result = value1 | value2</p>
+                    <p>Each bit in the result is 1 if either corresponding bit in the inputs is 1.</p>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <tr>
+                            <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Input</th>
+                            <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Output</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem;">R0 = value1<br/>R1 = value2</td>
+                            <td style="padding: 0.5rem;">R0 = value1 | value2</td>
+                        </tr>
+                    </table>
+                    <strong>Example:</strong>
+                    <pre><code>; Calculate 5 | 3 = 7
+; 5 = 101₂, 3 = 011₂
+; OR = 111₂ = 7
+LOAD R0, 5
+LOAD R1, 3
+CALL bitwise_or
+PRINT R0         ; Outputs: 7</code></pre>
+                </div>
+
+                <div class="function-box">
+                    <h3>bitwise_xor</h3>
+                    <p>Performs bitwise XOR (exclusive OR) operation: result = value1 ^ value2</p>
+                    <p>Each bit in the result is 1 if the corresponding bits in the inputs are different.</p>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <tr>
+                            <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Input</th>
+                            <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Output</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem;">R0 = value1<br/>R1 = value2</td>
+                            <td style="padding: 0.5rem;">R0 = value1 ^ value2</td>
+                        </tr>
+                    </table>
+                    <strong>Example:</strong>
+                    <pre><code>; Calculate 5 ^ 3 = 6
+; 5 = 101₂, 3 = 011₂
+; XOR = 110₂ = 6
+LOAD R0, 5
+LOAD R1, 3
+CALL bitwise_xor
+PRINT R0         ; Outputs: 6</code></pre>
+                </div>
+
+                <div class="function-box">
+                    <h3>bitwise_not</h3>
+                    <p>Performs bitwise NOT operation (complement): result = ~value</p>
+                    <p>Flips all bits: 0 becomes 1, 1 becomes 0.</p>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <tr>
+                            <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Input</th>
+                            <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Output</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem;">R0 = value</td>
+                            <td style="padding: 0.5rem;">R0 = ~value</td>
+                        </tr>
+                    </table>
+                    <strong>Example:</strong>
+                    <pre><code>; Calculate ~5
+; 5 = 101₂ (in 16-bit: 0000000000000101)
+; NOT = 1111111111111010 = 65530 (16-bit)
+LOAD R0, 5
+CALL bitwise_not
+PRINT R0         ; Outputs: 65530 (for 16-bit)</code></pre>
+                </div>
+            </section>
+
+            <section>
+                <h2>Implementation Details</h2>
+                <p>These functions implement bitwise operations by:</p>
+                <ol>
+                    <li>Processing bits one at a time (from least significant to most significant)</li>
+                    <li>Using MOD 2 to extract the lowest bit</li>
+                    <li>Using SHR (shift right) to move to the next bit</li>
+                    <li>Using SHL (shift left) to build the result</li>
+                </ol>
+                <p><strong>Note:</strong> The current implementation processes up to 32 bits, but can be extended for larger values.</p>
+            </section>
+
+            <section>
+                <h2>Use Cases</h2>
+                <ul>
+                    <li><strong>Flags:</strong> Pack multiple boolean flags into a single integer</li>
+                    <li><strong>Masks:</strong> Extract specific bits from values</li>
+                    <li><strong>Cryptography:</strong> XOR operations for simple encryption</li>
+                    <li><strong>Low-level Programming:</strong> Direct bit manipulation</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Related Documentation</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="instruction-set.html">Instruction Set</a> - SHL and SHR instructions</li>
+                    <li><a href="stdlib-math.html">Basic Math Functions</a> - Other stdlib functions</li>
+                    <li><a href="linker.html">Linker System</a> - How to use stdlib functions</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+

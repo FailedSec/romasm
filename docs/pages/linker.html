@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linker System - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .linker-box {
+            background: var(--surface);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Romasm Linker System</h1>
+            <p class="subtitle">Linking user code with standard library functions</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section>
+                <h2>Overview</h2>
+                <p>The Romasm Linker (<code>linker/romasm-linker.js</code>) combines user-written Romasm code with standard library functions, allowing you to call functions like <code>sin</code>, <code>cos</code>, <code>sqrt</code> without copying their code.</p>
+            </section>
+
+            <section>
+                <h2>How It Works</h2>
+
+                <div class="linker-box">
+                    <h3>Step 1: Load Standard Library</h3>
+                    <p>The linker loads and assembles stdlib files:</p>
+                    <ul>
+                        <li><code>stdlib/trig.romasm</code> - Trigonometric functions</li>
+                        <li><code>stdlib/math.romasm</code> - Basic math functions</li>
+                        <li><code>stdlib/calculus.romasm</code> - Calculus functions</li>
+                        <li><code>stdlib/advanced-math.romasm</code> - Advanced math</li>
+                        <li><code>stdlib/sine-taylor.romasm</code> - High-precision sine</li>
+                    </ul>
+                    <p>It extracts function labels (like <code>sin:</code>, <code>cos:</code>) and records their addresses.</p>
+                </div>
+
+                <div class="linker-box">
+                    <h3>Step 2: Assemble User Code</h3>
+                    <p>Your Romasm code is assembled normally. When you write <code>CALL sin</code>, the assembler creates an unresolved label reference:</p>
+                    <pre><code>{
+    opcode: 'CA',
+    operands: [{
+        type: 'label',
+        value: 0,           // Placeholder
+        labelName: 'sin'    // Function name for linker
+    }]
+}</code></pre>
+                </div>
+
+                <div class="linker-box">
+                    <h3>Step 3: Link Functions</h3>
+                    <p>The linker:</p>
+                    <ol>
+                        <li>Combines stdlib instructions with user instructions</li>
+                        <li>Resolves <code>CALL sin</code> to the actual stdlib function address</li>
+                        <li>Creates a function map for reference</li>
+                    </ol>
+                    <pre><code>; Before linking:
+CALL sin  ; Unresolved, value = 0
+
+; After linking:
+CALL sin  ; Resolved to stdlib address, e.g., value = 42</code></pre>
+                </div>
+            </section>
+
+            <section>
+                <h2>Using the Linker</h2>
+
+                <div class="linker-box">
+                    <h3>In the Calculator</h3>
+                    <p>The linker is automatically used when you call stdlib functions. Just write:</p>
+                    <pre><code>LOAD R0, 3000
+CALL sin
+PRINT R0</code></pre>
+                    <p>The calculator engine handles linking automatically.</p>
+                </div>
+
+                <div class="linker-box">
+                    <h3>In the IDE</h3>
+                    <p>You may need to manually enable stdlib linking, or include stdlib code directly in your program.</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>Function Resolution</h2>
+                <p>When the linker encounters <code>CALL function_name</code>:</p>
+                <ol>
+                    <li>It checks if <code>function_name</code> exists in the stdlib</li>
+                    <li>If found, replaces the placeholder address with the real address</li>
+                    <li>If not found, logs a warning (but doesn't fail - in case it's a user-defined function)</li>
+                </ol>
+            </section>
+
+            <section>
+                <h2>Available Functions</h2>
+                <p>Functions available through the linker include:</p>
+                <ul>
+                    <li><strong>Math:</strong> <code>factorial</code>, <code>power</code>, <code>sqrt</code></li>
+                    <li><strong>Trig:</strong> <code>sin</code>, <code>cos</code></li>
+                    <li><strong>Calculus:</strong> <code>derivative_x_squared</code>, <code>integral_x_squared</code>, etc.</li>
+                    <li><strong>Advanced:</strong> <code>exp</code>, <code>ln</code></li>
+                </ul>
+                <p>See the <a href="stdlib-math.html">Standard Library documentation</a> for complete lists.</p>
+            </section>
+
+            <section>
+                <h2>Related Documentation</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="assembler.html">Assembler</a> - How code is assembled</li>
+                    <li><a href="stdlib-math.html">Standard Library - Math</a> - Available functions</li>
+                    <li><a href="stdlib-trig.html">Standard Library - Trigonometry</a> - Trig functions</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Romasm Calculator - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .feature-box {
+            background: var(--surface);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Romasm Calculator</h1>
+            <p class="subtitle">Full-featured graphics calculator powered entirely by Romasm assembly</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section>
+                <h2>Overview</h2>
+                <p>The Romasm Calculator (<code>romasm-calculator.html</code>) is a TI-84-like calculator interface that performs all calculations using Romasm assembly. It includes function plotting, polar curves, parametric equations, and a console for running Romasm scripts.</p>
+            </section>
+
+            <section>
+                <h2>Modes</h2>
+
+                <div class="feature-box">
+                    <h3>Function Mode (y = f(x))</h3>
+                    <p>Plot standard functions where y is a function of x:</p>
+                    <ul>
+                        <li>Define up to 8 functions (Y1-Y8)</li>
+                        <li>Each function is Romasm assembly code</li>
+                        <li>Input: R0 = x (scaled by 100)</li>
+                        <li>Output: R0 = f(x) (scaled by 100)</li>
+                    </ul>
+                    <pre><code>; Example: Y1 = x²
+LOAD R1, R0    ; Copy x to R1
+MUL R0, R1     ; R0 = x * x = x²
+LOAD R1, 100
+DIV R0, R1     ; Scale down
+RET</code></pre>
+                </div>
+
+                <div class="feature-box">
+                    <h3>Polar Mode (r = f(θ))</h3>
+                    <p>Plot polar curves where r is a function of θ:</p>
+                    <ul>
+                        <li>Define polar functions</li>
+                        <li>Input: R0 = θ in degrees (scaled by 100)</li>
+                        <li>Output: R0 = r (scaled by 100)</li>
+                        <li>Automatically converts to Cartesian coordinates</li>
+                    </ul>
+                    <pre><code>; Example: r = cos(3θ)
+LOAD R0, R0     ; θ
+LOAD R1, 3
+MUL R0, R1      ; 3θ
+CALL cos        ; cos(3θ)
+RET</code></pre>
+                </div>
+
+                <div class="feature-box">
+                    <h3>Parametric Mode (x = f(t), y = g(t))</h3>
+                    <p>Plot parametric equations (coming soon).</p>
+                </div>
+
+                <div class="feature-box">
+                    <h3>Sequence Mode (u_n)</h3>
+                    <p>Plot sequences (coming soon).</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>Calculator Features</h2>
+
+                <div class="feature-box">
+                    <h3>Y= Editor</h3>
+                    <p>Define and edit functions:</p>
+                    <ul>
+                        <li>Click "Y=" button to open editor</li>
+                        <li>Enter Romasm assembly for each function</li>
+                        <li>Functions are automatically compiled and linked with stdlib</li>
+                    </ul>
+                </div>
+
+                <div class="feature-box">
+                    <h3>WINDOW Settings</h3>
+                    <p>Configure graph bounds:</p>
+                    <ul>
+                        <li><strong>X Min/Max:</strong> Horizontal range</li>
+                        <li><strong>Y Min/Max:</strong> Vertical range</li>
+                        <li><strong>θ Min/Max:</strong> Angle range (for polar mode)</li>
+                        <li><strong>Step Size:</strong> Resolution of plotting</li>
+                    </ul>
+                </div>
+
+                <div class="feature-box">
+                    <h3>ZOOM</h3>
+                    <p>Quick zoom presets:</p>
+                    <ul>
+                        <li>Zoom In/Out</li>
+                        <li>Zoom to fit</li>
+                        <li>Standard window</li>
+                    </ul>
+                </div>
+
+                <div class="feature-box">
+                    <h3>TRACE</h3>
+                    <p>Trace along plotted functions to see exact values (coming soon).</p>
+                </div>
+
+                <div class="feature-box">
+                    <h3>GRAPH</h3>
+                    <p>Plot all enabled functions on the graph.</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>Calculator Mode</h2>
+                <p>The calculator includes a home screen mode for direct expression evaluation:</p>
+                <ul>
+                    <li>Enter mathematical expressions</li>
+                    <li>Expressions are parsed and converted to Romasm</li>
+                    <li>Results are displayed on screen</li>
+                    <li>Supports arithmetic, trigonometric functions, and more</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Console</h2>
+                <p>The calculator includes a Romasm console for running arbitrary scripts:</p>
+                <ul>
+                    <li>Write Romasm assembly code</li>
+                    <li>Use drawing opcodes (MOVE, DRAW, STROKE, CLEAR)</li>
+                    <li>Output coordinate pairs that auto-plot on graph</li>
+                    <li>Pre-defined examples in dropdown</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Standard Library Integration</h2>
+                <p>The calculator automatically links with stdlib functions, so you can use:</p>
+                <ul>
+                    <li><code>CALL sin</code>, <code>CALL cos</code> - Trigonometric functions</li>
+                    <li><code>CALL sqrt</code> - Square root</li>
+                    <li><code>CALL exp</code>, <code>CALL ln</code> - Advanced math</li>
+                    <li>And all other stdlib functions</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Related Documentation</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="expression-parser.html">Expression Parser</a> - How expressions are converted to Romasm</li>
+                    <li><a href="canvas-drawing.html">Canvas Drawing</a> - Drawing opcodes</li>
+                    <li><a href="linker.html">Linker System</a> - How stdlib functions are linked</li>
+                    <li><a href="../../romasm-calculator.html">Try the Calculator</a> - Open it now!</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+

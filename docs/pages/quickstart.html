@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Romasm Quick Start - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .example-box {
+            background: var(--surface);
+            border-left: 4px solid var(--accent);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+        .example-box h4 {
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+        pre {
+            background: var(--background);
+            padding: 1rem;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .step {
+            background: var(--surface);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+            border-left: 4px solid var(--primary-color);
+        }
+        .step-number {
+            display: inline-block;
+            background: var(--primary-color);
+            color: white;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 2rem;
+            margin-right: 1rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Romasm Quick Start</h1>
+            <p class="subtitle">Get started with Romasm in 5 minutes</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section>
+                <h2>Your First Program</h2>
+                <p>Let's write a simple program that adds two numbers and prints the result.</p>
+
+                <div class="step">
+                    <span class="step-number">1</span>
+                    <strong>Open the Romasm IDE</strong>
+                    <p>Navigate to the <a href="../../ide.html" target="_blank">Romasm IDE</a> in your browser.</p>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">2</span>
+                    <strong>Write Your Code</strong>
+                    <p>Enter this simple program:</p>
+                    <div class="example-box">
+                        <pre><code>; Add two numbers
+LOAD R0, 10      ; Load 10 into R0
+LOAD R1, 20      ; Load 20 into R1
+ADD R0, R1       ; R0 = R0 + R1 (now 30)
+PRINT R0         ; Print the result</code></pre>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <span class="step-number">3</span>
+                    <strong>Run It!</strong>
+                    <p>Click the "Run" button. You should see <code>30</code> in the output.</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>Understanding the Code</h2>
+                <div class="example-box">
+                    <h4>LOAD Instruction</h4>
+                    <p><code>LOAD R0, 10</code> loads the value <code>10</code> into register <code>R0</code>.</p>
+                    <p>Registers are named <code>R0</code> through <code>R8</code>, which map to Roman numerals <code>I</code> through <code>IX</code>.</p>
+                </div>
+
+                <div class="example-box">
+                    <h4>ADD Instruction</h4>
+                    <p><code>ADD R0, R1</code> adds the value in <code>R1</code> to <code>R0</code> and stores the result in <code>R0</code>.</p>
+                    <p>After this instruction, <code>R0</code> contains <code>30</code> (10 + 20).</p>
+                </div>
+
+                <div class="example-box">
+                    <h4>PRINT Instruction</h4>
+                    <p><code>PRINT R0</code> outputs the value in <code>R0</code> to the console.</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>More Examples</h2>
+
+                <div class="example-box">
+                    <h4>Example 1: Multiplication</h4>
+                    <pre><code>; Calculate 5 * 7
+LOAD R0, 5
+LOAD R1, 7
+MUL R0, R1       ; R0 = R0 * R1 = 35
+PRINT R0</code></pre>
+                </div>
+
+                <div class="example-box">
+                    <h4>Example 2: Loop</h4>
+                    <pre><code>; Print numbers 1 to 5
+LOAD R0, 1       ; Counter
+LOAD R1, 5       ; Max value
+
+loop:
+  PRINT R0       ; Print current number
+  INC R0         ; Increment counter
+  CMP R0, R1     ; Compare R0 with R1
+  JLE loop       ; Jump to loop if R0 <= R1</code></pre>
+                </div>
+
+                <div class="example-box">
+                    <h4>Example 3: Conditional</h4>
+                    <pre><code>; Check if number is even
+LOAD R0, 8
+LOAD R1, 2
+MOD R0, R1       ; R0 = R0 % 2
+LOAD R2, 0
+CMP R0, R2       ; Compare remainder with 0
+JEQ is_even      ; Jump if equal (even)
+; Odd number
+LOAD R3, 1
+PRINT R3
+JMP done
+
+is_even:
+LOAD R3, 0
+PRINT R3
+
+done:</code></pre>
+                </div>
+            </section>
+
+            <section>
+                <h2>Using Standard Library Functions</h2>
+                <p>Romasm includes a standard library with pre-built functions. To use them, you need to link your code with the stdlib.</p>
+
+                <div class="example-box">
+                    <h4>Example: Calculate Sine</h4>
+                    <pre><code>; Calculate sin(30 degrees)
+; Note: This requires linking with stdlib
+LOAD R0, 3000    ; 30 degrees (scaled by 100)
+CALL sin         ; Call sin function from stdlib
+; Result in R0 (scaled by 1000)
+PRINT R0</code></pre>
+                    <p><strong>Note:</strong> In the IDE, you'll need to enable stdlib linking. In the calculator, this is handled automatically.</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>Next Steps</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="instruction-set.html">Learn all instructions</a> - Complete reference</li>
+                    <li><a href="syntax.html">Syntax & conventions</a> - Writing clean Romasm code</li>
+                    <li><a href="stdlib-math.html">Standard library</a> - Available functions</li>
+                    <li><a href="../../ide.html">Try the IDE</a> - Experiment with code</li>
+                    <li><a href="../../romasm-calculator.html">Try the Calculator</a> - Plot functions and draw graphics</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+

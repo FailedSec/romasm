@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collatz Conjecture Explorer - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .info-box {
+            background: var(--surface);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Collatz Conjecture Explorer</h1>
+            <p class="subtitle">Exploring the 3n+1 problem with Romasm and BigInt</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section>
+                <h2>Overview</h2>
+                <p>The Collatz Conjecture Explorer allows you to test the Collatz conjecture (3n+1 problem) using Romasm assembly with BigInt support for numbers beyond JavaScript's safe integer limit.</p>
+            </section>
+
+            <section>
+                <h2>The Collatz Conjecture</h2>
+                <div class="info-box">
+                    <h3>What is it?</h3>
+                    <p>Start with any positive integer n. Then repeatedly apply:</p>
+                    <ul>
+                        <li>If n is even: n → n/2</li>
+                        <li>If n is odd: n → 3n + 1</li>
+                    </ul>
+                    <p>The conjecture states that <strong>every starting number eventually reaches 1</strong>, regardless of how large it is.</p>
+                    <p><strong>Status:</strong> Unproven, but verified up to ~2^71 (as of 2025).</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>Romasm Implementation</h2>
+                <p>The explorer uses Romasm assembly to compute Collatz sequences:</p>
+                <pre><code>; Collatz sequence in Romasm
+LOAD R1, 1        ; Constant 1
+LOAD R2, 2        ; Constant 2
+LOAD R3, 3        ; Constant 3
+
+loop:
+  CMP R0, R1      ; Check if current number is 1
+  JEQ done        ; If 1, we're done
+  
+  PRINT R0        ; Print current number
+  
+  ; Check if even (R0 % 2 == 0)
+  LOAD R4, R0
+  MOD R4, R2      ; R4 = R0 % 2
+  CMP R4, R1      ; Compare with 1
+  JEQ is_odd      ; If R4 == 1, it's odd
+  
+  ; Even: divide by 2
+  SHR R0, R1      ; R0 = R0 >> 1 (divide by 2)
+  JMP loop
+  
+is_odd:
+  ; Odd: multiply by 3 and add 1
+  MUL R0, R3      ; R0 = R0 * 3
+  ADD R0, R1      ; R0 = R0 + 1
+  JMP loop
+
+done:
+  PRINT R1        ; Print final 1</code></pre>
+            </section>
+
+            <section>
+                <h2>BigInt Support</h2>
+                <p>For numbers beyond JavaScript's safe integer limit (2^53), the explorer uses BigInt arithmetic:</p>
+                <ul>
+                    <li>Numbers are stored as strings</li>
+                    <li>Operations are performed digit-by-digit</li>
+                    <li>Allows testing numbers with hundreds of digits</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Using the Explorer</h2>
+                <ol>
+                    <li>Enter a starting number (can be very large)</li>
+                    <li>Click "Run Collatz Sequence"</li>
+                    <li>View the sequence as it's computed</li>
+                    <li>See the total number of steps to reach 1</li>
+                </ol>
+            </section>
+
+            <section>
+                <h2>Related Documentation</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="stdlib-bigint.html">Big Integer Support</a> - How BigInt works</li>
+                    <li><a href="../../collatz.html">Try the Explorer</a> - Open it now!</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+

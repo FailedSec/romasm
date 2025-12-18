@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Machine - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .vm-box {
+            background: var(--surface);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+        .vm-box h3 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        .code-example {
+            background: var(--background);
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Romasm Virtual Machine</h1>
+            <p class="subtitle">How the VM executes Romasm instructions</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section>
+                <h2>Overview</h2>
+                <p>The Romasm Virtual Machine (VM) is a <strong>JavaScript-based interpreter</strong> that executes Romasm assembly instructions. It's not compiled to machine code or WebAssembly - it's a pure JavaScript interpreter that simulates a CPU.</p>
+            </section>
+
+            <section>
+                <h2>VM Architecture</h2>
+
+                <div class="vm-box">
+                    <h3>Registers</h3>
+                    <p>The VM maintains 9 registers (R0-R8, mapped to Roman numerals I-IX):</p>
+                    <div class="code-example">
+                        <pre><code>this.registers = {
+    'I': 0, 'II': 0, 'III': 0, 'IV': 0, 'V': 0,
+    'VI': 0, 'VII': 0, 'VIII': 0, 'IX': 0
+};</code></pre>
+                    </div>
+                </div>
+
+                <div class="vm-box">
+                    <h3>Memory</h3>
+                    <p>A sparse associative array for memory storage:</p>
+                    <div class="code-example">
+                        <pre><code>this.memory = {};  // Address -> Value mapping</code></pre>
+                    </div>
+                </div>
+
+                <div class="vm-box">
+                    <h3>Stack</h3>
+                    <p>Used for function calls and temporary storage:</p>
+                    <div class="code-example">
+                        <pre><code>this.stack = [];  // Array-based stack</code></pre>
+                    </div>
+                </div>
+
+                <div class="vm-box">
+                    <h3>Program Counter</h3>
+                    <p>Tracks the current instruction being executed:</p>
+                    <div class="code-example">
+                        <pre><code>this.pc = 0;  // Current instruction index</code></pre>
+                    </div>
+                </div>
+
+                <div class="vm-box">
+                    <h3>Flags</h3>
+                    <p>Status flags set by comparison operations:</p>
+                    <div class="code-example">
+                        <pre><code>this.flags = {
+    equal: false,
+    lessThan: false,
+    greaterThan: false
+};</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h2>Execution Loop</h2>
+                <p>The VM executes instructions in a loop until the program halts:</p>
+
+                <div class="vm-box">
+                    <h3>Step-by-Step Execution</h3>
+                    <div class="code-example">
+                        <pre><code>while (!this.halted && steps < maxSteps) {
+    // 1. Fetch instruction at PC
+    const instruction = this.instructions[this.pc];
+    
+    // 2. Execute the instruction
+    this.executeInstruction(instruction);
+    
+    // 3. Increment program counter (unless jumped)
+    this.pc++;
+    
+    // 4. Check for halt condition
+    if (this.halted) break;
+}</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h2>Instruction Execution</h2>
+                <p>Each instruction is executed by a switch statement that maps opcodes to operations:</p>
+
+                <div class="vm-box">
+                    <h3>Example: ADD Instruction</h3>
+                    <div class="code-example">
+                        <pre><code>case 'A': // ADD
+    const reg1 = operands[0].value;  // 'I' (R0)
+    const reg2 = operands[1].value;  // 'II' (R1)
+    this.registers[reg1] += this.registers[reg2];
+    break;</code></pre>
+                    </div>
+                    <p>When you write <code>ADD R0, R1</code>, the VM actually executes:</p>
+                    <div class="code-example">
+                        <pre><code>this.registers['I'] += this.registers['II'];</code></pre>
+                    </div>
+                </div>
+
+                <div class="vm-box">
+                    <h3>Example: LOAD Instruction</h3>
+                    <div class="code-example">
+                        <pre><code>case 'L': // LOAD
+    const reg = operands[0].value;
+    const src = operands[1];
+    if (src.type === 'immediate') {
+        this.registers[reg] = src.value;
+    } else if (src.type === 'register') {
+        this.registers[reg] = this.registers[src.value];
+    } else if (src.isMemory) {
+        this.registers[reg] = this.memory[src.value] || 0;
+    }
+    break;</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h2>Function Calls</h2>
+                <div class="vm-box">
+                    <h3>CALL Instruction</h3>
+                    <p>When <code>CALL function_name</code> is executed:</p>
+                    <ol>
+                        <li>Push current PC to stack (return address)</li>
+                        <li>Jump to function's address</li>
+                    </ol>
+                    <div class="code-example">
+                        <pre><code>case 'CA': // CALL
+    this.stack.push(this.pc);  // Save return address
+    this.pc = operands[0].value - 1;  // Jump to function
+    break;</code></pre>
+                    </div>
+                </div>
+
+                <div class="vm-box">
+                    <h3>RET Instruction</h3>
+                    <p>When <code>RET</code> is executed:</p>
+                    <ol>
+                        <li>Pop return address from stack</li>
+                        <li>Jump back to caller</li>
+                    </ol>
+                    <div class="code-example">
+                        <pre><code>case 'R': // RET
+    if (this.stack.length > 0) {
+        this.pc = this.stack.pop();  // Restore return address
+    } else {
+        this.halted = true;  // No return address = program end
+    }
+    break;</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h2>Canvas Integration</h2>
+                <p>The VM can be initialized with a canvas context for drawing operations:</p>
+                <div class="vm-box">
+                    <h3>Drawing Opcodes</h3>
+                    <div class="code-example">
+                        <pre><code>case 'MOV': // MOVE
+    const y = this.stack.pop();
+    const x = this.stack.pop();
+    if (this.canvasContext) {
+        this.canvasContext.moveTo(x, y);
+    }
+    break;
+
+case 'DRW': // DRAW
+    const y = this.stack.pop();
+    const x = this.stack.pop();
+    if (this.canvasContext) {
+        this.canvasContext.lineTo(x, y);
+    }
+    break;</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h2>Safety Features</h2>
+                <div class="vm-box">
+                    <h3>Maximum Steps</h3>
+                    <p>The VM has a safety limit to prevent infinite loops:</p>
+                    <div class="code-example">
+                        <pre><code>run(maxSteps = 10000) {
+    while (!this.halted && steps < maxSteps) {
+        // Execute instructions...
+    }
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="vm-box">
+                    <h3>Error Handling</h3>
+                    <p>Division by zero and other errors are caught:</p>
+                    <div class="code-example">
+                        <pre><code>case 'DI': // DIV
+    const divisor = this.registers[reg2];
+    if (divisor === 0) {
+        throw new Error('Division by zero');
+    }
+    // ... perform division
+    break;</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h2>Related Documentation</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="assembler.html">Assembler</a> - How code is converted to instructions</li>
+                    <li><a href="instruction-set.html">Instruction Set</a> - All available instructions</li>
+                    <li><a href="registers.html">Registers & Memory</a> - Understanding the register system</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+

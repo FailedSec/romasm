@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graphics Calculator - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .feature-box {
+            background: var(--surface);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Graphics Calculator</h1>
+            <p class="subtitle">Original graphics calculator for plotting Romasm functions</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section>
+                <h2>Overview</h2>
+                <p>The Graphics Calculator (<code>calculator.html</code>) is the original Romasm function plotting tool. It allows you to plot Romasm functions with customizable graph bounds and includes support for both Cartesian and polar coordinate plotting.</p>
+                <p><strong>Note:</strong> For a more full-featured calculator experience, see the <a href="calculator.html">Romasm Calculator</a>.</p>
+            </section>
+
+            <section>
+                <h2>Features</h2>
+
+                <div class="feature-box">
+                    <h3>Function Plotting</h3>
+                    <p>Plot functions defined in Romasm assembly:</p>
+                    <ul>
+                        <li>Enter Romasm code for f(x)</li>
+                        <li>Input: R0 = x (scaled by 100)</li>
+                        <li>Output: R0 = f(x) (scaled by 100)</li>
+                        <li>Functions are evaluated at multiple points and plotted</li>
+                    </ul>
+                </div>
+
+                <div class="feature-box">
+                    <h3>Graph Modes</h3>
+                    <p>Switch between different plotting modes:</p>
+                    <ul>
+                        <li><strong>Function Mode:</strong> y = f(x) - Standard Cartesian plotting</li>
+                        <li><strong>Polar Mode:</strong> r = f(θ) - Polar coordinate plotting</li>
+                    </ul>
+                </div>
+
+                <div class="feature-box">
+                    <h3>Customizable Bounds</h3>
+                    <p>Set graph window settings:</p>
+                    <ul>
+                        <li>X Min/Max - Horizontal range</li>
+                        <li>Y Min/Max - Vertical range</li>
+                        <li>Step Size - Resolution of plotting</li>
+                        <li>Auto-adjustment for polar curves</li>
+                    </ul>
+                </div>
+
+                <div class="feature-box">
+                    <h3>Preset Functions</h3>
+                    <p>Quick-load preset functions:</p>
+                    <ul>
+                        <li>Basic: x², x³, sin(x), cos(x)</li>
+                        <li>Polar: Rose curves, cardioid, spiral</li>
+                        <li>Advanced: Exponential, logarithmic</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section>
+                <h2>Using the Graphics Calculator</h2>
+
+                <div class="feature-box">
+                    <h3>Step 1: Select Mode</h3>
+                    <p>Choose "Function (y=f(x))" or "Polar (r=f(θ))" from the dropdown.</p>
+                </div>
+
+                <div class="feature-box">
+                    <h3>Step 2: Enter Function</h3>
+                    <p>Type or select a Romasm function. For example, to plot y = x²:</p>
+                    <pre><code>LOAD R1, R0
+MUL R0, R1
+LOAD R1, 100
+DIV R0, R1
+RET</code></pre>
+                </div>
+
+                <div class="feature-box">
+                    <h3>Step 3: Set Bounds</h3>
+                    <p>Configure X Min/Max, Y Min/Max, and Step Size.</p>
+                </div>
+
+                <div class="feature-box">
+                    <h3>Step 4: Plot</h3>
+                    <p>Click "Run" to plot the function.</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>Polar Plotting</h2>
+                <p>In polar mode, functions define r as a function of θ:</p>
+                <ul>
+                    <li>Input: R0 = θ in degrees (scaled by 100)</li>
+                    <li>Output: R0 = r (scaled by 100)</li>
+                    <li>Automatically converts to Cartesian: x = r×cos(θ), y = r×sin(θ)</li>
+                    <li>Handles negative r values correctly</li>
+                    <li>Auto-adjusts graph bounds based on max r</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Related Documentation</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="calculator.html">Romasm Calculator</a> - Full-featured calculator</li>
+                    <li><a href="stdlib-trig.html">Trigonometric Functions</a> - For polar curves</li>
+                    <li><a href="canvas-drawing.html">Canvas Drawing</a> - How graphs are rendered</li>
+                    <li><a href="../../calculator.html">Try the Graphics Calculator</a> - Open it now!</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+

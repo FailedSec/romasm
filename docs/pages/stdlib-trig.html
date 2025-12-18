@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Standard Library - Trigonometry - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .function-box {
+            background: var(--surface);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+        .function-box h3 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        .algorithm-box {
+            background: var(--surface-light);
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Standard Library - Trigonometry</h1>
+            <p class="subtitle">Trigonometric functions using Taylor series</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section>
+                <h2>Overview</h2>
+                <p>Romasm's trigonometric functions use <strong>Taylor series expansions</strong> to calculate sine and cosine. These functions are located in <code>stdlib/trig.romasm</code> and <code>stdlib/sine-taylor.romasm</code>.</p>
+                <p><strong>Note:</strong> All angles are in <strong>degrees</strong> and scaled by 100. Results are scaled by 1000.</p>
+            </section>
+
+            <section>
+                <h2>Available Functions</h2>
+
+                <div class="function-box">
+                    <h3>sin</h3>
+                    <p>Calculates the sine of an angle using a 6-term Taylor series expansion.</p>
+                    <div class="algorithm-box">
+                        <strong>Taylor Series:</strong>
+                        <pre>sin(x) = x - x³/6 + x⁵/120 - x⁷/5040 + x⁹/362880 - x¹¹/39916800</pre>
+                    </div>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <tr>
+                            <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Input</th>
+                            <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Output</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem;">R0 = angle in degrees (scaled by 100)<br/>Example: 3000 = 30.00°</td>
+                            <td style="padding: 0.5rem;">R0 = sin(angle) × 1000<br/>Example: ~500 for sin(30°) ≈ 0.5</td>
+                        </tr>
+                    </table>
+                    <strong>Example:</strong>
+                    <pre><code>LOAD R0, 3000    ; 30 degrees (scaled by 100)
+CALL sin
+PRINT R0         ; Outputs ~500 (0.5 × 1000)</code></pre>
+                    <p><strong>Implementation:</strong> Uses argument reduction to handle angles > 90°, then applies Taylor series.</p>
+                </div>
+
+                <div class="function-box">
+                    <h3>cos</h3>
+                    <p>Calculates the cosine of an angle. Uses the identity: cos(x) = sin(90° - x)</p>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <tr>
+                            <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Input</th>
+                            <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Output</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem;">R0 = angle in degrees (scaled by 100)</td>
+                            <td style="padding: 0.5rem;">R0 = cos(angle) × 1000</td>
+                        </tr>
+                    </table>
+                    <strong>Example:</strong>
+                    <pre><code>LOAD R0, 0       ; 0 degrees
+CALL cos
+PRINT R0         ; Outputs ~1000 (1.0 × 1000)</code></pre>
+                </div>
+
+                <div class="function-box">
+                    <h3>sin_cordic</h3>
+                    <p>Simplified CORDIC (Coordinate Rotation Digital Computer) algorithm for sine. More efficient for hardware implementation.</p>
+                    <p><strong>Note:</strong> This is a simplified version. For full accuracy, use the <code>sin</code> function with Taylor series.</p>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <tr>
+                            <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Input</th>
+                            <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Output</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem;">R0 = angle in degrees (0-45°, scaled by 100)</td>
+                            <td style="padding: 0.5rem;">R0 = sin(angle) × 1000</td>
+                        </tr>
+                    </table>
+                </div>
+            </section>
+
+            <section>
+                <h2>Scaling & Fixed-Point Arithmetic</h2>
+                <div class="function-box">
+                    <h3>Input Scaling</h3>
+                    <p>Angles are specified in degrees, scaled by 100:</p>
+                    <ul>
+                        <li><code>3000</code> = 30.00°</li>
+                        <li><code>4500</code> = 45.00°</li>
+                        <li><code>9000</code> = 90.00°</li>
+                    </ul>
+                </div>
+
+                <div class="function-box">
+                    <h3>Output Scaling</h3>
+                    <p>Results are scaled by 1000:</p>
+                    <ul>
+                        <li><code>1000</code> = 1.0</li>
+                        <li><code>500</code> = 0.5</li>
+                        <li><code>866</code> ≈ 0.866 (sin(60°))</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section>
+                <h2>Argument Reduction</h2>
+                <p>For angles greater than 90°, the functions use argument reduction to map them to the 0-90° range where the Taylor series converges quickly.</p>
+                <div class="function-box">
+                    <h3>How It Works</h3>
+                    <ul>
+                        <li>Angles are reduced modulo 360°</li>
+                        <li>Angles > 90° use trigonometric identities:
+                            <ul>
+                                <li>sin(180° - x) = sin(x)</li>
+                                <li>sin(180° + x) = -sin(x)</li>
+                                <li>sin(360° - x) = -sin(x)</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+            <section>
+                <h2>Complete Example</h2>
+                <div class="function-box">
+                    <pre><code>; Calculate sin(30°) and cos(60°)
+; sin(30°) = 0.5
+; cos(60°) = 0.5
+
+; Calculate sin(30°)
+LOAD R0, 3000    ; 30 degrees (scaled by 100)
+CALL sin
+LOAD R1, R0       ; Save result in R1
+PRINT R1          ; Outputs ~500
+
+; Calculate cos(60°)
+LOAD R0, 6000    ; 60 degrees (scaled by 100)
+CALL cos
+PRINT R0          ; Outputs ~500 (same as sin(30°))</code></pre>
+                </div>
+            </section>
+
+            <section>
+                <h2>Related Documentation</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="stdlib-math.html">Basic Math Functions</a> - factorial, power, sqrt</li>
+                    <li><a href="stdlib-calculus.html">Calculus Functions</a> - derivatives and integrals of trig functions</li>
+                    <li><a href="linker.html">Linker System</a> - How to use stdlib functions</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+

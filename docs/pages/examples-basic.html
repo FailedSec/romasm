@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basic Examples - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .example-box {
+            background: var(--surface);
+            border-left: 4px solid var(--accent);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+        .example-box h3 {
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Basic Examples</h1>
+            <p class="subtitle">Simple Romasm programs to get you started</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section>
+                <h2>Hello, Romasm!</h2>
+                <div class="example-box">
+                    <h3>Example 1: Add Two Numbers</h3>
+                    <pre><code>; Add 10 + 20
+LOAD R0, 10      ; Load 10 into R0
+LOAD R1, 20      ; Load 20 into R1
+ADD R0, R1       ; R0 = R0 + R1 (now 30)
+PRINT R0         ; Output: 30</code></pre>
+                </div>
+
+                <div class="example-box">
+                    <h3>Example 2: Multiply</h3>
+                    <pre><code>; Calculate 5 * 7
+LOAD R0, 5
+LOAD R1, 7
+MUL R0, R1       ; R0 = 5 * 7 = 35
+PRINT R0         ; Output: 35</code></pre>
+                </div>
+
+                <div class="example-box">
+                    <h3>Example 3: Division</h3>
+                    <pre><code>; Calculate 100 / 4
+LOAD R0, 100
+LOAD R1, 4
+DIV R0, R1       ; R0 = 100 / 4 = 25
+PRINT R0         ; Output: 25</code></pre>
+                </div>
+            </section>
+
+            <section>
+                <h2>Loops</h2>
+                <div class="example-box">
+                    <h3>Example 4: Count from 1 to 10</h3>
+                    <pre><code>; Print numbers 1 through 10
+LOAD R0, 1       ; Counter starts at 1
+LOAD R1, 10      ; Max value
+
+loop:
+    PRINT R0     ; Print current number
+    INC R0       ; Increment counter
+    CMP R0, R1   ; Compare with max
+    JLE loop     ; Jump if R0 <= 10</code></pre>
+                </div>
+
+                <div class="example-box">
+                    <h3>Example 5: Sum 1 to 10</h3>
+                    <pre><code>; Calculate sum of 1+2+...+10
+LOAD R0, 0       ; Sum (starts at 0)
+LOAD R1, 1       ; Counter
+LOAD R2, 10      ; Max value
+
+loop:
+    ADD R0, R1   ; Add counter to sum
+    INC R1       ; Increment counter
+    CMP R1, R2   ; Compare with max
+    JLE loop     ; Continue if R1 <= 10
+
+PRINT R0         ; Output: 55</code></pre>
+                </div>
+            </section>
+
+            <section>
+                <h2>Conditionals</h2>
+                <div class="example-box">
+                    <h3>Example 6: Check if Even</h3>
+                    <pre><code>; Check if 8 is even
+LOAD R0, 8
+LOAD R1, 2
+MOD R0, R1       ; R0 = 8 % 2 = 0
+LOAD R2, 0
+CMP R0, R2       ; Compare remainder with 0
+JEQ is_even      ; Jump if equal (even)
+; Odd
+LOAD R3, 0
+PRINT R3         ; Output: 0 (false)
+JMP done
+
+is_even:
+LOAD R3, 1
+PRINT R3         ; Output: 1 (true)
+
+done:</code></pre>
+                </div>
+
+                <div class="example-box">
+                    <h3>Example 7: Find Maximum</h3>
+                    <pre><code>; Find max of 15 and 23
+LOAD R0, 15
+LOAD R1, 23
+CMP R0, R1       ; Compare R0 with R1
+JGT r0_greater   ; Jump if R0 > R1
+; R1 is greater
+LOAD R2, R1
+JMP done
+
+r0_greater:
+LOAD R2, R0
+
+done:
+PRINT R2         ; Output: 23</code></pre>
+                </div>
+            </section>
+
+            <section>
+                <h2>Memory Operations</h2>
+                <div class="example-box">
+                    <h3>Example 8: Store and Load from Memory</h3>
+                    <pre><code>; Store value to memory, then retrieve it
+LOAD R0, 42
+STORE R0, [100]  ; Store 42 to memory address 100
+LOAD R1, [100]   ; Load from memory address 100
+PRINT R1         ; Output: 42</code></pre>
+                </div>
+            </section>
+
+            <section>
+                <h2>Stack Operations</h2>
+                <div class="example-box">
+                    <h3>Example 9: Using the Stack</h3>
+                    <pre><code>; Save and restore registers using stack
+LOAD R0, 10
+LOAD R1, 20
+
+; Save to stack
+PUSH R0
+PUSH R1
+
+; Modify registers
+LOAD R0, 100
+LOAD R1, 200
+
+; Restore from stack
+POP R1           ; Restores 20
+POP R0           ; Restores 10
+
+PRINT R0         ; Output: 10
+PRINT R1         ; Output: 20</code></pre>
+                </div>
+            </section>
+
+            <section>
+                <h2>Next Steps</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="examples-math.html">Math Examples</a> - Factorial, power, square root</li>
+                    <li><a href="examples-graphics.html">Graphics Examples</a> - Drawing and plotting</li>
+                    <li><a href="quickstart.html">Quick Start</a> - Learn more basics</li>
+                    <li><a href="../../ide.html">Try in IDE</a> - Run these examples!</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+

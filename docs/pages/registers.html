@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registers & Memory - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .register-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: var(--surface);
+        }
+        .register-table th,
+        .register-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .register-table th {
+            background: var(--surface-light);
+            color: var(--primary-color);
+        }
+        .register-table tr:hover {
+            background: var(--surface-light);
+        }
+        .info-box {
+            background: var(--surface);
+            border-left: 4px solid var(--accent);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Registers & Memory</h1>
+            <p class="subtitle">Understanding Romasm's register system and memory management</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section>
+                <h2>Registers</h2>
+                <p>Romasm has 9 general-purpose registers, named <code>R0</code> through <code>R8</code>, which map to Roman numerals <code>I</code> through <code>IX</code>.</p>
+
+                <table class="register-table">
+                    <thead>
+                        <tr>
+                            <th>Register Name</th>
+                            <th>Roman Numeral</th>
+                            <th>Internal Name</th>
+                            <th>Usage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>R0</code></td>
+                            <td>I</td>
+                            <td><code>I</code></td>
+                            <td>General purpose, often used for return values</td>
+                        </tr>
+                        <tr>
+                            <td><code>R1</code></td>
+                            <td>II</td>
+                            <td><code>II</code></td>
+                            <td>General purpose, often used for constants</td>
+                        </tr>
+                        <tr>
+                            <td><code>R2</code></td>
+                            <td>III</td>
+                            <td><code>III</code></td>
+                            <td>General purpose</td>
+                        </tr>
+                        <tr>
+                            <td><code>R3</code></td>
+                            <td>IV</td>
+                            <td><code>IV</code></td>
+                            <td>General purpose</td>
+                        </tr>
+                        <tr>
+                            <td><code>R4</code></td>
+                            <td>V</td>
+                            <td><code>V</code></td>
+                            <td>General purpose</td>
+                        </tr>
+                        <tr>
+                            <td><code>R5</code></td>
+                            <td>VI</td>
+                            <td><code>VI</code></td>
+                            <td>General purpose</td>
+                        </tr>
+                        <tr>
+                            <td><code>R6</code></td>
+                            <td>VII</td>
+                            <td><code>VII</code></td>
+                            <td>General purpose</td>
+                        </tr>
+                        <tr>
+                            <td><code>R7</code></td>
+                            <td>VIII</td>
+                            <td><code>VIII</code></td>
+                            <td>General purpose</td>
+                        </tr>
+                        <tr>
+                            <td><code>R8</code></td>
+                            <td>IX</td>
+                            <td><code>IX</code></td>
+                            <td>General purpose</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="info-box">
+                    <h3>Register Conventions</h3>
+                    <p>While all registers are general-purpose, common conventions include:</p>
+                    <ul>
+                        <li><strong>R0:</strong> Often used for function arguments and return values</li>
+                        <li><strong>R1:</strong> Frequently used for constants (like 1, 2, 100, 1000)</li>
+                        <li><strong>R2-R4:</strong> Temporary values and intermediate calculations</li>
+                        <li><strong>R5-R8:</strong> Additional temporary storage</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section>
+                <h2>Memory</h2>
+                <p>Romasm has a memory system that allows you to store and retrieve values at specific addresses.</p>
+
+                <h3>Memory Addressing</h3>
+                <p>Access memory using square brackets <code>[address]</code>:</p>
+                <pre><code>; Store value to memory
+LOAD R0, 42
+STORE R0, [100]    ; Store R0 to memory address 100
+
+; Load value from memory
+LOAD R1, [100]     ; Load from memory address 100 into R1</code></pre>
+
+                <div class="info-box">
+                    <h3>Memory Characteristics</h3>
+                    <ul>
+                        <li>Memory addresses are integers (0, 1, 2, ...)</li>
+                        <li>Memory is sparse - only accessed addresses are allocated</li>
+                        <li>Uninitialized memory returns 0</li>
+                        <li>Memory persists for the duration of program execution</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section>
+                <h2>Stack</h2>
+                <p>Romasm includes a stack for function calls and temporary storage.</p>
+
+                <h3>Stack Operations</h3>
+                <pre><code>; Push a value onto the stack
+PUSH R0           ; Push R0's value onto stack
+
+; Pop a value from the stack
+POP R1            ; Pop value from stack into R1</code></pre>
+
+                <div class="info-box">
+                    <h3>Stack Usage</h3>
+                    <ul>
+                        <li><strong>Function Calls:</strong> The <code>CALL</code> instruction automatically pushes the return address</li>
+                        <li><strong>Register Preservation:</strong> Save registers before function calls</li>
+                        <li><strong>Temporary Storage:</strong> Store values temporarily when registers are full</li>
+                    </ul>
+                </div>
+
+                <h3>Example: Function with Stack</h3>
+                <pre><code>my_function:
+    ; Save registers we'll modify
+    PUSH R2
+    PUSH R3
+    
+    ; Function body
+    LOAD R2, 10
+    LOAD R3, 20
+    ADD R2, R3
+    
+    ; Restore registers
+    POP R3
+    POP R2
+    
+    RET</code></pre>
+            </section>
+
+            <section>
+                <h2>Program Counter</h2>
+                <p>The Program Counter (PC) tracks the current instruction being executed. It's automatically managed by the VM, but you can control it with jump instructions:</p>
+                <ul>
+                    <li><code>JMP</code> - Unconditional jump</li>
+                    <li><code>JEQ</code>, <code>JNE</code>, etc. - Conditional jumps</li>
+                    <li><code>CALL</code> - Jump to function (saves return address)</li>
+                    <li><code>RET</code> - Return from function (restores PC from stack)</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Flags</h2>
+                <p>The VM maintains flags that are set by the <code>CMP</code> (compare) instruction:</p>
+                <ul>
+                    <li><strong>equal:</strong> Set when two values are equal</li>
+                    <li><strong>lessThan:</strong> Set when first value < second value</li>
+                    <li><strong>greaterThan:</strong> Set when first value > second value</li>
+                </ul>
+                <p>These flags are used by conditional jump instructions:</p>
+                <pre><code>LOAD R0, 10
+LOAD R1, 5
+CMP R0, R1        ; Compare R0 with R1, sets flags
+JGT greater      ; Jump if R0 > R1 (uses greaterThan flag)
+; R0 <= R1
+JMP done
+greater:
+; R0 > R1
+done:</code></pre>
+            </section>
+
+            <section>
+                <h2>Related Documentation</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="instruction-set.html">Instruction Set</a> - All instructions that work with registers</li>
+                    <li><a href="syntax.html">Syntax & Conventions</a> - Writing clean Romasm code</li>
+                    <li><a href="vm.html">Virtual Machine</a> - How the VM manages registers and memory</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+

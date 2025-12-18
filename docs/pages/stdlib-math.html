@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Standard Library - Math Functions - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .function-box {
+            background: var(--surface);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+        .function-box h3 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        .function-signature {
+            background: var(--background);
+            padding: 0.5rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            margin: 0.5rem 0;
+        }
+        .param-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        .param-table th,
+        .param-table td {
+            padding: 0.5rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .param-table th {
+            background: var(--surface-light);
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Standard Library - Math Functions</h1>
+            <p class="subtitle">Basic mathematical functions in Romasm</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section>
+                <h2>Overview</h2>
+                <p>The Romasm standard library provides pre-built mathematical functions that you can call from your programs. These functions are located in <code>stdlib/math.romasm</code> and are automatically linked when you use the linker system.</p>
+                <p><strong>Note:</strong> All functions use fixed-point arithmetic. Numbers are scaled (typically by 100 or 1000) to represent decimals as integers.</p>
+            </section>
+
+            <section>
+                <h2>Available Functions</h2>
+
+                <div class="function-box">
+                    <h3>factorial</h3>
+                    <p>Calculates the factorial of a number: n! = n × (n-1) × ... × 2 × 1</p>
+                    <div class="function-signature">CALL factorial</div>
+                    <table class="param-table">
+                        <tr>
+                            <th>Input</th>
+                            <th>Output</th>
+                        </tr>
+                        <tr>
+                            <td>R0 = n (integer)</td>
+                            <td>R0 = n! (factorial)</td>
+                        </tr>
+                    </table>
+                    <strong>Example:</strong>
+                    <pre><code>LOAD R0, 5
+CALL factorial
+PRINT R0    ; Outputs 120 (5! = 5×4×3×2×1)</code></pre>
+                </div>
+
+                <div class="function-box">
+                    <h3>power</h3>
+                    <p>Calculates base raised to the power of exponent: base^exponent</p>
+                    <div class="function-signature">CALL power</div>
+                    <table class="param-table">
+                        <tr>
+                            <th>Input</th>
+                            <th>Output</th>
+                        </tr>
+                        <tr>
+                            <td>R0 = base<br/>R1 = exponent</td>
+                            <td>R0 = base^exponent</td>
+                        </tr>
+                    </table>
+                    <strong>Example:</strong>
+                    <pre><code>LOAD R0, 2      ; base = 2
+LOAD R1, 8      ; exponent = 8
+CALL power
+PRINT R0        ; Outputs 256 (2^8)</code></pre>
+                </div>
+
+                <div class="function-box">
+                    <h3>sqrt</h3>
+                    <p>Calculates the square root using Newton's method</p>
+                    <div class="function-signature">CALL sqrt</div>
+                    <table class="param-table">
+                        <tr>
+                            <th>Input</th>
+                            <th>Output</th>
+                        </tr>
+                        <tr>
+                            <td>R0 = n (scaled by 1000)</td>
+                            <td>R0 = √n (scaled by 1000)</td>
+                        </tr>
+                    </table>
+                    <strong>Example:</strong>
+                    <pre><code>LOAD R0, 25000  ; n = 25.000 (scaled by 1000)
+CALL sqrt
+PRINT R0        ; Outputs ~5000 (5.000 = √25)</code></pre>
+                    <p><strong>Algorithm:</strong> Uses Newton's method: x_{n+1} = (x_n + n/x_n) / 2</p>
+                </div>
+
+                <div class="function-box">
+                    <h3>arg_reduce</h3>
+                    <p>Reduces an angle to a manageable range (typically -90° to 90°) for trigonometric calculations</p>
+                    <div class="function-signature">CALL arg_reduce</div>
+                    <table class="param-table">
+                        <tr>
+                            <th>Input</th>
+                            <th>Output</th>
+                        </tr>
+                        <tr>
+                            <td>R0 = angle (in degrees)</td>
+                            <td>R0 = reduced angle (in degrees)</td>
+                        </tr>
+                    </table>
+                    <p><strong>Purpose:</strong> Ensures fast convergence of Taylor series and numerical stability for trigonometric functions.</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>Using Standard Library Functions</h2>
+                <p>To use these functions in your Romasm code, you need to:</p>
+                <ol style="margin: 1rem 0; padding-left: 2rem;">
+                    <li>Ensure the linker is enabled (automatic in the calculator, manual in IDE)</li>
+                    <li>Load your input values into the appropriate registers</li>
+                    <li>Call the function using <code>CALL function_name</code></li>
+                    <li>Read the result from the output register (usually R0)</li>
+                </ol>
+
+                <div class="function-box">
+                    <h3>Complete Example</h3>
+                    <pre><code>; Calculate 3^4 and then take the square root
+LOAD R0, 3      ; base = 3
+LOAD R1, 4      ; exponent = 4
+CALL power      ; R0 = 3^4 = 81
+
+; Now calculate sqrt(81)
+; sqrt expects input scaled by 1000
+LOAD R1, 1000
+MUL R0, R1      ; R0 = 81000 (81.000 scaled)
+CALL sqrt       ; R0 = ~9000 (9.000 = √81)
+PRINT R0</code></pre>
+                </div>
+            </section>
+
+            <section>
+                <h2>Fixed-Point Scaling</h2>
+                <p>Romasm uses fixed-point arithmetic. Here's how scaling works:</p>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><strong>Scale by 100:</strong> 3050 represents 30.50</li>
+                    <li><strong>Scale by 1000:</strong> 30500 represents 30.500</li>
+                </ul>
+                <p>When calling functions like <code>sqrt</code>, make sure your input is properly scaled. The function will return a result with the same scaling.</p>
+            </section>
+
+            <section>
+                <h2>Related Documentation</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="stdlib-trig.html">Trigonometric Functions</a> - sin, cos, tan</li>
+                    <li><a href="stdlib-calculus.html">Calculus Functions</a> - derivatives and integrals</li>
+                    <li><a href="stdlib-advanced.html">Advanced Math</a> - exponential and logarithm</li>
+                    <li><a href="linker.html">Linker System</a> - How functions are linked</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+

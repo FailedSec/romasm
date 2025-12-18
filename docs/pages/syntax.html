@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Syntax & Conventions - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .syntax-box {
+            background: var(--surface);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+        .syntax-box h3 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Syntax & Conventions</h1>
+            <p class="subtitle">Writing clean and correct Romasm assembly code</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section>
+                <h2>Basic Syntax</h2>
+
+                <div class="syntax-box">
+                    <h3>Instructions</h3>
+                    <p>Each line contains one instruction:</p>
+                    <pre><code>INSTRUCTION operand1, operand2</code></pre>
+                    <p><strong>Example:</strong></p>
+                    <pre><code>LOAD R0, 10
+ADD R0, R1
+PRINT R0</code></pre>
+                </div>
+
+                <div class="syntax-box">
+                    <h3>Comments</h3>
+                    <p>Comments start with <code>;</code> and continue to the end of the line:</p>
+                    <pre><code>; This is a comment
+LOAD R0, 10    ; Load 10 into R0 (inline comment)</code></pre>
+                </div>
+
+                <div class="syntax-box">
+                    <h3>Labels</h3>
+                    <p>Labels mark locations in code and end with <code>:</code>:</p>
+                    <pre><code>my_label:
+    LOAD R0, 10
+    JMP my_label    ; Jump to my_label</code></pre>
+                    <p>Labels are used for:</p>
+                    <ul>
+                        <li>Jump targets (<code>JMP label</code>)</li>
+                        <li>Function entry points (<code>CALL function_name</code>)</li>
+                        <li>Loop start/end points</li>
+                    </ul>
+                </div>
+
+                <div class="syntax-box">
+                    <h3>Case Sensitivity</h3>
+                    <p>Romasm is <strong>case-insensitive</strong> for instructions and registers:</p>
+                    <pre><code>LOAD R0, 10    ; Valid
+load r0, 10    ; Also valid
+Load R0, 10    ; Also valid</code></pre>
+                    <p>However, labels are case-sensitive, so be consistent!</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>Operand Types</h2>
+
+                <div class="syntax-box">
+                    <h3>Registers</h3>
+                    <p>Registers are specified as <code>R0</code> through <code>R8</code>:</p>
+                    <pre><code>LOAD R0, 10      ; R0 is a register
+ADD R0, R1       ; Both R0 and R1 are registers</code></pre>
+                </div>
+
+                <div class="syntax-box">
+                    <h3>Immediate Values</h3>
+                    <p>Literal numbers can be used directly:</p>
+                    <pre><code>LOAD R0, 42      ; 42 is an immediate value
+CMP R0, 10       ; 10 is an immediate value</code></pre>
+                </div>
+
+                <div class="syntax-box">
+                    <h3>Memory Addresses</h3>
+                    <p>Memory is accessed using square brackets:</p>
+                    <pre><code>LOAD R0, [100]   ; Load from memory address 100
+STORE R0, [200]  ; Store to memory address 200</code></pre>
+                </div>
+
+                <div class="syntax-box">
+                    <h3>Labels as Operands</h3>
+                    <p>Labels can be used as jump targets:</p>
+                    <pre><code>JMP my_label     ; Jump to label
+CALL my_function ; Call function at label</code></pre>
+                </div>
+            </section>
+
+            <section>
+                <h2>Common Patterns</h2>
+
+                <div class="syntax-box">
+                    <h3>Loading Constants</h3>
+                    <pre><code>; Load common constants into registers
+LOAD R1, 1       ; Constant 1
+LOAD R2, 2       ; Constant 2
+LOAD R3, 100     ; Scaling factor
+LOAD R4, 1000    ; Another scaling factor</code></pre>
+                </div>
+
+                <div class="syntax-box">
+                    <h3>Loops</h3>
+                    <pre><code>; Count from 1 to 10
+LOAD R0, 1       ; Counter
+LOAD R1, 10      ; Max value
+
+loop:
+    PRINT R0
+    INC R0
+    CMP R0, R1
+    JLE loop     ; Jump if R0 <= R1</code></pre>
+                </div>
+
+                <div class="syntax-box">
+                    <h3>Conditionals</h3>
+                    <pre><code>; If-else pattern
+LOAD R0, 10
+LOAD R1, 5
+CMP R0, R1
+JGT greater     ; Jump if R0 > R1
+; R0 <= R1
+LOAD R2, 0
+JMP done
+
+greater:
+LOAD R2, 1
+
+done:</code></pre>
+                </div>
+
+                <div class="syntax-box">
+                    <h3>Function Calls</h3>
+                    <pre><code>; Call a function
+LOAD R0, 3000    ; Argument (30 degrees scaled)
+CALL sin         ; Call sin function
+; Result in R0
+PRINT R0</code></pre>
+                </div>
+            </section>
+
+            <section>
+                <h2>Coding Conventions</h2>
+
+                <div class="syntax-box">
+                    <h3>Naming</h3>
+                    <ul>
+                        <li>Use descriptive labels: <code>loop</code>, <code>is_even</code>, <code>calculate_sum</code></li>
+                        <li>Avoid single-letter labels except for very short functions</li>
+                        <li>Use underscores for multi-word labels: <code>my_function</code>, not <code>myfunction</code></li>
+                    </ul>
+                </div>
+
+                <div class="syntax-box">
+                    <h3>Comments</h3>
+                    <ul>
+                        <li>Comment complex logic and algorithms</li>
+                        <li>Document function inputs/outputs</li>
+                        <li>Explain scaling factors for fixed-point arithmetic</li>
+                        <li>Note register usage conventions</li>
+                    </ul>
+                </div>
+
+                <div class="syntax-box">
+                    <h3>Formatting</h3>
+                    <ul>
+                        <li>Use consistent indentation (spaces or tabs)</li>
+                        <li>Align labels at the start of lines</li>
+                        <li>Add blank lines between logical sections</li>
+                        <li>Group related instructions together</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section>
+                <h2>Common Errors</h2>
+
+                <div class="syntax-box">
+                    <h3>Missing Operands</h3>
+                    <pre><code>; ❌ Wrong
+ADD R0
+
+; ✅ Correct
+ADD R0, R1</code></pre>
+                </div>
+
+                <div class="syntax-box">
+                    <h3>Wrong Operand Order</h3>
+                    <pre><code>; ADD: reg1 = reg1 + reg2
+; ❌ Wrong (if you want R0 = R0 + R1)
+ADD R1, R0
+
+; ✅ Correct
+ADD R0, R1</code></pre>
+                </div>
+
+                <div class="syntax-box">
+                    <h3>Undefined Labels</h3>
+                    <pre><code>; ❌ Wrong - label doesn't exist
+JMP non_existent_label
+
+; ✅ Correct - define label first
+my_label:
+    LOAD R0, 10
+JMP my_label</code></pre>
+                </div>
+            </section>
+
+            <section>
+                <h2>Related Documentation</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="instruction-set.html">Instruction Set</a> - All available instructions</li>
+                    <li><a href="registers.html">Registers & Memory</a> - Understanding the register system</li>
+                    <li><a href="quickstart.html">Quick Start</a> - Get started with examples</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+

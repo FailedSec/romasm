@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Romasm Extended - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Romasm Extended</h1>
+            <p class="subtitle">Advanced features: Fractions, Negative Numbers, and ISA</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section>
+                <h2>Overview</h2>
+                <p>Romasm Extended adds advanced features to the Basic Romasm concept: fractional numbers, negative numbers, and an Instruction Set Architecture (ISA).</p>
+            </section>
+
+            <section>
+                <h2>Features</h2>
+                <h3>1. Radix Point for Fractions</h3>
+                <p>Represent fractional values using a radix point (colon :)</p>
+                <pre><code>15.51 → I V:V I
+1.5   → I:V</code></pre>
+
+                <h3>2. Negative Numbers</h3>
+                <p>Two methods for representing negatives:</p>
+                <ul>
+                    <li><strong>Sign-Magnitude:</strong> Use a sign symbol</li>
+                    <li><strong>Ten's Complement:</strong> Complement representation</li>
+                </ul>
+
+                <h3>3. Instruction Set Architecture (ISA)</h3>
+                <p>Defines instructions for the Romasm system, forming the foundation for the Assembly Language.</p>
+            </section>
+
+            <section>
+                <h2>Try It</h2>
+                <p>Experiment with these features on the <a href="../../romasm-extended.html">Romasm Extended page</a>.</p>
+            </section>
+
+            <section>
+                <h2>Related Documentation</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="romasm.html">Basic Romasm</a> - The original concept</li>
+                    <li><a href="language-overview.html">Language Overview</a> - The Assembly Language</li>
+                    <li><a href="instruction-set.html">Instruction Set</a> - Assembly instructions</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+

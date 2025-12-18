@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Standard Library - Advanced Math - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .function-box {
+            background: var(--surface);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Standard Library - Advanced Math</h1>
+            <p class="subtitle">Exponential and logarithmic functions</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section>
+                <h2>Overview</h2>
+                <p>Advanced mathematical functions including exponential (e^x) and natural logarithm (ln). All values use <strong>fixed-point scaling by 1000</strong>.</p>
+            </section>
+
+            <section>
+                <h2>Available Functions</h2>
+
+                <div class="function-box">
+                    <h3>exp</h3>
+                    <p>Calculates e^x (exponential function) using Taylor series expansion.</p>
+                    <p><strong>Taylor Series:</strong> e^x = 1 + x + x²/2! + x³/3! + x⁴/4! + ...</p>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <tr>
+                            <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Input</th>
+                            <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Output</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem;">R0 = x (scaled by 1000)</td>
+                            <td style="padding: 0.5rem;">R0 = e^x (scaled by 1000)</td>
+                        </tr>
+                    </table>
+                    <strong>Example:</strong>
+                    <pre><code>; Calculate e^1 ≈ 2.718
+LOAD R0, 1000    ; x = 1.000
+CALL exp
+PRINT R0         ; Outputs ~2718 (2.718)</code></pre>
+                </div>
+
+                <div class="function-box">
+                    <h3>ln</h3>
+                    <p>Calculates the natural logarithm ln(x) using an approximation method.</p>
+                    <p><strong>Note:</strong> x must be > 0</p>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <tr>
+                            <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Input</th>
+                            <th style="padding: 0.5rem; text-align: left; border-bottom: 1px solid var(--border-color);">Output</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem;">R0 = x (scaled by 1000, must be > 0)</td>
+                            <td style="padding: 0.5rem;">R0 = ln(x) (scaled by 1000)</td>
+                        </tr>
+                    </table>
+                    <strong>Example:</strong>
+                    <pre><code>; Calculate ln(2.718) ≈ 1.000
+LOAD R0, 2718    ; x = 2.718
+CALL ln
+PRINT R0         ; Outputs ~1000 (1.000)</code></pre>
+                </div>
+            </section>
+
+            <section>
+                <h2>Related Documentation</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="stdlib-math.html">Basic Math Functions</a></li>
+                    <li><a href="stdlib-trig.html">Trigonometric Functions</a></li>
+                    <li><a href="stdlib-calculus.html">Calculus Functions</a> - Derivatives and integrals of exp/ln</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graphics Examples - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .example-box {
+            background: var(--surface);
+            border-left: 4px solid var(--accent);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+        .example-box h3 {
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Graphics Examples</h1>
+            <p class="subtitle">Drawing and plotting with Romasm</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section>
+                <h2>Drawing Shapes</h2>
+                <div class="example-box">
+                    <h3>Draw a Line</h3>
+                    <pre><code>; Draw line from (-5, -5) to (5, 5)
+CLEAR
+LOAD R0, -500    ; x1 = -5 (scaled by 100)
+LOAD R1, -500    ; y1 = -5
+MOVE R0, R1      ; Move to start point
+LOAD R0, 500     ; x2 = 5
+LOAD R1, 500     ; y2 = 5
+DRAW R0, R1      ; Draw line to end point
+STROKE           ; Render it</code></pre>
+                </div>
+
+                <div class="example-box">
+                    <h3>Draw a Square</h3>
+                    <pre><code>; Draw square from (-3, -3) to (3, 3)
+CLEAR
+; Bottom-left
+LOAD R0, -300
+LOAD R1, -300
+MOVE R0, R1
+; Top-left
+LOAD R0, -300
+LOAD R1, 300
+DRAW R0, R1
+; Top-right
+LOAD R0, 300
+LOAD R1, 300
+DRAW R0, R1
+; Bottom-right
+LOAD R0, 300
+LOAD R1, -300
+DRAW R0, R1
+; Close square
+LOAD R0, -300
+LOAD R1, -300
+DRAW R0, R1
+STROKE</code></pre>
+                </div>
+            </section>
+
+            <section>
+                <h2>Plotting Functions</h2>
+                <div class="example-box">
+                    <h3>Plot y = x²</h3>
+                    <pre><code>; Function to plot: y = x²
+; Input: R0 = x (scaled by 100)
+; Output: R0 = x² (scaled by 100)
+LOAD R1, R0      ; Copy x to R1
+MUL R0, R1       ; R0 = x * x = x²
+LOAD R1, 100
+DIV R0, R1       ; Scale down
+RET</code></pre>
+                    <p>Use this in the calculator's Y= editor to plot a parabola.</p>
+                </div>
+
+                <div class="example-box">
+                    <h3>Plot y = sin(x)</h3>
+                    <pre><code>; Function to plot: y = sin(x)
+; Input: R0 = x in degrees (scaled by 100)
+; Output: R0 = sin(x) (scaled by 1000, then scaled down)
+CALL sin          ; Call stdlib sin function
+; sin returns value scaled by 1000
+LOAD R1, 10
+DIV R0, R1       ; Scale down to match graph scale
+RET</code></pre>
+                    <p>Plots a sine wave. Requires stdlib linking.</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>Polar Curves</h2>
+                <div class="example-box">
+                    <h3>Rose Curve: r = cos(3θ)</h3>
+                    <pre><code>; Polar function: r = cos(3θ)
+; Input: R0 = θ in degrees (scaled by 100)
+; Output: R0 = r (scaled by 100)
+LOAD R1, R0      ; Copy θ
+LOAD R2, 3
+MUL R1, R2       ; 3θ
+LOAD R0, R1      ; Prepare for cos
+CALL cos         ; cos(3θ)
+; cos returns scaled by 1000
+LOAD R1, 10
+DIV R0, R1       ; Scale to match polar scale
+RET</code></pre>
+                </div>
+
+                <div class="example-box">
+                    <h3>Cardioid: r = 1 + cos(θ)</h3>
+                    <pre><code>; Polar function: r = 1 + cos(θ)
+; Input: R0 = θ (scaled by 100)
+; Output: R0 = r (scaled by 100)
+CALL cos         ; cos(θ)
+; cos returns scaled by 1000
+LOAD R1, 10
+DIV R0, R1       ; Scale down
+LOAD R1, 100     ; 1.00 (scaled by 100)
+ADD R0, R1       ; r = 1 + cos(θ)
+RET</code></pre>
+                </div>
+            </section>
+
+            <section>
+                <h2>Console Plotting</h2>
+                <div class="example-box">
+                    <h3>Plot Points by Output</h3>
+                    <pre><code>; Output (x, y) pairs that auto-plot
+; Plot y = x² from x=-5 to x=5
+LOAD R2, -500    ; x counter
+LOAD R3, 500     ; max x
+LOAD R4, 50      ; step
+
+plot_loop:
+    ; Calculate y = x²
+    LOAD R0, R2  ; x
+    LOAD R1, 100
+    DIV R0, R1   ; Unscale x
+    LOAD R1, R0
+    MUL R0, R1   ; x²
+    MUL R0, R1   ; Scale back
+    
+    ; Output (x, y) pair
+    PRINT R2     ; x
+    PRINT R0     ; y
+    
+    ; Increment x
+    ADD R2, R4
+    CMP R2, R3
+    JLE plot_loop</code></pre>
+                    <p>In the calculator console, PRINTing pairs of numbers automatically plots them on the graph.</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>Related Documentation</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="canvas-drawing.html">Canvas Drawing</a> - Drawing opcodes reference</li>
+                    <li><a href="calculator.html">Romasm Calculator</a> - Using the calculator</li>
+                    <li><a href="graphics-calculator.html">Graphics Calculator</a> - Original plotting tool</li>
+                    <li><a href="stdlib-trig.html">Trigonometric Functions</a> - For plotting curves</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+
