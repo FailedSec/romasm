@@ -144,8 +144,14 @@ RET"></textarea>
                         <h5 style="color: var(--primary-color); margin-top: 0.75rem; margin-bottom: 0.25rem;">Trigonometric</h5>
                         <button class="preset-btn" onclick="loadPreset('sine')">f(x) = sin(x)</button>
                         <button class="preset-btn" onclick="loadPreset('cosine')">f(x) = cos(x)</button>
+                        <button class="preset-btn" onclick="loadPreset('tangent')">f(x) = tan(x)</button>
                         <button class="preset-btn" onclick="loadPreset('sine_x')">f(x) = x·sin(x)</button>
                         <button class="preset-btn" onclick="loadPreset('sine_squared')">f(x) = sin²(x)</button>
+                        
+                        <h5 style="color: var(--primary-color); margin-top: 0.75rem; margin-bottom: 0.25rem;">Polar Curves</h5>
+                        <button class="preset-btn" onclick="loadPreset('rose_3')">r = cos(3θ) (Rose)</button>
+                        <button class="preset-btn" onclick="loadPreset('cardioid')">r = 1 + cos(θ) (Cardioid)</button>
+                        <button class="preset-btn" onclick="loadPreset('spiral')">r = θ (Spiral)</button>
                         
                         <h5 style="color: var(--primary-color); margin-top: 0.75rem; margin-bottom: 0.25rem;">Exponential & Logarithmic</h5>
                         <button class="preset-btn" onclick="loadPreset('exponential')">f(x) = 2^x</button>
@@ -187,15 +193,23 @@ RET"></textarea>
                             <label>Step Size</label>
                             <input type="number" id="step-size" value="0.1" step="0.01" min="0.01">
                         </div>
+                        <div class="control-group">
+                            <label>Graph Mode</label>
+                            <select id="graph-mode" style="width: 100%; padding: 0.5rem; background: var(--background); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary);">
+                                <option value="cartesian">Cartesian (y = f(x))</option>
+                                <option value="polar">Polar (r = f(θ))</option>
+                            </select>
+                        </div>
                         <button class="plot-btn" onclick="plotFunction()">▶ Plot Function</button>
                     </div>
 
                     <div class="info-box">
                         <strong>Tips:</strong><br>
-                        • Input x is scaled by 100 (x=5 means 0.05)<br>
-                        • Output should be scaled by 100<br>
+                        • <strong>Cartesian:</strong> Input x scaled by 100, output y scaled by 100<br>
+                        • <strong>Polar:</strong> Input θ (degrees) scaled by 100, output r scaled by 100<br>
                         • Use R0 for input/output<br>
-                        • Function must end with RET
+                        • Function must end with RET<br>
+                        • Polar curves auto-adjust bounds for best display
                     </div>
                 </div>
 
@@ -216,8 +230,10 @@ RET"></textarea>
 
     <script src="compiler/romasm-assembler.js"></script>
     <script src="compiler/romasm-vm.js"></script>
+    <script src="calcengine/romasm-math-engine.js"></script>
     <script>
         const assembler = new RomasmAssembler();
+        const mathEngine = new RomasmMathEngine();
         const canvas = document.getElementById('graph-canvas');
         const ctx = canvas.getContext('2d');
 
@@ -305,6 +321,176 @@ DIV R1, R2
 SUB R0, R1
 LOAD R1, 1000
 MUL R0, R1
+RET`,
+
+            tangent: `; f(x) = tan(x) = sin(x)/cos(x)
+; Input: R0 = x (in degrees, scaled by 100)
+; Output: R0 = tan(x) * 1000 (scaled by 1000)
+; Save x
+LOAD R1, R0
+; Calculate sin(x)
+LOAD R2, 100
+DIV R0, R2
+LOAD R2, 1745
+MUL R0, R2
+LOAD R2, 100000
+DIV R0, R2
+LOAD R2, R0
+LOAD R3, R0
+MUL R2, R3
+MUL R2, R0
+LOAD R3, 6
+DIV R2, R3
+SUB R0, R2
+LOAD R2, 1000
+MUL R0, R2
+; R0 = sin(x) * 1000
+; Calculate cos(x) = sin(90 - x)
+LOAD R2, R1
+LOAD R3, 9000
+SUB R3, R2
+LOAD R2, R3
+LOAD R3, 100
+DIV R2, R3
+LOAD R3, 1745
+MUL R2, R3
+LOAD R3, 100000
+DIV R2, R3
+LOAD R3, R2
+LOAD R4, R2
+MUL R3, R4
+MUL R3, R2
+LOAD R4, 6
+DIV R3, R4
+SUB R2, R3
+LOAD R3, 1000
+MUL R2, R3
+; R2 = cos(x) * 1000
+; tan(x) = sin(x)/cos(x)
+; (sin*1000) / (cos*1000) = sin/cos (scaled by 1000)
+LOAD R3, 1000
+MUL R0, R3
+DIV R0, R2
+RET`,
+
+            rose_3: `; Polar: r = cos(3θ) (CORRECTED)
+; Input: R0 = θ (in degrees, scaled by 100)
+; Output: R0 = r (scaled by 100)
+; Calculate 3θ
+LOAD R1, 3
+MUL R0, R1
+; Now R0 = 3θ scaled by 100
+; Calculate cos(3θ) using identity: cos(x) = sin(90° - x)
+LOAD R1, 9000  ; 90° scaled by 100
+SUB R1, R0     ; R1 = 90° - 3θ (scaled by 100)
+LOAD R0, R1    ; R0 = (90° - 3θ) scaled by 100
+; Convert to radians: (90° - 3θ) * π/180
+; We want radians scaled by 1000
+; Formula: radians*1000 = (degrees*100) * 1745 / 10000
+LOAD R1, 1745
+MUL R0, R1     ; R0 = (90° - 3θ) * 1745
+LOAD R1, 10000
+DIV R0, R1     ; R0 = (90° - 3θ) in radians (scaled by 1000)
+; Calculate sin using Taylor: sin(x) ≈ x - x³/6 + x⁵/120
+; x is in R0, scaled by 1000 (e.g., π/2 ≈ 1570)
+LOAD R1, R0    ; R1 = x (will be result)
+; Calculate x³ (scaled by 1000³ = 1,000,000,000)
+LOAD R2, R0
+LOAD R3, R0
+MUL R2, R3     ; R2 = x² (scaled by 1,000,000)
+MUL R2, R0     ; R2 = x³ (scaled by 1,000,000,000)
+; Calculate x³/6 (we want result scaled by 1000)
+; x³/6 scaled by 1000 = (x³ scaled by 1,000,000,000) / 6 / 1,000,000
+LOAD R3, 6
+DIV R2, R3     ; R2 = x³/6 (scaled by 1,000,000,000/6)
+LOAD R3, 1000
+DIV R2, R3     ; R2 = x³/6 (scaled by 1,000,000)
+DIV R2, R3     ; R2 = x³/6 (scaled by 1000)
+SUB R1, R2     ; R1 = x - x³/6 (scaled by 1000)
+; Calculate x⁵ (scaled by 1000⁵)
+LOAD R2, R0
+MUL R2, R2     ; R2 = x²
+MUL R2, R2     ; R2 = x⁴
+MUL R2, R0     ; R2 = x⁵ (scaled by 1000⁵)
+; Calculate x⁵/120 (we want result scaled by 1000)
+LOAD R3, 120
+DIV R2, R3     ; R2 = x⁵/120 (scaled by 1000⁵/120)
+LOAD R3, 1000
+DIV R2, R3     ; R2 = x⁵/120 (scaled by 1000⁴/120)
+DIV R2, R3     ; R2 = x⁵/120 (scaled by 1000³/120)
+DIV R2, R3     ; R2 = x⁵/120 (scaled by 1000²/120)
+DIV R2, R3     ; R2 = x⁵/120 (scaled by 1000/120) - WRONG!
+; Actually: x⁵/120 scaled by 1000 = (x⁵ scaled by 1000⁵) / 120 / 1000⁴
+; Let's do it step by step: x⁵/120 = (x⁵) / 120
+; To scale by 1000: (x⁵ scaled by 1000⁵) / 120 / 1000⁴ = (x⁵) / 120 / 1000⁴
+; So we need 4 divisions by 1000
+LOAD R3, 1000
+DIV R2, R3
+DIV R2, R3
+DIV R2, R3
+DIV R2, R3     ; R2 = x⁵/120 (scaled by 1000)
+ADD R1, R2     ; R1 = x - x³/6 + x⁵/120 (scaled by 1000)
+; R1 = sin(90° - 3θ) = cos(3θ) scaled by 1000
+; Scale to output: divide by 10 to get scaled by 100
+LOAD R0, R1
+LOAD R1, 10
+DIV R0, R1     ; R0 = cos(3θ) scaled by 100
+RET`,
+
+            cardioid: `; Polar: r = 1 + cos(θ) (FIXED VERSION)
+; Input: R0 = θ (in degrees, scaled by 100)
+; Output: R0 = r (scaled by 100)
+; Calculate cos(θ) = sin(90° - θ)
+LOAD R1, 9000  ; 90° scaled by 100
+SUB R1, R0     ; R1 = 90° - θ (scaled by 100)
+; Convert to radians
+LOAD R2, R1
+LOAD R3, 1745
+MUL R2, R3
+LOAD R3, 100
+DIV R2, R3     ; R2 = (90° - θ) in radians (scaled by 1000)
+; Calculate sin using Taylor: sin(x) ≈ x - x³/6 + x⁵/120
+LOAD R3, R2    ; R3 = x
+LOAD R4, R2
+LOAD R5, R2
+MUL R4, R5
+MUL R4, R2
+LOAD R5, 6
+DIV R4, R5
+LOAD R5, 1000
+DIV R4, R5
+DIV R4, R5     ; R4 = x³/6 (scaled by 1000)
+SUB R3, R4     ; R3 = x - x³/6
+; Add x⁵ term
+LOAD R4, R2
+MUL R4, R4
+MUL R4, R4
+MUL R4, R2
+LOAD R5, 120
+DIV R4, R5
+LOAD R5, 1000
+DIV R4, R5
+DIV R4, R5
+DIV R4, R5     ; R4 = x⁵/120 (scaled by 1000)
+ADD R3, R4     ; R3 = sin(90° - θ) = cos(θ) (scaled by 1000)
+; 1 + cos(θ) (scaled by 100)
+; 1 scaled by 100 = 100, cos scaled by 1000
+; (1000 + cos*1000) / 10 = 100 + cos*100
+LOAD R1, 1000  ; 1 scaled by 1000
+ADD R1, R3     ; R1 = 1000 + cos*1000
+LOAD R2, 10
+DIV R1, R2     ; R1 = (1 + cos) scaled by 100
+LOAD R0, R1
+RET`,
+
+            spiral: `; Polar: r = θ/10 (Archimedean spiral, scaled for visibility)
+; Input: R0 = θ (in degrees, scaled by 100)
+; Output: R0 = r (scaled by 100)
+; For spiral, r = θ/10 to make it visible
+; θ is scaled by 100, so r = (θ/100) / 10 = θ/1000
+; To output scaled by 100: r*100 = (θ/1000)*100 = θ/10
+LOAD R1, 10
+DIV R0, R1
 RET`,
 
             exponential: `; f(x) = 2^x
@@ -726,23 +912,71 @@ weier_end:
 RET`
         };
 
+        // Test the math engine after presets are defined
+        try {
+            // Test: sin(30°) should be 0.5 → 500 (scaled by 1000)
+            const testSin = mathEngine.sin(3000); // 30° scaled by 100
+            console.log('Math engine test - sin(30°):', testSin, '(expected ~500)');
+            
+            // Test: cos(0°) should be 1.0 → 1000 (scaled by 1000)
+            const testCos = mathEngine.cos(0); // 0° scaled by 100
+            console.log('Math engine test - cos(0°):', testCos, '(expected ~1000)');
+            
+            // Test: polar conversion for r=1, θ=0° should give x=1, y=0
+            const testPolar = mathEngine.polarToCartesian(100, 0); // r=1, θ=0°
+            console.log('Math engine test - polar(1, 0°):', testPolar, '(expected x≈100, y≈0)');
+            
+            // Test the rose function directly
+            console.log('\n=== Testing Rose Function Directly ===');
+            const roseCode = presets['rose_3'];
+            const roseAssembled = assembler.assemble(roseCode);
+            if (roseAssembled.success) {
+                for (let testTheta = 0; testTheta <= 90; testTheta += 30) {
+                    const testVM = new RomasmVM();
+                    testVM.registers['I'] = testTheta * 100; // θ scaled by 100
+                    testVM.loadProgram(roseAssembled.instructions);
+                    let steps = 0;
+                    while (!testVM.halted && steps < 1000) {
+                        const stepResult = testVM.step();
+                        if (stepResult.error) {
+                            console.error(`Rose test error at θ=${testTheta}°:`, stepResult.error);
+                            break;
+                        }
+                        steps++;
+                    }
+                    const rScaled = testVM.registers['I'];
+                    const r = rScaled / 100.0;
+                    const expected = Math.cos(testTheta * 3 * Math.PI / 180);
+                    console.log(`Rose(θ=${testTheta}°): r=${r}, reg=${rScaled}, expected≈${expected.toFixed(3)}, steps=${steps}`);
+                }
+            } else {
+                console.error('Failed to assemble rose function:', roseAssembled.errors);
+            }
+        } catch (error) {
+            console.error('Math engine test error:', error);
+        }
+
         function loadPreset(name) {
             document.getElementById('function-code').value = presets[name];
             document.getElementById('error-message').textContent = '';
             
             // Auto-adjust graph settings for certain functions
             const settings = {
-                'sine': { xMin: -360, xMax: 360, yMin: -2, yMax: 2 },
-                'cosine': { xMin: -360, xMax: 360, yMin: -2, yMax: 2 },
-                'sine_x': { xMin: -20, xMax: 20, yMin: -20, yMax: 20 },
-                'sine_squared': { xMin: -360, xMax: 360, yMin: -1, yMax: 2 },
-                'exp_x': { xMin: -5, xMax: 5, yMin: -1, yMax: 20 },
-                'exp_neg_x': { xMin: -5, xMax: 5, yMin: -1, yMax: 2 },
-                'gaussian': { xMin: -5, xMax: 5, yMin: -1, yMax: 2 },
-                'sinc': { xMin: -20, xMax: 20, yMin: -1, yMax: 2 },
-                'weierstrass': { xMin: -2, xMax: 2, yMin: -1, yMax: 1 },
-                'sqrt': { xMin: 0, xMax: 20, yMin: 0, yMax: 5 },
-                'rational': { xMin: -5, xMax: 5, yMin: -1, yMax: 2 }
+                'sine': { xMin: -360, xMax: 360, yMin: -2, yMax: 2, polar: false },
+                'cosine': { xMin: -360, xMax: 360, yMin: -2, yMax: 2, polar: false },
+                'tangent': { xMin: -90, xMax: 90, yMin: -10, yMax: 10, polar: false },
+                'sine_x': { xMin: -20, xMax: 20, yMin: -20, yMax: 20, polar: false },
+                'sine_squared': { xMin: -360, xMax: 360, yMin: -1, yMax: 2, polar: false },
+                'exp_x': { xMin: -5, xMax: 5, yMin: -1, yMax: 20, polar: false },
+                'exp_neg_x': { xMin: -5, xMax: 5, yMin: -1, yMax: 2, polar: false },
+                'gaussian': { xMin: -5, xMax: 5, yMin: -1, yMax: 2, polar: false },
+                'sinc': { xMin: -20, xMax: 20, yMin: -1, yMax: 2, polar: false },
+                'weierstrass': { xMin: -2, xMax: 2, yMin: -1, yMax: 1, polar: false },
+                'sqrt': { xMin: 0, xMax: 20, yMin: 0, yMax: 5, polar: false },
+                'rational': { xMin: -5, xMax: 5, yMin: -1, yMax: 2, polar: false },
+                'rose_3': { xMin: 0, xMax: 360, yMin: -2, yMax: 2, polar: true, stepSize: 0.5 },
+                'cardioid': { xMin: 0, xMax: 360, yMin: -2, yMax: 2, polar: true, stepSize: 0.5 },
+                'spiral': { xMin: 0, xMax: 1080, yMin: -15, yMax: 15, polar: true, stepSize: 1.0 }
             };
             
             if (settings[name]) {
@@ -750,6 +984,10 @@ RET`
                 document.getElementById('x-max').value = settings[name].xMax;
                 document.getElementById('y-min').value = settings[name].yMin;
                 document.getElementById('y-max').value = settings[name].yMax;
+                document.getElementById('graph-mode').value = (settings[name].polar) ? 'polar' : 'cartesian';
+                if (settings[name].stepSize) {
+                    document.getElementById('step-size').value = settings[name].stepSize;
+                }
             }
         }
 
@@ -771,8 +1009,11 @@ RET`
                     errorMsg += `Line ${error.line}: ${error.message}\n`;
                 }
                 errorDiv.textContent = errorMsg;
+                console.error('Assembly failed:', result.errors);
                 return;
             }
+            
+            console.log('Assembly successful, instructions:', result.instructions.length);
 
             // Get graph settings
             const xMin = parseFloat(document.getElementById('x-min').value);
@@ -780,47 +1021,277 @@ RET`
             const yMin = parseFloat(document.getElementById('y-min').value);
             const yMax = parseFloat(document.getElementById('y-max').value);
             const stepSize = parseFloat(document.getElementById('step-size').value);
+            const graphMode = document.getElementById('graph-mode').value;
+            const polarMode = (graphMode === 'polar');
 
             // Plot the function
             const points = [];
             
-            for (let x = xMin; x <= xMax; x += stepSize) {
-                const vm = new RomasmVM();
+            if (polarMode) {
+                // Polar coordinates: r = f(θ)
+                // For polar curves, use smaller step size for smooth curves
+                const polarStepSize = Math.min(stepSize, 1.0); // Max 1 degree steps for smooth curves
+                let maxR = 0;
+                const rValues = [];
                 
-                // Set input x (scaled by 100) in R0
-                const scaledX = Math.floor(x * 100);
-                vm.registers['I'] = scaledX; // R0 = I
+                // Calculate r for each theta (ensure we cover full range)
+                const thetaStart = Math.max(xMin, 0);
+                const thetaEnd = Math.min(xMax, 360);
                 
-                // Load and execute the function
-                vm.loadProgram(result.instructions);
+                console.log(`Polar mode: calculating r from θ=${thetaStart}° to ${thetaEnd}°, step=${polarStepSize}°`);
                 
-                try {
-                    // Execute until RET or max steps
-                    let steps = 0;
-                    while (!vm.halted && steps < 1000) {
-                        const stepResult = vm.step();
-                        if (stepResult.error) {
-                            break;
+                for (let theta = thetaStart; theta <= thetaEnd; theta += polarStepSize) {
+                    const vm = new RomasmVM();
+                    const scaledTheta = Math.floor(theta * 100);
+                    vm.registers['I'] = scaledTheta;
+                    vm.loadProgram(result.instructions);
+                    
+                    try {
+                        let steps = 0;
+                        while (!vm.halted && steps < 1000) {
+                            const stepResult = vm.step();
+                            if (stepResult.error) {
+                                if (theta === thetaStart) {
+                                    console.error('Step error at first point:', stepResult.error);
+                                }
+                                break;
+                            }
+                            steps++;
                         }
-                        steps++;
+                        
+                        const regValue = vm.registers['I'];
+                        const r = regValue / 100.0; // Keep sign for negative r
+                        
+                        // Debug first few points
+                        if (rValues.length < 5) {
+                            console.log(`r calc: θ=${theta}°, reg=${regValue}, r=${r}, halted=${vm.halted}, steps=${steps}`);
+                            // Also show register state
+                            if (rValues.length === 0) {
+                                console.log('Register state:', {
+                                    R0: vm.registers['I'],
+                                    R1: vm.registers['II'],
+                                    R2: vm.registers['III'],
+                                    R3: vm.registers['IV']
+                                });
+                            }
+                        }
+                        
+                        if (!isNaN(r) && isFinite(r)) {
+                            maxR = Math.max(maxR, Math.abs(r));
+                            rValues.push({ theta, r });
+                        } else if (theta === thetaStart || rValues.length === 0) {
+                            // Debug first point or if no valid points yet
+                            console.warn('Point calculation failed:', { 
+                                theta, 
+                                r, 
+                                reg: regValue, 
+                                steps, 
+                                halted: vm.halted,
+                                scaledTheta: scaledTheta,
+                                allRegs: {
+                                    R0: vm.registers['I'],
+                                    R1: vm.registers['II'],
+                                    R2: vm.registers['III']
+                                }
+                            });
+                        }
+                    } catch (error) {
+                        if (theta === thetaStart) {
+                            console.error('Error calculating r:', error, error.stack);
+                        }
+                        continue;
                     }
-
-                    // Get result from R0 (I register)
-                    const result = vm.registers['I'];
-                    const y = result / 100.0; // Unscale
-
-                    // Clamp to reasonable range
-                    if (!isNaN(y) && isFinite(y) && y >= yMin - 10 && y <= yMax + 10) {
-                        points.push({ x, y });
-                    }
-                } catch (error) {
-                    // Skip this point if there's an error
-                    continue;
                 }
-            }
+                
+                // Sort by theta to ensure proper connection order
+                rValues.sort((a, b) => a.theta - b.theta);
+                
+                console.log(`Calculated ${rValues.length} r values, maxR = ${maxR}`);
+                if (rValues.length > 0) {
+                    console.log('First few r values:', rValues.slice(0, 5));
+                }
+                if (rValues.length === 0) {
+                    console.error('No r values calculated! Check function execution.');
+                    console.error('Function code:', code);
+                    console.error('Theta range:', thetaStart, 'to', thetaEnd, 'step:', polarStepSize);
+                    alert('Error: No points calculated. Check console for details.');
+                    return;
+                }
+                
+                // Auto-adjust bounds for polar curves (symmetric around origin)
+                // Store original bounds before auto-adjustment
+                const originalBounds = {
+                    xMin: parseFloat(document.getElementById('x-min').value),
+                    xMax: parseFloat(document.getElementById('x-max').value),
+                    yMin: parseFloat(document.getElementById('y-min').value),
+                    yMax: parseFloat(document.getElementById('y-max').value)
+                };
+                
+                // Only auto-adjust if maxR is valid and reasonable
+                let adjustedXMin, adjustedXMax, adjustedYMin, adjustedYMax;
+                if (maxR > 0 && maxR < 1000) {
+                    const polarRange = Math.max(maxR * 1.2, 1); // Add 20% padding
+                    adjustedXMin = -polarRange;
+                    adjustedXMax = polarRange;
+                    adjustedYMin = -polarRange;
+                    adjustedYMax = polarRange;
+                    
+                    // Only update bounds if they're significantly different (user might have set them manually)
+                    const rangeChanged = Math.abs(adjustedXMax - originalBounds.xMax) > 0.5;
+                    if (rangeChanged) {
+                        document.getElementById('x-min').value = adjustedXMin.toFixed(1);
+                        document.getElementById('x-max').value = adjustedXMax.toFixed(1);
+                        document.getElementById('y-min').value = adjustedYMin.toFixed(1);
+                        document.getElementById('y-max').value = adjustedYMax.toFixed(1);
+                        console.log(`Auto-adjusted bounds: ±${polarRange.toFixed(2)} (maxR=${maxR.toFixed(3)})`);
+                    } else {
+                        // Use original bounds if they're already close
+                        adjustedXMin = originalBounds.xMin;
+                        adjustedXMax = originalBounds.xMax;
+                        adjustedYMin = originalBounds.yMin;
+                        adjustedYMax = originalBounds.yMax;
+                        console.log('Keeping original bounds (close to auto-adjusted)');
+                    }
+                } else {
+                    // Keep original bounds if maxR is invalid
+                    console.warn('Invalid maxR, keeping original bounds:', maxR);
+                    adjustedXMin = originalBounds.xMin;
+                    adjustedXMax = originalBounds.xMax;
+                    adjustedYMin = originalBounds.yMin;
+                    adjustedYMax = originalBounds.yMax;
+                }
+                
+                // Convert to Cartesian using Romasm (all math in Romasm!)
+                const cartesianPoints = [];
+                for (const { theta, r } of rValues) {
+                    // Handle negative r: in polar coords, negative r means plot at θ+180° with |r|
+                    let actualTheta = theta;
+                    let actualR = r;
+                    if (r < 0) {
+                        actualTheta = theta + 180;
+                        actualR = Math.abs(r);
+                        // Normalize angle to 0-360 range
+                        while (actualTheta >= 360) actualTheta -= 360;
+                        while (actualTheta < 0) actualTheta += 360;
+                    }
+                    
+                    // Convert polar to Cartesian using Romasm Math Engine
+                    const scaledTheta = Math.floor(actualTheta * 100);
+                    const scaledR = Math.floor(actualR * 100);
+                    
+                    try {
+                        const result = mathEngine.polarToCartesian(scaledR, scaledTheta);
+                        const x = result.x / 100.0;
+                        const y = result.y / 100.0;
+                        
+                        if (cartesianPoints.length < 3) {
+                            console.log('Conversion debug:', {
+                                r: actualR,
+                                theta: actualTheta,
+                                scaledR: scaledR,
+                                scaledTheta: scaledTheta,
+                                resultX: result.x,
+                                resultY: result.y,
+                                x: x,
+                                y: y
+                            });
+                        }
+                        
+                        if (!isNaN(x) && !isNaN(y) && isFinite(x) && isFinite(y)) {
+                            cartesianPoints.push({ x, y, plotAngle: actualTheta });
+                        } else {
+                            if (cartesianPoints.length === 0) {
+                                console.error('Invalid conversion result:', { 
+                                    x, y, 
+                                    r: actualR, 
+                                    theta: actualTheta,
+                                    result: result
+                                });
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Conversion exception:', error);
+                        continue;
+                    }
+                }
+                
+                // Sort by plotting angle to ensure proper connection order
+                cartesianPoints.sort((a, b) => a.plotAngle - b.plotAngle);
+                
+                console.log(`Converted ${cartesianPoints.length} points to Cartesian`);
+                if (cartesianPoints.length > 0) {
+                    console.log('First few Cartesian points:', cartesianPoints.slice(0, 3));
+                }
+                
+                // Extract x, y for plotting
+                for (const point of cartesianPoints) {
+                    points.push({ x: point.x, y: point.y });
+                }
+                
+                console.log(`Total points to plot: ${points.length}`);
+                
+                // Only auto-adjust bounds if we have valid points and maxR
+                if (maxR > 0 && maxR < 1000 && points.length > 0) {
+                    const polarRange = Math.max(maxR * 1.2, 1);
+                    const adjustedXMin = -polarRange;
+                    const adjustedXMax = polarRange;
+                    const adjustedYMin = -polarRange;
+                    const adjustedYMax = polarRange;
+                    
+                    // Update graph bounds for polar curves
+                    document.getElementById('x-min').value = adjustedXMin.toFixed(1);
+                    document.getElementById('x-max').value = adjustedXMax.toFixed(1);
+                    document.getElementById('y-min').value = adjustedYMin.toFixed(1);
+                    document.getElementById('y-max').value = adjustedYMax.toFixed(1);
+                    
+                    // Draw with adjusted bounds
+                    drawGraph(points, adjustedXMin, adjustedXMax, adjustedYMin, adjustedYMax);
+                } else {
+                    // Use original bounds if auto-adjustment failed
+                    console.warn('Auto-adjustment failed, using original bounds');
+                    drawGraph(points, xMin, xMax, yMin, yMax);
+                }
+                return; // Early return for polar mode
+            } else {
+                // Cartesian coordinates: y = f(x)
+                for (let x = xMin; x <= xMax; x += stepSize) {
+                    const vm = new RomasmVM();
+                    
+                    // Set input x (scaled by 100) in R0
+                    const scaledX = Math.floor(x * 100);
+                    vm.registers['I'] = scaledX; // R0 = I
+                    
+                    // Load and execute the function
+                    vm.loadProgram(result.instructions);
+                    
+                    try {
+                        // Execute until RET or max steps
+                        let steps = 0;
+                        while (!vm.halted && steps < 1000) {
+                            const stepResult = vm.step();
+                            if (stepResult.error) {
+                                break;
+                            }
+                            steps++;
+                        }
 
-            // Draw graph
-            drawGraph(points, xMin, xMax, yMin, yMax);
+                        // Get result from R0 (I register)
+                        const result = vm.registers['I'];
+                        const y = result / 100.0; // Unscale
+
+                        // Clamp to reasonable range
+                        if (!isNaN(y) && isFinite(y) && y >= yMin - 10 && y <= yMax + 10) {
+                            points.push({ x, y });
+                        }
+                    } catch (error) {
+                        // Skip this point if there's an error
+                        continue;
+                    }
+                }
+                
+                // Draw graph for Cartesian mode
+                drawGraph(points, xMin, xMax, yMin, yMax);
+            }
         }
 
         function drawGraph(points, xMin, xMax, yMin, yMax) {
@@ -885,10 +1356,24 @@ RET`
                     const x = padding + graphWidth * (point.x - xMin) / (xMax - xMin);
                     const y = padding + graphHeight * (yMax - point.y) / (yMax - yMin);
 
-                    if (i === 0) {
-                        ctx.moveTo(x, y);
-                    } else {
-                        ctx.lineTo(x, y);
+                    // Check if point is valid (not NaN or Infinity)
+                    if (!isNaN(x) && !isNaN(y) && isFinite(x) && isFinite(y)) {
+                        if (i === 0) {
+                            ctx.moveTo(x, y);
+                        } else {
+                            // Check distance to previous point - if too far, start new path segment
+                            const prevPoint = points[i - 1];
+                            const prevX = padding + graphWidth * (prevPoint.x - xMin) / (xMax - xMin);
+                            const prevY = padding + graphHeight * (yMax - prevPoint.y) / (yMax - yMin);
+                            const dist = Math.sqrt((x - prevX) ** 2 + (y - prevY) ** 2);
+                            
+                            // If points are too far apart (likely a discontinuity), start new segment
+                            if (dist > Math.max(graphWidth, graphHeight) * 0.1) {
+                                ctx.moveTo(x, y);
+                            } else {
+                                ctx.lineTo(x, y);
+                            }
+                        }
                     }
                 }
 

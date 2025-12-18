@@ -9,10 +9,27 @@ function createNavigation() {
     
     // Get current page to highlight active link
     const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    const pathParts = window.location.pathname.split('/').filter(p => p);
+    
+    // Determine if we're in docs folder
+    const isInDocs = pathParts.includes('docs');
+    const isInDocsPages = pathParts.includes('pages');
+    
+    // Generate path prefix based on location
+    let pathPrefix = '';
+    if (isInDocsPages) {
+        pathPrefix = '../../';  // From docs/pages/ to root
+    } else if (isInDocs) {
+        pathPrefix = '../';  // From docs/ to root
+    }
     
     function isActive(href) {
         return href === currentPage || (currentPage === '' && href === 'index.html');
     }
+    
+    // Documentation link
+    const docsLink = isInDocs ? 'index.html' : 'docs/index.html';
+    const docsActive = isInDocs && (currentPage === 'index.html' || pathParts[pathParts.length - 1] === 'docs');
     
     nav.innerHTML = `
         <div class="nav-header">
@@ -21,16 +38,19 @@ function createNavigation() {
         <div class="nav-section">
             <h3 class="nav-section-title">Romasm</h3>
             <ul class="nav-links">
-                <li><a href="romasm.html" class="${isActive('romasm.html') ? 'active' : ''}">Basic Romasm</a></li>
-                <li><a href="romasm-extended.html" class="${isActive('romasm-extended.html') ? 'active' : ''}">Extended Features</a></li>
-                <li><a href="ide.html" class="${isActive('ide.html') ? 'active' : ''}">IDE</a></li>
+                <li><a href="${pathPrefix}romasm.html" class="${isActive('romasm.html') ? 'active' : ''}">Basic Romasm</a></li>
+                <li><a href="${pathPrefix}romasm-extended.html" class="${isActive('romasm-extended.html') ? 'active' : ''}">Extended Features</a></li>
+                <li><a href="${pathPrefix}ide.html" class="${isActive('ide.html') ? 'active' : ''}">IDE</a></li>
             </ul>
         </div>
         <div class="nav-section">
             <h3 class="nav-section-title">Tools</h3>
             <ul class="nav-links">
-                <li><a href="index.html" class="${isActive('index.html') ? 'active' : ''}">Positional Roman</a></li>
-                <li><a href="calculator.html" class="${isActive('calculator.html') ? 'active' : ''}">Graphics Calculator</a></li>
+                <li><a href="${pathPrefix}index.html" class="${isActive('index.html') && !isInDocs ? 'active' : ''}">Positional Roman</a></li>
+                <li><a href="${pathPrefix}text-to-romasm.html" class="${isActive('text-to-romasm.html') ? 'active' : ''}">Text to Romasm</a></li>
+                <li><a href="${pathPrefix}calculator.html" class="${isActive('calculator.html') ? 'active' : ''}">Graphics Calculator</a></li>
+                <li><a href="${pathPrefix}romasm-calculator.html" class="${isActive('romasm-calculator.html') ? 'active' : ''}">Romasm Calculator</a></li>
+                <li><a href="${docsLink}" class="${docsActive ? 'active' : ''}">Documentation</a></li>
             </ul>
         </div>
         <div class="nav-section">

@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Romasm Calculator</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="nav.css">
+    <style>
+        .romasm-calculator {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            padding: 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .calc-screen {
+            background: #1a1a1a;
+            border: 3px solid #333;
+            border-radius: 8px;
+            padding: 1rem;
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        .calc-status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            background: #000;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .calc-display {
+            background: #fff;
+            border: 2px solid #333;
+            border-radius: 4px;
+            padding: 0.5rem;
+        }
+        
+        #calc-canvas {
+            width: 100%;
+            height: 300px;
+            background: #fff;
+            display: block;
+            border: 1px solid #333;
+        }
+        
+        .function-editor {
+            display: block;
+        }
+        
+        .window-settings {
+            display: grid;
+        }
+        
+        .window-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .calc-keypad {
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        .keypad-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .keypad-main {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+        }
+        
+        .calc-key {
+            padding: 0.75rem;
+            background: var(--surface);
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+        
+        .calc-key:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .calc-key:active {
+            transform: scale(0.95);
+        }
+        
+        .function-key {
+            background: #ff6b00;
+            color: white;
+        }
+        
+        .function-key:hover {
+            background: #ff8c00;
+        }
+        
+        .nav-pad {
+            grid-column: span 4;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+            gap: 0.25rem;
+        }
+        
+        .nav-key {
+            padding: 0.5rem;
+        }
+        
+        .nav-center {
+            grid-column: 3;
+        }
+        
+        .mode-selector {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: var(--surface);
+            border-radius: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .mode-btn {
+            padding: 0.5rem 1rem;
+            background: var(--surface-light);
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .mode-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .function-editor {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: var(--surface);
+            border-radius: 8px;
+        }
+        
+        .function-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+        
+        .function-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .function-item label {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .function-item textarea {
+            width: 100%;
+            padding: 0.5rem;
+            background: var(--background);
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            min-height: 60px;
+        }
+        
+        .window-settings {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: var(--surface);
+            border-radius: 8px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+        
+        .window-setting {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .window-setting label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        .window-setting input {
+            padding: 0.5rem;
+            background: var(--background);
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-primary);
+        }
+        
+        .console-section {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: var(--surface);
+            border-radius: 8px;
+        }
+        
+        .console-section h3 {
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        
+        .console-controls {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .examples-dropdown {
+            padding: 0.5rem;
+            background: var(--surface-light);
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            cursor: pointer;
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .console-editor {
+            width: 100%;
+            min-height: 200px;
+            padding: 1rem;
+            background: var(--background);
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            margin-bottom: 1rem;
+        }
+        
+        .console-output {
+            background: var(--background);
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1rem;
+            min-height: 150px;
+        }
+        
+        .console-output-header {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+        
+        .console-output-content {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            color: var(--text-primary);
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .run-btn {
+            padding: 0.5rem 1.5rem;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .run-btn:hover {
+            background: #059669;
+        }
+        
+        .clear-btn {
+            padding: 0.5rem 1rem;
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        .clear-btn:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Romasm Calculator</h1>
+            <p class="subtitle">Full-featured calculator powered entirely by Romasm assembly</p>
+        </header>
+        
+        <main>
+            <div class="mode-selector">
+                <button class="mode-btn active" data-mode="function">Function (y=f(x))</button>
+                <button class="mode-btn" data-mode="polar">Polar (r=f(θ))</button>
+                <button class="mode-btn" data-mode="parametric">Parametric (x=f(t), y=g(t))</button>
+                <button class="mode-btn" data-mode="sequence">Sequence (u_n)</button>
+            </div>
+            
+            <div id="calculator-container"></div>
+            
+            <div class="function-editor">
+                <h3>Function Editor (Y=)</h3>
+                <div class="function-list">
+                    <div class="function-item">
+                        <label>Y1 =</label>
+                        <textarea id="y1-code" placeholder="; Romasm assembly code
+; Input: R0 = x (scaled by 100)
+; Output: R0 = f(x) (scaled by 100)
+; 
+; Example: y = x²
+; LOAD R1, R0
+; MUL R0, R1
+; LOAD R1, 100
+; DIV R0, R1
+; RET
+;
+; Example: y = sin(x) using stdlib
+; LOAD R1, 100
+; MUL R0, R1    ; Convert x to degrees (x*100)
+; CALL sin      ; Call stdlib sin function
+; LOAD R1, 100
+; DIV R0, R1    ; Scale result back
+; RET"></textarea>
+                    </div>
+                    <div class="function-item">
+                        <label>Y2 =</label>
+                        <textarea id="y2-code" placeholder="; Define Y2 function"></textarea>
+                    </div>
+                    <div class="function-item">
+                        <label>Y3 =</label>
+                        <textarea id="y3-code" placeholder="; Define Y3 function"></textarea>
+                    </div>
+                    <div class="function-item">
+                        <label>Y4 =</label>
+                        <textarea id="y4-code" placeholder="; Define Y4 function"></textarea>
+                    </div>
+                </div>
+                <button id="update-functions" style="margin-top: 1rem; padding: 0.75rem 1.5rem; background: var(--success); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Update Functions</button>
+            </div>
+            
+            <div class="window-settings">
+                <!-- Function/Parametric window settings -->
+                <div id="cartesian-window" class="window-group">
+                    <div class="window-setting">
+                        <label>X Min</label>
+                        <input type="number" id="xmin" value="-10" step="0.1">
+                    </div>
+                    <div class="window-setting">
+                        <label>X Max</label>
+                        <input type="number" id="xmax" value="10" step="0.1">
+                    </div>
+                    <div class="window-setting">
+                        <label>Y Min</label>
+                        <input type="number" id="ymin" value="-10" step="0.1">
+                    </div>
+                    <div class="window-setting">
+                        <label>Y Max</label>
+                        <input type="number" id="ymax" value="10" step="0.1">
+                    </div>
+                </div>
+                
+                <!-- Polar window settings -->
+                <div id="polar-window" class="window-group" style="display: none;">
+                    <div class="window-setting">
+                        <label>θ Min</label>
+                        <input type="number" id="theta-min" value="0" step="0.01">
+                    </div>
+                    <div class="window-setting">
+                        <label>θ Max</label>
+                        <input type="number" id="theta-max" value="6.283185307" step="0.01">
+                    </div>
+                    <div class="window-setting">
+                        <label>θ Step</label>
+                        <input type="number" id="theta-step" value="0.13" step="0.01">
+                    </div>
+                    <div class="window-setting">
+                        <label>X Min</label>
+                        <input type="number" id="polar-x-min" value="-5" step="0.1">
+                    </div>
+                    <div class="window-setting">
+                        <label>X Max</label>
+                        <input type="number" id="polar-x-max" value="5" step="0.1">
+                    </div>
+                    <div class="window-setting">
+                        <label>Y Min</label>
+                        <input type="number" id="polar-y-min" value="-5" step="0.1">
+                    </div>
+                    <div class="window-setting">
+                        <label>Y Max</label>
+                        <input type="number" id="polar-y-max" value="5" step="0.1">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="console-section">
+                <h3>Romasm Console</h3>
+                <div class="console-controls">
+                    <select id="console-examples" class="examples-dropdown">
+                        <option value="">Select an example...</option>
+                        <option value="hello">Hello World</option>
+                        <option value="factorial">Factorial</option>
+                        <option value="fibonacci">Fibonacci</option>
+                        <option value="power">Power Function</option>
+                        <option value="sqrt">Square Root</option>
+                        <option value="sin">Sine Function</option>
+                        <option value="cos">Cosine Function</option>
+                        <option value="loop">Loop Example</option>
+                        <option value="prime">Prime Check</option>
+                        <option value="draw_line">Draw Line</option>
+                        <option value="draw_circle">Draw Circle</option>
+                        <option value="draw_square">Draw Square</option>
+                        <option value="plot_function">Plot Function</option>
+                        <option value="plot_points">Plot Points (Auto-Graph)</option>
+                        <option value="plot_sine">Plot Sine Wave</option>
+                    </select>
+                    <button id="run-console" class="run-btn">Run Script</button>
+                    <button id="clear-console" class="clear-btn">Clear</button>
+                </div>
+                <textarea id="console-editor" class="console-editor" placeholder="; Paste or type Romasm assembly code here
+; Example:
+LOAD R1, 5
+PRINT R1
+RET"></textarea>
+                <div class="console-output">
+                    <div class="console-output-header">Output:</div>
+                    <div id="console-output-content" class="console-output-content"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="compiler/romasm-assembler.js"></script>
+    <script src="compiler/romasm-vm.js"></script>
+    <script src="calcengine/romasm-math-engine.js"></script>
+    <script src="linker/romasm-linker.js"></script>
+    <script src="calcengine/romasm-calculator-engine.js"></script>
+    <script src="calcengine/romasm-expression-parser.js"></script>
+    <script src="calcengine/romasm-calculator-ui.js"></script>
+    <script>
+        // Initialize calculator
+        const engine = new RomasmCalculatorEngine();
+        
+        // Wait for DOM to be ready
+        document.addEventListener('DOMContentLoaded', () => {
+            const ui = new RomasmCalculatorUI('calculator-container', engine);
+            
+            // Mode selector
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    const mode = btn.dataset.mode;
+                    engine.setMode(mode);
+                    
+                    // Show/hide appropriate window settings
+                    const cartesianWindow = document.getElementById('cartesian-window');
+                    const polarWindow = document.getElementById('polar-window');
+                    if (mode === 'polar') {
+                        if (cartesianWindow) cartesianWindow.style.display = 'none';
+                        if (polarWindow) polarWindow.style.display = 'grid';
+                        // Set default polar window if in radian mode
+                        if (engine.angleMode === 'radian') {
+                            engine.setPolarWindow(0, 2 * Math.PI, 0.13);
+                            const thetaMaxInput = document.getElementById('theta-max');
+                            if (thetaMaxInput) thetaMaxInput.value = (2 * Math.PI).toFixed(9);
+                        }
+                    } else {
+                        if (cartesianWindow) cartesianWindow.style.display = 'grid';
+                        if (polarWindow) polarWindow.style.display = 'none';
+                    }
+                    
+                    ui.setState('graphing');
+                    ui.updateStatusBar();
+                    ui.plotCurrentFunctions();
+                });
+            });
+            
+            // Function editor - Update Functions button
+            const updateBtn = document.getElementById('update-functions');
+            if (updateBtn) {
+                updateBtn.addEventListener('click', () => {
+                    const functions = ['Y1', 'Y2', 'Y3', 'Y4'];
+                    functions.forEach((name, idx) => {
+                        const code = document.getElementById(`y${idx + 1}-code`);
+                        if (code && code.value.trim()) {
+                            try {
+                                engine.defineFunction(name, code.value.trim());
+                                console.log(`${name} defined successfully`);
+                            } catch (error) {
+                                console.error(`Error defining ${name}:`, error);
+                                alert(`Error defining ${name}: ${error.message}`);
+                            }
+                        }
+                    });
+                    ui.plotCurrentFunctions();
+                });
+            }
+            
+            // Make UI accessible globally
+            window.calculatorUI = ui;
+            window.calculatorEngine = engine;
+            
+            // Set initial window
+            engine.setWindow(-10, 10, -10, 10, 0.1);
+            
+            // Start with blank graph (no default function)
+            // Users can define their own functions in the Y= editor
+        });
+        
+        // Window settings - update engine when changed
+        ['xmin', 'xmax', 'ymin', 'ymax'].forEach(id => {
+            const input = document.getElementById(id);
+            if (input) {
+                input.addEventListener('change', () => {
+                    const xMin = parseFloat(document.getElementById('xmin').value);
+                    const xMax = parseFloat(document.getElementById('xmax').value);
+                    const yMin = parseFloat(document.getElementById('ymin').value);
+                    const yMax = parseFloat(document.getElementById('ymax').value);
+                    if (!isNaN(xMin) && !isNaN(xMax) && !isNaN(yMin) && !isNaN(yMax)) {
+                        engine.setWindow(xMin, xMax, yMin, yMax);
+                        if (window.calculatorUI) {
+                            window.calculatorUI.plotCurrentFunctions();
+                        }
+                    }
+                });
+            }
+        });
+        
+        // Polar window settings
+        const polarInputs = ['theta-min', 'theta-max', 'theta-step', 'polar-x-min', 'polar-x-max', 'polar-y-min', 'polar-y-max'];
+        polarInputs.forEach(id => {
+            const input = document.getElementById(id);
+            if (input) {
+                input.addEventListener('change', () => {
+                    const thetaMin = parseFloat(document.getElementById('theta-min').value) || 0;
+                    const thetaMax = parseFloat(document.getElementById('theta-max').value) || (2 * Math.PI);
+                    const thetaStep = parseFloat(document.getElementById('theta-step').value) || 0.13;
+                    const xMin = parseFloat(document.getElementById('polar-x-min').value) || -5;
+                    const xMax = parseFloat(document.getElementById('polar-x-max').value) || 5;
+                    const yMin = parseFloat(document.getElementById('polar-y-min').value) || -5;
+                    const yMax = parseFloat(document.getElementById('polar-y-max').value) || 5;
+                    
+                    engine.setPolarWindow(thetaMin, thetaMax, thetaStep);
+                    engine.setWindow(xMin, xMax, yMin, yMax);
+                    
+                    if (window.calculatorUI) {
+                        window.calculatorUI.plotCurrentFunctions();
+                    }
+                });
+            }
+        });
+        
+        // Make expression parser available
+        if (typeof RomasmExpressionParser !== 'undefined') {
+            window.RomasmExpressionParser = RomasmExpressionParser;
+        }
+        
+        // Console functionality
+        const consoleExamples = {
+            hello: `; Hello World - Simple program
+LOAD R0, 42
+PRINT R0
+LOAD R1, 100
+PRINT R1`,
+            
+            factorial: `; Calculate 5!
+LOAD R0, 1
+LOAD R1, 1
+LOAD R2, 5
+loop:
+  MUL R0, R1
+  INC R1
+  CMP R1, R2
+  JLT loop
+  JEQ done
+done:
+PRINT R0`,
+            
+            fibonacci: `; Calculate first 10 Fibonacci numbers
+LOAD R0, 0   ; F(0)
+LOAD R1, 1   ; F(1)
+LOAD R2, 10  ; Count
+LOAD R3, 0   ; Counter
+
+PRINT R0
+PRINT R1
+
+fib_loop:
+  ADD R0, R1  ; F(n) = F(n-1) + F(n-2)
+  PRINT R0
+  LOAD R5, R0
+  LOAD R0, R1
+  LOAD R1, R5
+  INC R3
+  CMP R3, R2
+  JLT fib_loop`,
+            
+            power: `; Calculate 2^8
+LOAD R0, 2   ; base
+LOAD R1, 8   ; exponent
+LOAD R2, 1   ; result = 1
+LOAD R3, 0   ; constant 0
+
+power_loop:
+  CMP R1, R3
+  JLE power_done
+  MUL R2, R0
+  DEC R1
+  JMP power_loop
+
+power_done:
+LOAD R0, R2
+PRINT R0  ; Should output 256`,
+            
+            sqrt: `; Square root using Newton's method
+; Find sqrt(25)
+LOAD R0, 25  ; Number
+LOAD R1, R0  ; Guess = number
+LOAD R2, 2   ; Constant 2
+LOAD R3, 10  ; Iterations
+
+sqrt_loop:
+  ; x_new = (x + n/x) / 2
+  LOAD R4, R0
+  DIV R4, R1  ; n/x
+  ADD R4, R1  ; x + n/x
+  DIV R4, R2  ; (x + n/x) / 2
+  LOAD R1, R4
+  DEC R3
+  CMP R3, 0
+  JGT sqrt_loop
+
+PRINT R1  ; Should output ~5`,
+            
+            sin: `; Calculate sin(30 degrees) - simplified
+LOAD R0, 30   ; 30 degrees
+LOAD R1, 90
+CMP R0, R1
+JLE sin_ok
+LOAD R1, 180
+SUB R1, R0
+LOAD R0, R1
+sin_ok:
+; Convert to radians approximation
+LOAD R1, R0
+LOAD R2, 17
+MUL R1, R2
+LOAD R2, 100
+DIV R1, R2
+; Simple sin approximation: sin(x) ≈ x for small x
+LOAD R0, R1
+PRINT R0`,
+            
+            cos: `; Calculate cos(0 degrees)
+LOAD R0, 0    ; 0 degrees
+LOAD R1, 90
+SUB R1, R0
+LOAD R0, R1
+; Convert and calculate
+LOAD R1, R0
+LOAD R2, 17
+MUL R1, R2
+LOAD R2, 100
+DIV R1, R2
+LOAD R0, 1000  ; cos(0) ≈ 1, scaled
+PRINT R0`,
+            
+            loop: `; Loop example - count 1 to 5
+LOAD R0, 0
+LOAD R1, 5
+loop:
+  INC R0
+  PRINT R0
+  CMP R0, R1
+  JLT loop
+done:
+  PRINT R0`,
+            
+            prime: `; Check if 17 is prime
+LOAD R0, 17  ; Number to check
+LOAD R1, 2   ; Divisor
+LOAD R2, 1   ; Constant 1
+LOAD R3, 0   ; Constant 0
+
+check_loop:
+  LOAD R4, R0
+  DIV R4, R1
+  MUL R4, R1
+  SUB R4, R0  ; R4 = R0 % R1 (approximation)
+  CMP R4, R3
+  JEQ not_prime
+  INC R1
+  LOAD R4, R1
+  MUL R4, R4
+  CMP R4, R0
+  JLT check_loop
+  ; Prime!
+  LOAD R0, 1
+  PRINT R0
+  JMP done
+not_prime:
+  LOAD R0, 0
+  PRINT R0
+done:`,
+            
+            draw_line: `; Draw a line on the graph
+; Coordinates are in graph space (scaled by 100)
+; Draw line from (-5, -5) to (5, 5)
+CLEAR
+; Start point: (-5, -5) scaled by 100
+LOAD R0, -500  ; x1 (graph coordinate * 100)
+LOAD R1, -500  ; y1 (graph coordinate * 100)
+MOVE R0, R1
+; End point: (5, 5) in graph space
+LOAD R0, 500   ; x2 (graph coordinate * 100)
+LOAD R1, 500   ; y2 (graph coordinate * 100)
+DRAW R0, R1
+STROKE
+PRINT 1  ; Done!`,
+            
+            draw_circle: `; Draw a circle on the graph using DRAW opcodes
+; Coordinates in graph space (scaled by 100)
+; Circle centered at (0, 0) with radius 3
+CLEAR
+LOAD R2, 0     ; centerX
+LOAD R3, 0     ; centerY
+LOAD R4, 300   ; radius (3 scaled by 100)
+LOAD R5, 0     ; angle counter (0-360, step 30)
+LOAD R6, 360   ; max angle
+LOAD R7, 30    ; step size
+
+circle_loop:
+  ; Approximate circle with polygon
+  ; For each angle, calculate point on circle
+  ; Simplified: use radius directly
+  LOAD R0, R2   ; centerX
+  LOAD R1, R4   ; radius
+  ADD R0, R1    ; x = centerX + radius (simplified)
+  
+  LOAD R1, R3   ; centerY
+  ADD R1, R4    ; y = centerY + radius (simplified)
+  
+  ; Draw point
+  CMP R5, 0
+  JEQ first_point
+  DRAW R0, R1
+  JMP next_angle
+first_point:
+  MOVE R0, R1
+next_angle:
+  ADD R5, R7
+  CMP R5, R6
+  JLT circle_loop
+  
+STROKE
+PRINT 1`,
+            
+            draw_square: `; Draw a square on the graph
+; Coordinates in graph space (scaled by 100)
+; Square from (-3, -3) to (3, 3)
+CLEAR
+; Top-left corner
+LOAD R0, -300  ; x = -3 (scaled by 100)
+LOAD R1, 300   ; y = 3 (scaled by 100)
+MOVE R0, R1
+; Top-right
+LOAD R0, 300   ; x = 3
+LOAD R1, 300   ; y = 3
+DRAW R0, R1
+; Bottom-right
+LOAD R0, 300   ; x = 3
+LOAD R1, -300  ; y = -3
+DRAW R0, R1
+; Bottom-left
+LOAD R0, -300  ; x = -3
+LOAD R1, -300  ; y = -3
+DRAW R0, R1
+; Close square
+LOAD R0, -300
+LOAD R1, 300
+DRAW R0, R1
+STROKE
+PRINT 1`,
+            
+            plot_function: `; Plot y = x² using DRAW opcodes
+; Uses direct screen coordinates
+CLEAR
+LOAD R2, -500  ; x counter (scaled by 100, so -5 = -500)
+LOAD R3, 500   ; max x (5 = 500)
+LOAD R4, 50    ; step (0.5 = 50)
+
+plot_loop:
+  ; Calculate y = x²
+  LOAD R0, R2  ; x (scaled by 100)
+  LOAD R1, 100
+  DIV R0, R1   ; x (unscaled)
+  LOAD R1, R0
+  MUL R0, R1   ; x² (unscaled)
+  LOAD R1, 100
+  MUL R0, R1   ; x² (scaled by 100)
+  
+  ; Convert to screen coordinates (simplified)
+  ; x_screen ≈ 250 + (x/100) * 23
+  LOAD R5, R2
+  LOAD R1, 100
+  DIV R5, R1
+  LOAD R1, 23
+  MUL R5, R1
+  LOAD R1, 250
+  ADD R5, R1
+  
+  ; y_screen ≈ 150 - (y/100) * 13
+  LOAD R6, R0
+  LOAD R1, 100
+  DIV R6, R1
+  LOAD R1, 13
+  MUL R6, R1
+  LOAD R1, 150
+  SUB R1, R6
+  LOAD R6, R1
+  
+  ; Draw point
+  CMP R2, -500
+  JEQ first_plot
+  DRAW R5, R6
+  JMP next_x
+first_plot:
+  MOVE R5, R6
+next_x:
+  ADD R2, R4
+  CMP R2, R3
+  JLE plot_loop
+  
+STROKE
+PRINT 1`,
+            
+            plot_points: `; Plot points by outputting (x, y) pairs
+; This will automatically render on the graph!
+; Output format: PRINT x, PRINT y (repeated)
+; Plot y = x² from x=-5 to x=5
+LOAD R2, -500  ; x counter (scaled by 100)
+LOAD R3, 500   ; max x
+LOAD R4, 50    ; step
+
+plot_loop:
+  ; Calculate y = x²
+  LOAD R0, R2  ; x (scaled)
+  LOAD R1, 100
+  DIV R0, R1   ; x (unscaled)
+  LOAD R1, R0
+  MUL R0, R1   ; x² (unscaled)
+  LOAD R1, 100
+  MUL R0, R1   ; x² (scaled by 100)
+  
+  ; Output as coordinate pair: (x, y)
+  PRINT R2     ; x (scaled by 100)
+  PRINT R0     ; y (scaled by 100)
+  
+  ADD R2, R4
+  CMP R2, R3
+  JLE plot_loop
+  
+PRINT 1  ; Done`,
+            
+            plot_sine: `; Plot sin(x) wave using stdlib sin function
+; Outputs (x, y) pairs that auto-plot on graph
+; Note: This requires linking with stdlib (sin function)
+; x ranges from 0 to 360 degrees
+LOAD R2, 0      ; x from 0 to 360 (in degrees, scaled by 100)
+LOAD R3, 36000  ; max x (360 degrees scaled by 100)
+LOAD R4, 1000   ; step (10 degrees scaled by 100)
+
+sine_loop:
+  ; Calculate y = sin(x) using stdlib
+  ; sin function expects: R0 = angle in degrees (scaled by 100)
+  ; Returns: R0 = sin(angle) scaled by 1000
+  LOAD R0, R2   ; x (degrees scaled by 100)
+  CALL sin      ; Call stdlib sin function
+  ; Result in R0 is sin(angle) scaled by 1000
+  ; Scale result to match graph coordinates (divide by 10 to get scaled by 100)
+  LOAD R1, 10
+  DIV R0, R1    ; R0 = sin(x) scaled by 100
+  
+  ; Convert x from degrees to graph units (divide by 36 to get -10 to 10 range)
+  ; For display: x_graph = (x_degrees - 180) / 18
+  LOAD R5, R2   ; x in degrees
+  LOAD R1, 18000  ; 180 degrees scaled by 100
+  SUB R5, R1    ; x - 180
+  LOAD R1, 18
+  DIV R5, R1    ; (x - 180) / 18, scaled by 100
+  
+  ; Output coordinate pair
+  PRINT R5      ; x (in graph units, scaled by 100)
+  PRINT R0      ; y = sin(x) (scaled by 100)
+  
+  ADD R2, R4
+  CMP R2, R3
+  JLE sine_loop
+  
+PRINT 1  ; Done`
+        };
+        
+        // Load example from dropdown
+        const exampleSelect = document.getElementById('console-examples');
+        if (exampleSelect) {
+            exampleSelect.addEventListener('change', () => {
+                const example = consoleExamples[exampleSelect.value];
+                if (example) {
+                    document.getElementById('console-editor').value = example;
+                }
+            });
+        }
+        
+        // Run script
+        const runBtn = document.getElementById('run-console');
+        const consoleEditor = document.getElementById('console-editor');
+        const consoleOutput = document.getElementById('console-output-content');
+        
+        if (runBtn && consoleEditor && consoleOutput) {
+            runBtn.addEventListener('click', async () => {
+                const code = consoleEditor.value.trim();
+                if (!code) {
+                    consoleOutput.textContent = 'Error: No code to run';
+                    return;
+                }
+                
+                try {
+                    // Clear previous output
+                    consoleOutput.textContent = 'Running...\n';
+                    
+                    // Check if code needs stdlib functions
+                    const codeUpper = code.toUpperCase();
+                    const requiredStdlib = [];
+                    if (codeUpper.includes('CALL SIN')) {
+                        requiredStdlib.push('sin');
+                    }
+                    if (codeUpper.includes('CALL COS')) {
+                        requiredStdlib.push('cos');
+                    }
+                    if (codeUpper.includes('CALL SQRT')) {
+                        requiredStdlib.push('sqrt');
+                    }
+                    
+                    // Assemble the user code
+                    const assembler = new RomasmAssembler();
+                    const userResult = assembler.assemble(code);
+                    
+                    if (!userResult.success) {
+                        consoleOutput.textContent = 'Assembly Errors:\n' + 
+                            userResult.errors.map(e => `Line ${e.line}: ${e.message}`).join('\n');
+                        return;
+                    }
+                    
+                    // Link with stdlib if needed
+                    let result = userResult;
+                    if (requiredStdlib.length > 0) {
+                        const linker = new RomasmLinker();
+                        const linked = await linker.link(userResult.instructions, requiredStdlib);
+                        result = {
+                            success: true,
+                            instructions: linked.instructions,
+                            errors: []
+                        };
+                        consoleOutput.textContent += `Linked with stdlib: ${requiredStdlib.join(', ')}\n`;
+                    }
+                    
+                    // Get canvas context from calculator UI for drawing
+                    let canvasContext = null;
+                    let calculatorUI = null;
+                    let engine = null;
+                    if (window.calculatorUI) {
+                        calculatorUI = window.calculatorUI;
+                        canvasContext = calculatorUI.ctx;
+                        engine = calculatorUI.engine;
+                    } else if (window.calculatorEngine) {
+                        engine = window.calculatorEngine;
+                    }
+                    
+                    // Create a coordinate converter wrapper for the canvas
+                    // This converts graph coordinates to screen coordinates
+                    let graphCanvasContext = null;
+                    if (canvasContext && engine && calculatorUI && calculatorUI.canvas) {
+                        const width = calculatorUI.canvas.width;
+                        const height = calculatorUI.canvas.height;
+                        const padding = 20;
+                        const graphWidth = width - 2 * padding;
+                        const graphHeight = height - 2 * padding;
+                        const xScale = graphWidth / (engine.xMax - engine.xMin);
+                        const yScale = graphHeight / (engine.yMax - engine.yMin);
+                        
+                        // Create wrapper that converts graph coords to screen coords
+                        graphCanvasContext = {
+                            canvas: canvasContext.canvas,
+                            moveTo: (x, y) => {
+                                // x, y are in graph coordinates (scaled by 100)
+                                const graphX = x / 100.0;
+                                const graphY = y / 100.0;
+                                const screenX = padding + (graphX - engine.xMin) * xScale;
+                                const screenY = padding + (engine.yMax - graphY) * yScale;
+                                canvasContext.moveTo(screenX, screenY);
+                            },
+                            lineTo: (x, y) => {
+                                const graphX = x / 100.0;
+                                const graphY = y / 100.0;
+                                const screenX = padding + (graphX - engine.xMin) * xScale;
+                                const screenY = padding + (engine.yMax - graphY) * yScale;
+                                canvasContext.lineTo(screenX, screenY);
+                            },
+                            stroke: () => canvasContext.stroke(),
+                            clearRect: (x, y, w, h) => canvasContext.clearRect(x, y, w, h),
+                            beginPath: () => canvasContext.beginPath(),
+                            strokeStyle: {
+                                get: () => canvasContext.strokeStyle,
+                                set: (val) => canvasContext.strokeStyle = val
+                            },
+                            lineWidth: {
+                                get: () => canvasContext.lineWidth,
+                                set: (val) => canvasContext.lineWidth = val
+                            }
+                        };
+                    }
+                    
+                    // Create VM with graph-aware canvas context
+                    const vm = new RomasmVM(graphCanvasContext || canvasContext);
+                    vm.loadProgram(result.instructions);
+                    
+                    let output = 'Running...\n\n';
+                    let steps = 0;
+                    const maxSteps = 10000;
+                    let hasDrawing = false;
+                    let graphPoints = []; // Store points for graphing
+                    
+                    // Check if code uses drawing opcodes
+                    const drawingOpcodes = ['MOV', 'DRW', 'STR', 'CLR'];
+                    const codeUpperDraw = code.toUpperCase();
+                    if (drawingOpcodes.some(op => codeUpperDraw.includes(op))) {
+                        hasDrawing = true;
+                        // Switch to graphing mode
+                        if (calculatorUI) {
+                            calculatorUI.currentState = 'graphing';
+                            // Draw the base graph first
+                            calculatorUI.drawGraph();
+                        }
+                        // Clear graph if CLEAR is used, otherwise prepare for drawing
+                        const ctx = graphCanvasContext || canvasContext;
+                        if (ctx && codeUpperDraw.includes('CLR')) {
+                            // Clear and redraw base graph
+                            if (calculatorUI) {
+                                calculatorUI.drawGraph();
+                            }
+                        } else if (ctx) {
+                            // Set up drawing style for console drawings
+                            ctx.strokeStyle = '#00f'; // Blue for console drawings
+                            ctx.lineWidth = 2;
+                            ctx.beginPath();
+                        }
+                    }
+                    
+                    while (!vm.halted && steps < maxSteps) {
+                        const stepResult = vm.step();
+                        if (stepResult.error) {
+                            output += `\nError: ${stepResult.error}`;
+                            break;
+                        }
+                        steps++;
+                    }
+                    
+                    // Stroke if we were drawing
+                    if (hasDrawing) {
+                        const ctx = graphCanvasContext || canvasContext;
+                        if (ctx) {
+                            ctx.stroke();
+                        }
+                    }
+                    
+                    // Check if output contains coordinate pairs (for graphing)
+                    // If PRINT outputs pairs of numbers, treat them as (x, y) coordinates
+                    // Also check if we should graph even if drawing opcodes were used
+                    if (vm.output.length >= 2) {
+                        // Try to interpret output as coordinates
+                        // Look for patterns: even number of outputs might be coordinate pairs
+                        const coords = [];
+                        if (vm.output.length % 2 === 0) {
+                            // Even number - likely coordinate pairs
+                            for (let i = 0; i < vm.output.length; i += 2) {
+                                const x = vm.output[i] / 100.0; // Unscale (assuming scaled by 100)
+                                const y = vm.output[i + 1] / 100.0; // Unscale
+                                if (isFinite(x) && isFinite(y) && !isNaN(x) && !isNaN(y)) {
+                                    coords.push({ x, y });
+                                }
+                            }
+                        } else {
+                            // Odd number - might be single values or last is result
+                            // Try pairing from start
+                            for (let i = 0; i < vm.output.length - 1; i += 2) {
+                                const x = vm.output[i] / 100.0;
+                                const y = vm.output[i + 1] / 100.0;
+                                if (isFinite(x) && isFinite(y) && !isNaN(x) && !isNaN(y)) {
+                                    coords.push({ x, y });
+                                }
+                            }
+                        }
+                        
+                        if (coords.length > 0) {
+                            // Switch to graphing mode and plot points
+                            if (calculatorUI) {
+                                calculatorUI.currentState = 'graphing';
+                                // Draw base graph first
+                                calculatorUI.drawGraph();
+                                
+                                // Plot points on graph
+                                if (canvasContext && calculatorUI.canvas) {
+                                    const width = calculatorUI.canvas.width;
+                                    const height = calculatorUI.canvas.height;
+                                    const padding = 20;
+                                    const graphWidth = width - 2 * padding;
+                                    const graphHeight = height - 2 * padding;
+                                    
+                                    // Get engine window bounds
+                                    const engine = calculatorUI.engine;
+                                    const xScale = graphWidth / (engine.xMax - engine.xMin);
+                                    const yScale = graphHeight / (engine.yMax - engine.yMin);
+                                    
+                                    // Draw points as a connected line
+                                    canvasContext.strokeStyle = '#00f';
+                                    canvasContext.fillStyle = '#00f';
+                                    canvasContext.lineWidth = 2;
+                                    canvasContext.beginPath();
+                                    
+                                    coords.forEach((point, idx) => {
+                                        const screenX = padding + (point.x - engine.xMin) * xScale;
+                                        const screenY = padding + (engine.yMax - point.y) * yScale;
+                                        
+                                        if (screenX >= padding && screenX <= width - padding &&
+                                            screenY >= padding && screenY <= height - padding) {
+                                            if (idx === 0) {
+                                                canvasContext.moveTo(screenX, screenY);
+                                            } else {
+                                                canvasContext.lineTo(screenX, screenY);
+                                            }
+                                        }
+                                    });
+                                    
+                                    canvasContext.stroke();
+                                    
+                                    // Also draw individual points
+                                    coords.forEach((point) => {
+                                        const screenX = padding + (point.x - engine.xMin) * xScale;
+                                        const screenY = padding + (engine.yMax - point.y) * yScale;
+                                        
+                                        if (screenX >= padding && screenX <= width - padding &&
+                                            screenY >= padding && screenY <= height - padding) {
+                                            canvasContext.fillRect(screenX - 2, screenY - 2, 4, 4);
+                                        }
+                                    });
+                                    
+                                    hasDrawing = true;
+                                    output += `\n✓ Plotted ${coords.length} points on graph`;
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (steps >= maxSteps) {
+                        output += '\nWarning: Maximum steps exceeded';
+                    }
+                    
+                    // Display output
+                    if (vm.output.length > 0) {
+                        output += 'Output:\n';
+                        vm.output.forEach(val => {
+                            output += `  ${val}\n`;
+                        });
+                    }
+                    
+                    // Display registers
+                    output += '\nFinal Registers:\n';
+                    Object.entries(vm.registers).forEach(([reg, val]) => {
+                        if (val !== 0) {
+                            output += `  R${reg}: ${val}\n`;
+                        }
+                    });
+                    
+                    if (hasDrawing) {
+                        output += '\n✓ Drawing rendered to graph';
+                    }
+                    
+                    consoleOutput.textContent = output;
+                    
+                    // Update calculator display if drawing occurred
+                    if (hasDrawing && calculatorUI) {
+                        // Preserve console drawing when redrawing graph
+                        calculatorUI.preserveConsoleDrawing = true;
+                        // Redraw the graph with the new drawing
+                        calculatorUI.drawGraph();
+                        calculatorUI.preserveConsoleDrawing = false;
+                        calculatorUI.updateStatusBar();
+                    }
+                } catch (error) {
+                    consoleOutput.textContent = `Error: ${error.message}`;
+                    console.error('Console error:', error);
+                }
+            });
+        }
+        
+        // Clear console
+        const clearBtn = document.getElementById('clear-console');
+        if (clearBtn && consoleEditor && consoleOutput) {
+            clearBtn.addEventListener('click', () => {
+                consoleEditor.value = '';
+                consoleOutput.textContent = '';
+            });
+        }
+    </script>
+</body>
+</html>
+

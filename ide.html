@@ -96,6 +96,33 @@
             border-radius: 4px;
             text-align: center;
         }
+        .memory-display {
+            margin-top: 0.5rem;
+            max-height: 200px;
+            overflow-y: auto;
+            background: var(--background);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.5rem;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        .memory-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.25rem 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .memory-item:last-child {
+            border-bottom: none;
+        }
+        .memory-address {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        .memory-value {
+            color: var(--text-primary);
+        }
         .error {
             color: var(--error);
         }
@@ -159,7 +186,10 @@ PRINT R0"></textarea>
                         <h3>Output</h3>
                     </div>
                     <div id="output-content" class="output-content">Ready to run...</div>
+                    <h3 style="margin-top: 1rem;">Registers</h3>
                     <div id="registers-display" class="register-display"></div>
+                    <h3 style="margin-top: 1rem;">Memory</h3>
+                    <div id="memory-display" class="memory-display"></div>
                 </div>
             </div>
 
@@ -694,11 +724,10 @@ PRINT R0        ; Should output ~2718`
 
             // Display registers
             const state = vm.getState();
-            let regsHtml = '<strong>Registers:</strong><br>';
             const regNames = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
             const regLabels = ['R0', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8'];
             
-            regsHtml += '<div class="register-display">';
+            let regsHtml = '<div class="register-display">';
             for (let i = 0; i < regNames.length; i++) {
                 const value = state.registers[regNames[i]];
                 regsHtml += `<div class="register-item">
@@ -708,6 +737,21 @@ PRINT R0        ; Should output ~2718`
             }
             regsHtml += '</div>';
             registersDiv.innerHTML = regsHtml;
+            
+            // Display memory
+            const memoryDiv = document.getElementById('memory-display');
+            const memory = execution.memory || {};
+            const memoryKeys = Object.keys(memory).sort((a, b) => parseInt(a) - parseInt(b));
+            
+            if (memoryKeys.length > 0) {
+                let memHtml = '';
+                for (const addr of memoryKeys) {
+                    memHtml += `<div class="memory-item"><span class="memory-address">[${addr}]</span><span class="memory-value">${memory[addr]}</span></div>`;
+                }
+                memoryDiv.innerHTML = memHtml;
+            } else {
+                memoryDiv.innerHTML = '<div style="color: var(--text-secondary); padding: 0.5rem;">No memory accessed</div>';
+            }
         }
 
         function clearOutput() {
