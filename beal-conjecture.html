@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beal Conjecture Explorer - Romasm</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="nav.css">
+    <style>
+        .beal-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .search-panel {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .results-panel {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .counterexample {
+            padding: 1.5rem;
+            background: rgba(244, 67, 54, 0.2);
+            border: 2px solid var(--error);
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+        
+        .counterexample h4 {
+            color: var(--error);
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .equation {
+            font-family: 'Courier New', monospace;
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Beal Conjecture Explorer</h1>
+            <p class="subtitle">Search for counterexamples to the Beal Conjecture</p>
+        </header>
+
+        <main>
+            <section class="info-section" style="margin-bottom: 2rem;">
+                <h2>About the Beal Conjecture</h2>
+                <div class="info-content">
+                    <div class="info-card">
+                        <h3>The Conjecture</h3>
+                        <p>If A<sup>x</sup> + B<sup>y</sup> = C<sup>z</sup> where A, B, C, x, y, z are positive integers with x, y, z > 2, then A, B, and C must have a common prime factor.</p>
+                        <p><strong>Reward:</strong> $1,000,000 prize for proof or counterexample!</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>Why It Matters</h3>
+                        <p>This is a generalization of Fermat's Last Theorem. A counterexample would revolutionize number theory.</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>The Challenge</h3>
+                        <p>No counterexample has been found despite extensive searches. Finding one would win the prize and make mathematical history!</p>
+                    </div>
+                </div>
+            </section>
+
+            <div class="beal-container">
+                <div class="search-panel">
+                    <h3>Search for Counterexamples</h3>
+                    <div class="input-group">
+                        <label>Maximum Base Value (A, B, C)</label>
+                        <input type="number" id="max-base" value="100" min="10" max="1000">
+                    </div>
+                    <div class="input-group">
+                        <label>Maximum Exponent (x, y, z)</label>
+                        <input type="number" id="max-exp" value="10" min="3" max="20">
+                    </div>
+                    <button class="run-btn" onclick="searchBeal()">🔍 Search for Counterexamples</button>
+                </div>
+
+                <div class="results-panel" id="results-panel" style="display: none;">
+                    <h3>Search Results</h3>
+                    <div id="results-display"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="compiler/romasm-assembler.js"></script>
+    <script src="compiler/romasm-vm.js"></script>
+    <script src="stdlib/bigint.js"></script>
+    <script>
+        function searchBeal() {
+            const maxBase = parseInt(document.getElementById('max-base').value);
+            const maxExp = parseInt(document.getElementById('max-exp').value);
+            
+            document.getElementById('results-panel').style.display = 'block';
+            document.getElementById('results-display').innerHTML = '<p>Searching with Romasm...</p>';
+            
+            // Limit search for Romasm performance
+            const limitedBase = Math.min(maxBase, 20);
+            const limitedExp = Math.min(maxExp, 5);
+            
+            let found = false;
+            
+            // Search using Romasm for each combination
+            for (let a = 2; a <= limitedBase && !found; a++) {
+                for (let b = 2; b <= limitedBase && !found; b++) {
+                    for (let x = 3; x <= limitedExp && !found; x++) {
+                        for (let y = 3; y <= limitedExp && !found; y++) {
+                            // Romasm code to compute A^x + B^y and check if it equals C^z
+                            const romasmCode = `
+; Beal Conjecture: Check if A^x + B^y = C^z
+; Input: a, b, x, y in registers
+; Output: Prints c, z if found, else 0
+
+LOAD R0, ${a}        ; A
+LOAD R1, ${x}        ; x
+LOAD R2, ${b}        ; B
+LOAD R3, ${y}        ; y
+
+; Calculate A^x
+LOAD R4, 1           ; Result accumulator
+LOAD R5, 0           ; Loop counter
+
+power_a_loop:
+  CMP R5, R1
+  JGE power_a_done
+  MUL R4, R0         ; R4 = R4 * A
+  INC R5
+  JMP power_a_loop
+
+power_a_done:
+  ; R4 now contains A^x
+  ; Calculate B^y
+  LOAD R5, 1
+  LOAD R6, 0
+
+power_b_loop:
+  CMP R6, R3
+  JGE power_b_done
+  MUL R5, R2         ; R5 = R5 * B
+  INC R6
+  JMP power_b_loop
+
+power_b_done:
+  ; R5 now contains B^y
+  ; Calculate A^x + B^y
+  ADD R4, R5         ; R4 = A^x + B^y
+  
+  ; Now check if R4 equals C^z for some C, z
+  LOAD R6, 2         ; C (start from 2)
+  LOAD R7, ${limitedBase} ; max C
+
+check_c_loop:
+  CMP R6, R7
+  JGT not_found
+  
+  LOAD R8, 3         ; z (start from 3)
+  LOAD R9, ${limitedExp} ; max z
+
+check_z_loop:
+  CMP R8, R9
+  JGT next_c
+  
+  ; Calculate C^z
+  LOAD R10, 1
+  LOAD R11, 0
+
+power_c_loop:
+  CMP R11, R8
+  JGE power_c_done
+  MUL R10, R6        ; R10 = R10 * C
+  INC R11
+  JMP power_c_loop
+
+power_c_done:
+  ; R10 now contains C^z
+  ; Check if A^x + B^y == C^z
+  CMP R4, R10
+  JEQ found_solution
+  
+  INC R8
+  JMP check_z_loop
+
+next_c:
+  INC R6
+  JMP check_c_loop
+
+found_solution:
+  ; Check if A, B, C have common factor (simplified GCD check)
+  ; For now, just print the solution
+  PRINT R6           ; Print C
+  PRINT R8           ; Print z
+  JMP done
+
+not_found:
+  LOAD R6, 0
+  PRINT R6
+
+done:
+  ; Program ends naturally
+`;
+
+                            const assembler = new RomasmAssembler();
+                            const result = assembler.assemble(romasmCode);
+                            
+                            if (result.success) {
+                                const vm = new RomasmVM();
+                                vm.loadProgram(result.instructions);
+                                const execResult = vm.run(100000);
+                                
+                                if (execResult.output.length >= 2 && execResult.output[0] !== 0) {
+                                    const c = execResult.output[0];
+                                    const z = execResult.output[1];
+                                    
+                                    // Verify no common factor
+                                    if (!hasCommonFactor(a, b, c)) {
+                                        found = true;
+                                        displayCounterexample(a, b, c, x, y, z);
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            if (!found) {
+                document.getElementById('results-display').innerHTML = 
+                    '<p style="color: var(--text-secondary);">No counterexample found in searched range. The conjecture holds for these values.</p>';
+                document.getElementById('results-display').innerHTML += 
+                    '<p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">Note: Search limited for Romasm performance. For exhaustive search, use optimized algorithms.</p>';
+            }
+        }
+        
+        function hasCommonFactor(a, b, c) {
+            return gcd(gcd(a, b), c) > 1;
+        }
+        
+        function gcd(a, b) {
+            while (b !== 0) {
+                const temp = b;
+                b = a % b;
+                a = temp;
+            }
+            return a;
+        }
+        
+        function displayCounterexample(a, b, c, x, y, z) {
+            const ax = Math.pow(a, x);
+            const by = Math.pow(b, y);
+            const cz = Math.pow(c, z);
+            const sum = ax + by;
+            
+            const html = `
+                <div class="counterexample">
+                    <h4>🎉 COUNTEREXAMPLE FOUND!</h4>
+                    <p>This would be a major mathematical discovery!</p>
+                    <div class="equation">
+                        ${a}<sup>${x}</sup> + ${b}<sup>${y}</sup> = ${c}<sup>${z}</sup>
+                    </div>
+                    <p><strong>Verification:</strong></p>
+                    <p>${ax} + ${by} = ${sum}</p>
+                    <p>${c}<sup>${z}</sup> = ${cz}</p>
+                    <p style="margin-top: 1rem; font-weight: bold;">This would win the $1,000,000 prize!</p>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">Computed using Romasm assembly language</p>
+                </div>
+            `;
+            document.getElementById('results-display').innerHTML = html;
+        }
+    </script>
+</body>
+</html>
+

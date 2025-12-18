@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brocard's Problem Explorer - Romasm</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="nav.css">
+    <style>
+        .brocard-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .search-panel {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .solution {
+            padding: 1rem;
+            margin: 0.5rem 0;
+            background: var(--surface-light);
+            border-radius: 8px;
+            border-left: 4px solid var(--success);
+        }
+        
+        .equation {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Brocard's Problem Explorer</h1>
+            <p class="subtitle">Find integer solutions to n! + 1 = m²</p>
+        </header>
+
+        <main>
+            <section class="info-section" style="margin-bottom: 2rem;">
+                <h2>About Brocard's Problem</h2>
+                <div class="info-content">
+                    <div class="info-card">
+                        <h3>The Problem</h3>
+                        <p>Find integer solutions to the equation: <strong>n! + 1 = m²</strong></p>
+                        <p>Only three solutions are known: (4,5), (5,11), and (7,71)</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>Known Solutions</h3>
+                        <p><strong>n = 4:</strong> 4! + 1 = 24 + 1 = 25 = 5²</p>
+                        <p><strong>n = 5:</strong> 5! + 1 = 120 + 1 = 121 = 11²</p>
+                        <p><strong>n = 7:</strong> 7! + 1 = 5040 + 1 = 5041 = 71²</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>The Challenge</h3>
+                        <p>No other solutions are known for n < 10⁹. Finding a fourth solution would be a major discovery!</p>
+                    </div>
+                </div>
+            </section>
+
+            <div class="brocard-container">
+                <div class="search-panel">
+                    <h3>Search for Solutions</h3>
+                    <div class="input-group">
+                        <label>Start from n =</label>
+                        <input type="number" id="start-n" value="8" min="1" max="100">
+                    </div>
+                    <div class="input-group">
+                        <label>Search up to n =</label>
+                        <input type="number" id="end-n" value="20" min="1" max="100">
+                    </div>
+                    <button class="run-btn" onclick="searchBrocard()">🔍 Search for Solutions</button>
+                </div>
+
+                <div class="results-panel" id="results-panel" style="display: none;">
+                    <h3>Search Results</h3>
+                    <div id="results-display"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="compiler/romasm-assembler.js"></script>
+    <script src="compiler/romasm-vm.js"></script>
+    <script src="stdlib/bigint.js"></script>
+    <script>
+        function searchBrocard() {
+            const startN = parseInt(document.getElementById('start-n').value);
+            const endN = parseInt(document.getElementById('end-n').value);
+            
+            document.getElementById('results-panel').style.display = 'block';
+            document.getElementById('results-display').innerHTML = '<p>Searching with Romasm...</p>';
+            
+            const solutions = [];
+            
+            // For each n, use Romasm to compute n! + 1 and check if it's a perfect square
+            for (let n = startN; n <= endN && n <= 10; n++) { // Limit to 10 for factorial computation
+                const romasmCode = `
+; Brocard's Problem: Check if n! + 1 is a perfect square
+; Input: n in R0
+; Output: Prints m if n! + 1 = m², else prints 0
+
+LOAD R0, ${n}        ; n
+LOAD R1, 1           ; factorial accumulator
+LOAD R2, 1           ; loop counter
+
+; Calculate n!
+factorial_loop:
+  CMP R2, R0
+  JGT factorial_done
+  MUL R1, R2         ; R1 = R1 * counter
+  INC R2
+  JMP factorial_loop
+
+factorial_done:
+  ; R1 now contains n!
+  ; Calculate n! + 1
+  LOAD R2, 1
+  ADD R1, R2         ; R1 = n! + 1
+  
+  ; Check if R1 is a perfect square
+  ; Try values of m from 1 to sqrt(n! + 1) approximately
+  LOAD R2, 1         ; m (candidate square root)
+  LOAD R3, 1000      ; max iterations (safety limit)
+  LOAD R4, 0         ; counter
+
+sqrt_check_loop:
+  CMP R4, R3
+  JGE not_square
+  
+  ; Calculate m²
+  LOAD R5, R2        ; R5 = m
+  MUL R5, R2         ; R5 = m²
+  
+  ; Compare m² with n! + 1
+  CMP R5, R1
+  JEQ found_square   ; Found! m² = n! + 1
+  JGT not_square     ; m² > n! + 1, so not a square
+  
+  INC R2             ; Try next m
+  INC R4
+  JMP sqrt_check_loop
+
+found_square:
+  PRINT R2           ; Print m (the square root)
+  JMP done
+
+not_square:
+  LOAD R2, 0
+  PRINT R2           ; Print 0 (not a square)
+
+done:
+  ; Program ends naturally
+`;
+
+                const assembler = new RomasmAssembler();
+                const result = assembler.assemble(romasmCode);
+                
+                if (result.success) {
+                    const vm = new RomasmVM();
+                    vm.loadProgram(result.instructions);
+                    const execResult = vm.run(100000);
+                    
+                    if (execResult.output.length > 0 && execResult.output[0] !== 0) {
+                        solutions.push({ n, m: execResult.output[0] });
+                    }
+                }
+            }
+            
+            let html = '';
+            if (solutions.length === 0) {
+                html = '<p style="color: var(--text-secondary);">No solutions found in this range.</p>';
+                html += '<p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">Note: Romasm computation is limited to n ≤ 10 due to factorial size. For larger n, use BigInt library.</p>';
+            } else {
+                solutions.forEach(sol => {
+                    html += `<div class="solution">`;
+                    html += `<h4>🎉 Solution Found!</h4>`;
+                    html += `<div class="equation">${sol.n}! + 1 = ${sol.m}²</div>`;
+                    if (sol.n > 7) {
+                        html += `<p style="color: var(--accent); font-weight: bold;">This could be a NEW discovery!</p>`;
+                    }
+                    html += `</div>`;
+                });
+            }
+            
+            document.getElementById('results-display').innerHTML = html;
+        }
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Romasm Extended - Advanced Features</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="nav.css">
+    <style>
+        .feature-section {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        .converter-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .mode-selector {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .mode-btn {
+            padding: 0.5rem 1rem;
+            background: var(--surface-light);
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .mode-btn.active {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+        .isa-example {
+            background: var(--background);
+            padding: 1rem;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            margin: 0.5rem 0;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Romasm Extended</h1>
+            <p class="subtitle">Advanced features: Fractions, Negative Numbers, and ISA</p>
+        </header>
+
+        <main>
+            <!-- Radix Point / Fractions -->
+            <section class="feature-section">
+                <h2>1. Radix Point for Fractions</h2>
+                <p>Represent fractional values using a radix point (colon :)</p>
+                
+                <div class="converter-panel">
+                    <div class="input-group">
+                        <label>Decimal Number (with fractions)</label>
+                        <input type="text" id="fraction-input" placeholder="e.g., 15.51 or 1.5">
+                        <button onclick="convertFraction()">Convert to Romasm</button>
+                    </div>
+                    <div class="input-group">
+                        <label>Romasm (with radix point)</label>
+                        <input type="text" id="fraction-romasm" placeholder="e.g., I V:V I">
+                        <button onclick="convertFromFraction()">Convert to Decimal</button>
+                    </div>
+                </div>
+                <div id="fraction-result" style="margin-top: 1rem;"></div>
+            </section>
+
+            <!-- Negative Numbers -->
+            <section class="feature-section">
+                <h2>2. Negative Numbers</h2>
+                <p>Represent negative numbers using Sign-Magnitude or Ten's Complement</p>
+                
+                <div class="mode-selector">
+                    <button class="mode-btn active" onclick="setNegativeMode('sign-magnitude')">Sign-Magnitude</button>
+                    <button class="mode-btn" onclick="setNegativeMode('tens-complement')">Ten's Complement</button>
+                </div>
+
+                <div class="converter-panel">
+                    <div class="input-group">
+                        <label>Decimal Number (can be negative)</label>
+                        <input type="text" id="negative-input" placeholder="e.g., -15 or -2025">
+                        <button onclick="convertNegative()">Convert to Romasm</button>
+                    </div>
+                    <div class="input-group">
+                        <label>Romasm (negative representation)</label>
+                        <input type="text" id="negative-romasm" placeholder="e.g., -I V or IX IX VIII V">
+                        <button onclick="convertFromNegative()">Convert to Decimal</button>
+                    </div>
+                </div>
+                <div id="negative-result" style="margin-top: 1rem;"></div>
+                <div id="negative-mode-info" style="margin-top: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
+                    <strong>Sign-Magnitude:</strong> Simple prefix with minus sign (e.g., -I V for -15)<br>
+                    <strong>Ten's Complement:</strong> Uses complement arithmetic (e.g., IX IX VIII V for -15 in 4-digit system)
+                </div>
+            </section>
+
+            <!-- ISA -->
+            <section class="feature-section">
+                <h2>3. Romasm ISA (Instruction Set Architecture)</h2>
+                <p>Map Roman symbols to CPU operations - treat Romasm as assembly language</p>
+                
+                <div class="info-content" style="margin-bottom: 1rem;">
+                    <div class="info-card">
+                        <h3>Instruction Mappings</h3>
+                        <table class="digit-table">
+                            <tr><th>Symbol</th><th>Operation</th></tr>
+                            <tr><td>I</td><td>INC (Increment)</td></tr>
+                            <tr><td>D</td><td>DEC (Decrement)</td></tr>
+                            <tr><td>V</td><td>JMP (Jump)</td></tr>
+                            <tr><td>X</td><td>STORE</td></tr>
+                            <tr><td>L</td><td>LOAD</td></tr>
+                            <tr><td>C</td><td>CMP (Compare)</td></tr>
+                            <tr><td>M</td><td>MUL (Multiply)</td></tr>
+                            <tr><td>A</td><td>ADD</td></tr>
+                            <tr><td>S</td><td>SUB (Subtract)</td></tr>
+                        </table>
+                    </div>
+                    <div class="info-card">
+                        <h3>Register Mappings</h3>
+                        <p>Roman numerals I-IX map to registers 0-8</p>
+                        <div class="example-box">
+                            <strong>Example Instructions:</strong>
+                            <ul>
+                                <li><code>I II</code> - Increment register 1</li>
+                                <li><code>X V III</code> - Store value 5 to address 3</li>
+                                <li><code>L I</code> - Load from register 0</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Romasm Instruction</label>
+                    <input type="text" id="isa-input" placeholder="e.g., I II or X V III">
+                    <button onclick="parseISA()">Parse Instruction</button>
+                </div>
+                <div id="isa-result" style="margin-top: 1rem;"></div>
+            </section>
+
+            <!-- Examples -->
+            <section class="feature-section">
+                <h2>Examples</h2>
+                <div class="examples-grid">
+                    <div class="example-card">
+                        <h3>Fraction Example</h3>
+                        <p>15.51 in Romasm: <code>I V:V I</code></p>
+                        <p>This represents: 15 + 5/10 + 1/100 = 15.51</p>
+                        <button class="operation-btn" onclick="loadExample('fraction', '15.51')">Try It</button>
+                    </div>
+                    <div class="example-card">
+                        <h3>Negative Example (Sign-Magnitude)</h3>
+                        <p>-15 in Romasm: <code>-I V</code></p>
+                        <p>Simple prefix notation</p>
+                        <button class="operation-btn" onclick="loadExample('negative', '-15')">Try It</button>
+                    </div>
+                    <div class="example-card">
+                        <h3>ISA Example</h3>
+                        <p>Instruction: <code>X V III</code></p>
+                        <p>STORE value 5 to address 3</p>
+                        <button class="operation-btn" onclick="loadExample('isa', 'X V III')">Try It</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Romasm Extended - Advanced features for the Roman Assembly Language</p>
+            <p style="margin-top: 1rem;">
+                <a href="index.html" style="color: var(--primary-color);">← Positional Roman</a> |
+                <a href="romasm.html" style="color: var(--primary-color);">← Romasm Basic</a>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // Note: This is a simplified browser version
+        // For full functionality, you'd need to port the extended features to browser-compatible code
+        
+        let currentNegativeMode = 'sign-magnitude';
+        let registerWidth = 4;
+
+        // Simplified Romasm Extended for browser
+        class RomasmExtendedBrowser {
+            constructor() {
+                this.radixChar = ':';
+            }
+
+            toRomasm(number) {
+                if (number < 0) {
+                    return `-${this.toRomasm(Math.abs(number))}`;
+                }
+
+                if (number === 0) return 'N';
+
+                const parts = String(number).split('.');
+                const integerPart = parseInt(parts[0]);
+                const fractionalPart = parts[1] ? parseFloat('0.' + parts[1]) : 0;
+
+                const integerRomasm = this._decimalToRomasmDigits(integerPart);
+                
+                if (fractionalPart > 0) {
+                    const fractionalRomasm = this._fractionalToRomasm(fractionalPart);
+                    return `${integerRomasm}${this.radixChar}${fractionalRomasm}`;
+                }
+
+                return integerRomasm;
+            }
+
+            fromRomasm(romasm) {
+                if (romasm === 'N' || romasm === '') return 0;
+
+                let isNegative = false;
+                if (romasm.startsWith('-')) {
+                    isNegative = true;
+                    romasm = romasm.substring(1).trim();
+                }
+
+                const parts = romasm.split(':');
+                const integerPart = parts[0].trim();
+                const fractionalPart = parts[1] ? parts[1].trim() : '';
+
+                let value = this._romasmDigitsToDecimal(integerPart);
+
+                if (fractionalPart) {
+                    value += this._romasmFractionalToDecimal(fractionalPart);
+                }
+
+                return isNegative ? -value : value;
+            }
+
+            _decimalToRomasmDigits(number) {
+                if (number === 0) return 'N';
+                const digits = String(number).split('').map(d => parseInt(d));
+                const positionalDigits = digits.map(d => this._digitToRomasm(d));
+                return positionalDigits.join(' ');
+            }
+
+            _digitToRomasm(digit) {
+                const digits = {
+                    0: 'N', 1: 'I', 2: 'II', 3: 'III', 4: 'IV',
+                    5: 'V', 6: 'VI', 7: 'VII', 8: 'VIII', 9: 'IX'
+                };
+                return digits[digit] || 'N';
+            }
+
+            _romasmDigitsToDecimal(romasm) {
+                const parts = romasm.trim().split(/\s+/);
+                const digits = parts.map(part => this._romasmToDigit(part));
+                return parseInt(digits.join(''));
+            }
+
+            _romasmToDigit(romasm) {
+                const digits = {
+                    'N': 0, 'I': 1, 'II': 2, 'III': 3, 'IV': 4,
+                    'V': 5, 'VI': 6, 'VII': 7, 'VIII': 8, 'IX': 9
+                };
+                return digits[romasm.toUpperCase()] ?? 0;
+            }
+
+            _fractionalToRomasm(fraction, precision = 4) {
+                const parts = [];
+                let remaining = fraction;
+                for (let i = 0; i < precision && remaining > 0; i++) {
+                    remaining *= 10;
+                    const digit = Math.floor(remaining);
+                    parts.push(this._digitToRomasm(digit));
+                    remaining -= digit;
+                }
+                return parts.join(' ');
+            }
+
+            _romasmFractionalToDecimal(romasm) {
+                const parts = romasm.trim().split(/\s+/);
+                let value = 0;
+                let place = 0.1;
+                for (const part of parts) {
+                    const digit = this._romasmToDigit(part);
+                    value += digit * place;
+                    place /= 10;
+                }
+                return value;
+            }
+        }
+
+        const ext = new RomasmExtendedBrowser();
+
+        function convertFraction() {
+            const input = document.getElementById('fraction-input').value;
+            const num = parseFloat(input);
+            if (isNaN(num)) {
+                showResult('fraction-result', 'Error: Invalid number', true);
+                return;
+            }
+            const romasm = ext.toRomasm(num);
+            const back = ext.fromRomasm(romasm);
+            showResult('fraction-result', 
+                `<strong>Result:</strong> ${num} → <code>${romasm}</code> → ${back.toFixed(4)}`, false);
+        }
+
+        function convertFromFraction() {
+            const input = document.getElementById('fraction-romasm').value;
+            const value = ext.fromRomasm(input);
+            showResult('fraction-result', 
+                `<strong>Result:</strong> <code>${input}</code> → ${value}`, false);
+        }
+
+        function setNegativeMode(mode) {
+            currentNegativeMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            updateNegativeModeInfo();
+        }
+
+        function updateNegativeModeInfo() {
+            const info = document.getElementById('negative-mode-info');
+            if (currentNegativeMode === 'sign-magnitude') {
+                info.innerHTML = `<strong>Sign-Magnitude:</strong> Simple prefix with minus sign (e.g., -I V for -15)`;
+            } else {
+                info.innerHTML = `<strong>Ten's Complement:</strong> Uses complement arithmetic. Max value for ${registerWidth}-digit system is ${Math.pow(10, registerWidth) - 1}`;
+            }
+        }
+
+        function convertNegative() {
+            const input = document.getElementById('negative-input').value;
+            const num = parseFloat(input);
+            if (isNaN(num)) {
+                showResult('negative-result', 'Error: Invalid number', true);
+                return;
+            }
+            const romasm = ext.toRomasm(num);
+            const back = ext.fromRomasm(romasm);
+            showResult('negative-result', 
+                `<strong>Result:</strong> ${num} → <code>${romasm}</code> → ${back}`, false);
+        }
+
+        function convertFromNegative() {
+            const input = document.getElementById('negative-romasm').value;
+            const value = ext.fromRomasm(input);
+            showResult('negative-result', 
+                `<strong>Result:</strong> <code>${input}</code> → ${value}`, false);
+        }
+
+        function parseISA() {
+            const input = document.getElementById('isa-input').value;
+            const parts = input.trim().split(/\s+/);
+            if (parts.length === 0) {
+                showResult('isa-result', 'Error: Empty instruction', true);
+                return;
+            }
+
+            const instructions = {
+                'I': 'INC', 'D': 'DEC', 'V': 'JMP', 'X': 'STORE',
+                'L': 'LOAD', 'C': 'CMP', 'M': 'MUL', 'A': 'ADD', 'S': 'SUB'
+            };
+
+            const registers = {
+                'I': 0, 'II': 1, 'III': 2, 'IV': 3, 'V': 4,
+                'VI': 5, 'VII': 6, 'VIII': 7, 'IX': 8
+            };
+
+            const opcode = parts[0];
+            const operation = instructions[opcode] || 'UNKNOWN';
+            const operands = parts.slice(1).map(op => {
+                if (op in registers) {
+                    return `Register ${registers[op]}`;
+                }
+                const num = parseInt(op);
+                if (!isNaN(num)) {
+                    return `Immediate ${num}`;
+                }
+                return `Label ${op}`;
+            });
+
+            let result = `<strong>Instruction:</strong> <code>${input}</code><br>`;
+            result += `<strong>Operation:</strong> ${operation}<br>`;
+            if (operands.length > 0) {
+                result += `<strong>Operands:</strong> ${operands.join(', ')}<br>`;
+            }
+
+            showResult('isa-result', result, false);
+        }
+
+        function loadExample(type, value) {
+            if (type === 'fraction') {
+                document.getElementById('fraction-input').value = value;
+                convertFraction();
+            } else if (type === 'negative') {
+                document.getElementById('negative-input').value = value;
+                convertNegative();
+            } else if (type === 'isa') {
+                document.getElementById('isa-input').value = value;
+                parseISA();
+            }
+        }
+
+        function showResult(elementId, message, isError) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="result-card" style="background: ${isError ? 'rgba(239, 68, 68, 0.1)' : 'var(--surface-light)'}; border: 2px solid ${isError ? 'var(--error)' : 'var(--border-color)'};">${message}</div>`;
+        }
+
+        updateNegativeModeInfo();
+    </script>
+</body>
+</html>
+

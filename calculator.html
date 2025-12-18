@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Romasm Graphics Calculator</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="nav.css">
+    <style>
+        .calculator-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 1rem;
+            height: calc(100vh - 200px);
+        }
+        .controls-panel {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 12px;
+            overflow-y: auto;
+        }
+        .graph-panel {
+            background: var(--surface);
+            padding: 1rem;
+            border-radius: 12px;
+            position: relative;
+        }
+        canvas {
+            background: var(--background);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            width: 100%;
+            height: 100%;
+        }
+        .function-input {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--background);
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-family: 'Courier New', monospace;
+            margin-bottom: 1rem;
+        }
+        .preset-btn {
+            width: 100%;
+            padding: 0.5rem;
+            margin: 0.25rem 0;
+            background: var(--surface-light);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.3s;
+        }
+        .preset-btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        .graph-controls {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+        .control-group {
+            margin-bottom: 1rem;
+        }
+        .control-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        .control-group input {
+            width: 100%;
+            padding: 0.5rem;
+            background: var(--background);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-primary);
+        }
+        .plot-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+        .plot-btn:hover {
+            background: #059669;
+        }
+        .error-message {
+            color: var(--error);
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+        .info-box {
+            background: var(--surface-light);
+            padding: 1rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Romasm Graphics Calculator</h1>
+            <p class="subtitle">Plot mathematical functions using Romasm assembly language</p>
+        </header>
+
+        <main>
+            <div class="calculator-container">
+                <div class="controls-panel">
+                    <h3>Function Definition</h3>
+                    <textarea id="function-code" class="function-input" rows="10" placeholder="; Romasm function to calculate f(x)
+; Input: R0 = x (scaled by 100)
+; Output: R0 = f(x) (scaled by 100)
+; Example: f(x) = x²
+LOAD R1, R0
+MUL R0, R1
+LOAD R1, 100
+DIV R0, R1
+RET"></textarea>
+                    
+                    <div id="error-message" class="error-message"></div>
+
+                    <h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">Preset Functions</h4>
+                    <div style="max-height: 300px; overflow-y: auto;">
+                        <h5 style="color: var(--primary-color); margin-top: 0.5rem; margin-bottom: 0.25rem;">Basic</h5>
+                        <button class="preset-btn" onclick="loadPreset('linear')">f(x) = x</button>
+                        <button class="preset-btn" onclick="loadPreset('quadratic')">f(x) = x²</button>
+                        <button class="preset-btn" onclick="loadPreset('cubic')">f(x) = x³</button>
+                        <button class="preset-btn" onclick="loadPreset('absolute')">f(x) = |x|</button>
+                        
+                        <h5 style="color: var(--primary-color); margin-top: 0.75rem; margin-bottom: 0.25rem;">Trigonometric</h5>
+                        <button class="preset-btn" onclick="loadPreset('sine')">f(x) = sin(x)</button>
+                        <button class="preset-btn" onclick="loadPreset('cosine')">f(x) = cos(x)</button>
+                        <button class="preset-btn" onclick="loadPreset('sine_x')">f(x) = x·sin(x)</button>
+                        <button class="preset-btn" onclick="loadPreset('sine_squared')">f(x) = sin²(x)</button>
+                        
+                        <h5 style="color: var(--primary-color); margin-top: 0.75rem; margin-bottom: 0.25rem;">Exponential & Logarithmic</h5>
+                        <button class="preset-btn" onclick="loadPreset('exponential')">f(x) = 2^x</button>
+                        <button class="preset-btn" onclick="loadPreset('exp_x')">f(x) = e^x (approx)</button>
+                        <button class="preset-btn" onclick="loadPreset('exp_neg_x')">f(x) = e^(-x²)</button>
+                        
+                        <h5 style="color: var(--primary-color); margin-top: 0.75rem; margin-bottom: 0.25rem;">Calculus</h5>
+                        <button class="preset-btn" onclick="loadPreset('derivative_x2')">f'(x) = 2x (derivative)</button>
+                        <button class="preset-btn" onclick="loadPreset('integral_x2')">F(x) = x³/3 (integral)</button>
+                        
+                        <h5 style="color: var(--primary-color); margin-top: 0.75rem; margin-bottom: 0.25rem;">Advanced</h5>
+                        <button class="preset-btn" onclick="loadPreset('sqrt')">f(x) = √x</button>
+                        <button class="preset-btn" onclick="loadPreset('polynomial')">f(x) = x⁴ - 2x² + 1</button>
+                        <button class="preset-btn" onclick="loadPreset('rational')">f(x) = 1/(1+x²)</button>
+                        <button class="preset-btn" onclick="loadPreset('gaussian')">f(x) = e^(-x²/2)</button>
+                        <button class="preset-btn" onclick="loadPreset('sinc')">f(x) = sin(x)/x</button>
+                        <button class="preset-btn" onclick="loadPreset('weierstrass')">f(x) = x²·sin(1/x)</button>
+                    </div>
+
+                    <div class="graph-controls">
+                        <h4>Graph Settings</h4>
+                        <div class="control-group">
+                            <label>X Min</label>
+                            <input type="number" id="x-min" value="-10" step="0.5">
+                        </div>
+                        <div class="control-group">
+                            <label>X Max</label>
+                            <input type="number" id="x-max" value="10" step="0.5">
+                        </div>
+                        <div class="control-group">
+                            <label>Y Min</label>
+                            <input type="number" id="y-min" value="-10" step="0.5">
+                        </div>
+                        <div class="control-group">
+                            <label>Y Max</label>
+                            <input type="number" id="y-max" value="10" step="0.5">
+                        </div>
+                        <div class="control-group">
+                            <label>Step Size</label>
+                            <input type="number" id="step-size" value="0.1" step="0.01" min="0.01">
+                        </div>
+                        <button class="plot-btn" onclick="plotFunction()">▶ Plot Function</button>
+                    </div>
+
+                    <div class="info-box">
+                        <strong>Tips:</strong><br>
+                        • Input x is scaled by 100 (x=5 means 0.05)<br>
+                        • Output should be scaled by 100<br>
+                        • Use R0 for input/output<br>
+                        • Function must end with RET
+                    </div>
+                </div>
+
+                <div class="graph-panel">
+                    <canvas id="graph-canvas"></canvas>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Romasm Graphics Calculator - Visualize functions written in Romasm assembly</p>
+            <p style="margin-top: 1rem;">
+                <a href="index.html" style="color: var(--primary-color);">← Positional Roman</a> |
+                <a href="ide.html" style="color: var(--primary-color);">← Romasm IDE</a>
+            </p>
+        </footer>
+    </div>
+
+    <script src="compiler/romasm-assembler.js"></script>
+    <script src="compiler/romasm-vm.js"></script>
+    <script>
+        const assembler = new RomasmAssembler();
+        const canvas = document.getElementById('graph-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set canvas size
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth - 32;
+            canvas.height = container.clientHeight - 32;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        const presets = {
+            linear: `; f(x) = x
+; Input: R0 = x (scaled by 100)
+; Output: R0 = x (scaled by 100)
+RET`,
+
+            quadratic: `; f(x) = x²
+; Input: R0 = x (scaled by 100)
+; Output: R0 = x² (scaled by 100)
+LOAD R1, R0
+MUL R0, R1
+LOAD R1, 100
+DIV R0, R1
+RET`,
+
+            cubic: `; f(x) = x³
+; Input: R0 = x (scaled by 100)
+; Output: R0 = x³ (scaled by 100)
+LOAD R1, R0
+LOAD R2, R0
+MUL R1, R2
+MUL R0, R1
+LOAD R1, 10000
+DIV R0, R1
+RET`,
+
+            sine: `; f(x) = sin(x)
+; Input: R0 = x (in degrees, scaled by 100)
+; Output: R0 = sin(x) * 1000
+; Convert scaled input to degrees
+LOAD R1, 100
+DIV R0, R1
+; Calculate sin using Taylor series approximation
+; sin(x) ≈ x - x³/6 (for small x in radians)
+; Convert degrees to radians (simplified)
+LOAD R1, 1745
+MUL R0, R1
+LOAD R1, 100000
+DIV R0, R1
+; Calculate x³
+LOAD R1, R0
+LOAD R2, R0
+MUL R1, R2
+MUL R1, R0
+; Divide by 6
+LOAD R2, 6
+DIV R1, R2
+; result = x - x³/6
+SUB R0, R1
+; Scale by 1000
+LOAD R1, 1000
+MUL R0, R1
+RET`,
+
+            cosine: `; f(x) = cos(x)
+; cos(x) = sin(90 - x)
+LOAD R1, 9000  ; 90 degrees * 100
+SUB R1, R0
+LOAD R0, R1
+LOAD R1, 100
+DIV R0, R1
+; Use sine approximation
+LOAD R1, 1745
+MUL R0, R1
+LOAD R1, 100000
+DIV R0, R1
+LOAD R1, R0
+LOAD R2, R0
+MUL R1, R2
+MUL R1, R0
+LOAD R2, 6
+DIV R1, R2
+SUB R0, R1
+LOAD R1, 1000
+MUL R0, R1
+RET`,
+
+            exponential: `; f(x) = 2^x
+; Input: R0 = x (scaled by 100)
+; Output: R0 = 2^x (scaled by 100)
+; Convert x to integer
+LOAD R1, 100
+DIV R0, R1
+; Handle negative x: 2^(-x) = 1/2^x
+LOAD R2, 0
+CMP R0, R2
+JGE exp_positive
+; Negative: calculate 2^(-x) then invert
+LOAD R2, 0
+SUB R2, R0
+LOAD R0, R2
+; Calculate 2^x
+LOAD R1, 1
+LOAD R2, 2
+exp_loop_neg:
+  CMP R0, 0
+  JEQ exp_invert
+  MUL R1, R2
+  DEC R0
+  JMP exp_loop_neg
+exp_invert:
+; Invert: 1/result
+LOAD R0, 10000
+DIV R0, R1
+LOAD R1, 100
+MUL R0, R1
+RET
+exp_positive:
+; Calculate 2^x
+LOAD R1, 1
+LOAD R2, 2
+exp_loop:
+  CMP R0, 0
+  JEQ exp_done
+  MUL R1, R2
+  DEC R0
+  JMP exp_loop
+exp_done:
+LOAD R0, R1
+LOAD R1, 100
+MUL R0, R1
+RET`,
+
+            absolute: `; f(x) = |x|
+; Input: R0 = x (scaled by 100)
+; Output: R0 = |x| (scaled by 100)
+LOAD R1, 0
+CMP R0, R1
+JGE abs_done
+; Negate if negative (multiply by -1)
+LOAD R1, 0
+SUB R1, R0
+LOAD R0, R1
+abs_done:
+RET`,
+
+            sine_x: `; f(x) = x·sin(x)
+; Input: R0 = x (scaled by 100)
+; Output: R0 = x·sin(x) (scaled by 100)
+; Save x
+LOAD R1, R0
+; Calculate sin(x) - convert to degrees
+LOAD R2, 100
+DIV R1, R2
+; Convert degrees to radians (approx)
+LOAD R2, 1745
+MUL R1, R2
+LOAD R2, 100000
+DIV R1, R2
+; Calculate sin using Taylor: sin(x) ≈ x - x³/6
+LOAD R2, R1
+LOAD R3, R1
+MUL R2, R3
+MUL R2, R1
+LOAD R3, 6
+DIV R2, R3
+SUB R1, R2
+; Now R1 = sin(x) scaled by 1000
+; Multiply by x (R0 is x scaled by 100)
+MUL R1, R0
+LOAD R2, 10000
+DIV R1, R2
+LOAD R0, R1
+RET`,
+
+            sine_squared: `; f(x) = sin²(x)
+; Input: R0 = x (scaled by 100)
+; Output: R0 = sin²(x) (scaled by 100)
+; Convert to degrees
+LOAD R1, 100
+DIV R0, R1
+; Convert to radians
+LOAD R1, 1745
+MUL R0, R1
+LOAD R1, 100000
+DIV R0, R1
+; Calculate sin(x)
+LOAD R1, R0
+LOAD R2, R0
+MUL R1, R2
+MUL R1, R0
+LOAD R2, 6
+DIV R1, R2
+SUB R0, R1
+; Now R0 = sin(x) scaled by 1000
+; Square it
+LOAD R1, R0
+MUL R0, R1
+LOAD R1, 10000
+DIV R0, R1
+RET`,
+
+            exp_x: `; f(x) = e^x (Taylor series approximation)
+; Input: R0 = x (scaled by 100)
+; Output: R0 = e^x (scaled by 100)
+; e^x ≈ 1 + x + x²/2 + x³/6 + x⁴/24
+; Unscale x
+LOAD R1, 100
+DIV R0, R1
+; result = 1 (scaled by 1000)
+LOAD R2, 1000
+; Add x
+ADD R2, R0
+; Calculate x²/2
+LOAD R3, R0
+LOAD R4, R0
+MUL R3, R4
+LOAD R4, 2
+DIV R3, R4
+ADD R2, R3
+; Calculate x³/6
+LOAD R3, R0
+LOAD R4, R0
+MUL R3, R4
+MUL R3, R0
+LOAD R4, 6
+DIV R3, R4
+ADD R2, R3
+; Calculate x⁴/24
+LOAD R3, R0
+LOAD R4, R0
+MUL R3, R4
+MUL R3, R0
+MUL R3, R0
+LOAD R4, 24
+DIV R3, R4
+ADD R2, R3
+; Scale down to output scale (100)
+LOAD R3, 10
+DIV R2, R3
+LOAD R0, R2
+RET`,
+
+            exp_neg_x: `; f(x) = e^(-x²) (Gaussian-like)
+; Input: R0 = x (scaled by 100)
+; Output: R0 = e^(-x²) (scaled by 100)
+; Calculate -x²
+LOAD R1, R0
+LOAD R2, R0
+MUL R1, R2
+LOAD R2, 100
+DIV R1, R2
+; Negate
+LOAD R2, 0
+SUB R2, R1
+LOAD R1, R2
+; Calculate e^(-x²) using Taylor series
+; e^u ≈ 1 + u + u²/2 + u³/6
+LOAD R2, 1000
+ADD R2, R1
+LOAD R3, R1
+LOAD R4, R1
+MUL R3, R4
+LOAD R4, 2
+DIV R3, R4
+ADD R2, R3
+LOAD R3, R1
+LOAD R4, R1
+MUL R3, R4
+MUL R3, R1
+LOAD R4, 6
+DIV R3, R4
+ADD R2, R3
+; Scale to output
+LOAD R3, 10
+DIV R2, R3
+LOAD R0, R2
+RET`,
+
+            derivative_x2: `; f'(x) = 2x (derivative of x²)
+; Input: R0 = x (scaled by 100)
+; Output: R0 = 2x (scaled by 100)
+LOAD R1, 2
+MUL R0, R1
+RET`,
+
+            integral_x2: `; F(x) = x³/3 (integral of x²)
+; Input: R0 = x (scaled by 100)
+; Output: R0 = x³/3 (scaled by 100)
+; Calculate x³
+LOAD R1, R0
+LOAD R2, R0
+MUL R1, R2
+MUL R1, R0
+LOAD R2, 10000
+DIV R1, R2
+; Divide by 3
+LOAD R2, 3
+DIV R1, R2
+LOAD R0, R1
+RET`,
+
+            sqrt: `; f(x) = √x (Newton's method)
+; Input: R0 = x (scaled by 100)
+; Output: R0 = √x (scaled by 100)
+; Handle edge cases
+LOAD R1, 0
+CMP R0, R1
+JEQ sqrt_zero
+LOAD R1, 1000
+CMP R0, R1
+JLE sqrt_one
+; Newton's method: x_new = (x + n/x) / 2
+; Scale x by 1000 for better precision
+LOAD R1, 1000
+MUL R0, R1
+; Initial guess: x/2
+LOAD R1, R0
+LOAD R2, 2
+DIV R1, R2
+; Iterate 10 times
+LOAD R2, 10
+sqrt_loop:
+  CMP R2, 0
+  JLE sqrt_done
+  ; Calculate n/x
+  LOAD R3, R0
+  LOAD R4, R1
+  DIV R3, R4
+  ; (x + n/x) / 2
+  ADD R1, R3
+  LOAD R4, 2
+  DIV R1, R4
+  DEC R2
+  JMP sqrt_loop
+sqrt_done:
+; Rescale result
+LOAD R2, 1000
+DIV R1, R2
+LOAD R0, R1
+JMP sqrt_end
+sqrt_zero:
+LOAD R0, 0
+JMP sqrt_end
+sqrt_one:
+LOAD R0, 1000
+sqrt_end:
+RET`,
+
+            polynomial: `; f(x) = x⁴ - 2x² + 1
+; Input: R0 = x (scaled by 100)
+; Output: R0 = x⁴ - 2x² + 1 (scaled by 100)
+; Calculate x²
+LOAD R1, R0
+LOAD R2, R0
+MUL R1, R2
+LOAD R2, 100
+DIV R1, R2
+; Calculate x⁴ = (x²)²
+LOAD R2, R1
+MUL R1, R2
+LOAD R2, 100
+DIV R1, R2
+; Calculate 2x²
+LOAD R2, R1
+LOAD R3, 2
+MUL R2, R3
+; x⁴ - 2x²
+SUB R1, R2
+; Add 1 (scaled by 100)
+LOAD R2, 100
+ADD R1, R2
+LOAD R0, R1
+RET`,
+
+            rational: `; f(x) = 1/(1+x²)
+; Input: R0 = x (scaled by 100)
+; Output: R0 = 1/(1+x²) (scaled by 100)
+; Calculate x²
+LOAD R1, R0
+LOAD R2, R0
+MUL R1, R2
+LOAD R2, 100
+DIV R1, R2
+; 1 + x² (scaled by 100)
+LOAD R2, 100
+ADD R1, R2
+; Calculate 1/(1+x²)
+; 1/(1+x²) = 10000 / (1+x²) scaled by 100
+LOAD R2, 10000
+DIV R2, R1
+LOAD R0, R2
+RET`,
+
+            gaussian: `; f(x) = e^(-x²/2) (Gaussian bell curve)
+; Input: R0 = x (scaled by 100)
+; Output: R0 = e^(-x²/2) (scaled by 100)
+; Calculate x²/2
+LOAD R1, R0
+LOAD R2, R0
+MUL R1, R2
+LOAD R2, 200
+DIV R1, R2
+; Negate: -x²/2
+LOAD R2, 0
+SUB R2, R1
+LOAD R1, R2
+; Calculate e^(-x²/2) using Taylor: e^u ≈ 1 + u + u²/2 + u³/6
+LOAD R2, 1000
+ADD R2, R1
+LOAD R3, R1
+LOAD R4, R1
+MUL R3, R4
+LOAD R4, 2
+DIV R3, R4
+ADD R2, R3
+LOAD R3, R1
+LOAD R4, R1
+MUL R3, R4
+MUL R3, R1
+LOAD R4, 6
+DIV R3, R4
+ADD R2, R3
+; Scale to output
+LOAD R3, 10
+DIV R2, R3
+LOAD R0, R2
+RET`,
+
+            sinc: `; f(x) = sin(x)/x (sinc function)
+; Input: R0 = x (scaled by 100)
+; Output: R0 = sin(x)/x (scaled by 100)
+; Handle x = 0 case
+LOAD R1, 0
+CMP R0, R1
+JEQ sinc_one
+; Save x
+LOAD R1, R0
+; Calculate sin(x)
+LOAD R2, 100
+DIV R0, R2
+LOAD R2, 1745
+MUL R0, R2
+LOAD R2, 100000
+DIV R0, R2
+LOAD R2, R0
+LOAD R3, R0
+MUL R2, R3
+MUL R2, R0
+LOAD R3, 6
+DIV R2, R3
+SUB R0, R2
+; R0 = sin(x) scaled by 1000
+; Divide by x (R1 is x scaled by 100)
+; sin(x)/x = (sin(x)*1000) / (x*100) = (sin(x)*10) / x
+LOAD R2, 10
+MUL R0, R2
+DIV R0, R1
+JMP sinc_end
+sinc_one:
+LOAD R0, 100
+sinc_end:
+RET`,
+
+            weierstrass: `; f(x) = x²·sin(1/x) (Weierstrass-like)
+; Input: R0 = x (scaled by 100)
+; Output: R0 = x²·sin(1/x) (scaled by 100)
+; Handle x = 0
+LOAD R1, 0
+CMP R0, R1
+JEQ weier_zero
+; Calculate x²
+LOAD R1, R0
+LOAD R2, R0
+MUL R1, R2
+LOAD R2, 100
+DIV R1, R2
+; Calculate 1/x (scaled)
+LOAD R2, 10000
+DIV R2, R0
+; Calculate sin(1/x)
+LOAD R3, R2
+LOAD R4, 1745
+MUL R3, R4
+LOAD R4, 100000
+DIV R3, R4
+LOAD R4, R3
+LOAD R5, R3
+MUL R4, R5
+MUL R4, R3
+LOAD R5, 6
+DIV R4, R5
+SUB R3, R4
+; R3 = sin(1/x) scaled by 1000
+; Multiply x² by sin(1/x)
+MUL R1, R3
+LOAD R2, 1000
+DIV R1, R2
+LOAD R0, R1
+JMP weier_end
+weier_zero:
+LOAD R0, 0
+weier_end:
+RET`
+        };
+
+        function loadPreset(name) {
+            document.getElementById('function-code').value = presets[name];
+            document.getElementById('error-message').textContent = '';
+            
+            // Auto-adjust graph settings for certain functions
+            const settings = {
+                'sine': { xMin: -360, xMax: 360, yMin: -2, yMax: 2 },
+                'cosine': { xMin: -360, xMax: 360, yMin: -2, yMax: 2 },
+                'sine_x': { xMin: -20, xMax: 20, yMin: -20, yMax: 20 },
+                'sine_squared': { xMin: -360, xMax: 360, yMin: -1, yMax: 2 },
+                'exp_x': { xMin: -5, xMax: 5, yMin: -1, yMax: 20 },
+                'exp_neg_x': { xMin: -5, xMax: 5, yMin: -1, yMax: 2 },
+                'gaussian': { xMin: -5, xMax: 5, yMin: -1, yMax: 2 },
+                'sinc': { xMin: -20, xMax: 20, yMin: -1, yMax: 2 },
+                'weierstrass': { xMin: -2, xMax: 2, yMin: -1, yMax: 1 },
+                'sqrt': { xMin: 0, xMax: 20, yMin: 0, yMax: 5 },
+                'rational': { xMin: -5, xMax: 5, yMin: -1, yMax: 2 }
+            };
+            
+            if (settings[name]) {
+                document.getElementById('x-min').value = settings[name].xMin;
+                document.getElementById('x-max').value = settings[name].xMax;
+                document.getElementById('y-min').value = settings[name].yMin;
+                document.getElementById('y-max').value = settings[name].yMax;
+            }
+        }
+
+        function plotFunction() {
+            const code = document.getElementById('function-code').value;
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = '';
+
+            // Wrap function code - assume it's a function that takes R0 as input
+            // We'll call it by setting R0 and jumping to the function
+            const fullCode = code;
+
+            // Assemble
+            const result = assembler.assemble(fullCode);
+            
+            if (!result.success) {
+                let errorMsg = 'Assembly Errors:\n';
+                for (const error of result.errors) {
+                    errorMsg += `Line ${error.line}: ${error.message}\n`;
+                }
+                errorDiv.textContent = errorMsg;
+                return;
+            }
+
+            // Get graph settings
+            const xMin = parseFloat(document.getElementById('x-min').value);
+            const xMax = parseFloat(document.getElementById('x-max').value);
+            const yMin = parseFloat(document.getElementById('y-min').value);
+            const yMax = parseFloat(document.getElementById('y-max').value);
+            const stepSize = parseFloat(document.getElementById('step-size').value);
+
+            // Plot the function
+            const points = [];
+            
+            for (let x = xMin; x <= xMax; x += stepSize) {
+                const vm = new RomasmVM();
+                
+                // Set input x (scaled by 100) in R0
+                const scaledX = Math.floor(x * 100);
+                vm.registers['I'] = scaledX; // R0 = I
+                
+                // Load and execute the function
+                vm.loadProgram(result.instructions);
+                
+                try {
+                    // Execute until RET or max steps
+                    let steps = 0;
+                    while (!vm.halted && steps < 1000) {
+                        const stepResult = vm.step();
+                        if (stepResult.error) {
+                            break;
+                        }
+                        steps++;
+                    }
+
+                    // Get result from R0 (I register)
+                    const result = vm.registers['I'];
+                    const y = result / 100.0; // Unscale
+
+                    // Clamp to reasonable range
+                    if (!isNaN(y) && isFinite(y) && y >= yMin - 10 && y <= yMax + 10) {
+                        points.push({ x, y });
+                    }
+                } catch (error) {
+                    // Skip this point if there's an error
+                    continue;
+                }
+            }
+
+            // Draw graph
+            drawGraph(points, xMin, xMax, yMin, yMax);
+        }
+
+        function drawGraph(points, xMin, xMax, yMin, yMax) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const padding = 40;
+            const graphWidth = canvas.width - 2 * padding;
+            const graphHeight = canvas.height - 2 * padding;
+
+            // Draw axes
+            ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary');
+            ctx.lineWidth = 1;
+            
+            // X axis
+            const xAxisY = padding + graphHeight * (0 - yMin) / (yMax - yMin);
+            if (xAxisY >= padding && xAxisY <= canvas.height - padding) {
+                ctx.beginPath();
+                ctx.moveTo(padding, xAxisY);
+                ctx.lineTo(canvas.width - padding, xAxisY);
+                ctx.stroke();
+            }
+
+            // Y axis
+            const yAxisX = padding + graphWidth * (0 - xMin) / (xMax - xMin);
+            if (yAxisX >= padding && yAxisX <= canvas.width - padding) {
+                ctx.beginPath();
+                ctx.moveTo(yAxisX, padding);
+                ctx.lineTo(yAxisX, canvas.height - padding);
+                ctx.stroke();
+            }
+
+            // Draw grid
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.lineWidth = 1;
+            
+            // Vertical grid lines
+            for (let x = Math.ceil(xMin); x <= Math.floor(xMax); x++) {
+                const xPos = padding + graphWidth * (x - xMin) / (xMax - xMin);
+                ctx.beginPath();
+                ctx.moveTo(xPos, padding);
+                ctx.lineTo(xPos, canvas.height - padding);
+                ctx.stroke();
+            }
+
+            // Horizontal grid lines
+            for (let y = Math.ceil(yMin); y <= Math.floor(yMax); y++) {
+                const yPos = padding + graphHeight * (yMax - y) / (yMax - yMin);
+                ctx.beginPath();
+                ctx.moveTo(padding, yPos);
+                ctx.lineTo(canvas.width - padding, yPos);
+                ctx.stroke();
+            }
+
+            // Draw function
+            if (points.length > 0) {
+                ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary-color');
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+
+                for (let i = 0; i < points.length; i++) {
+                    const point = points[i];
+                    const x = padding + graphWidth * (point.x - xMin) / (xMax - xMin);
+                    const y = padding + graphHeight * (yMax - point.y) / (yMax - yMin);
+
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+
+                ctx.stroke();
+            }
+
+            // Draw axis labels
+            ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-primary');
+            ctx.font = '12px monospace';
+            ctx.textAlign = 'center';
+            
+            // X axis labels
+            for (let x = Math.ceil(xMin); x <= Math.floor(xMax); x += 2) {
+                const xPos = padding + graphWidth * (x - xMin) / (xMax - xMin);
+                ctx.fillText(x.toString(), xPos, canvas.height - padding + 20);
+            }
+
+            // Y axis labels
+            ctx.textAlign = 'right';
+            for (let y = Math.ceil(yMin); y <= Math.floor(yMax); y += 2) {
+                const yPos = padding + graphHeight * (yMax - y) / (yMax - yMin);
+                ctx.fillText(y.toString(), padding - 10, yPos + 4);
+            }
+        }
+
+        // Load default function
+        loadPreset('quadratic');
+    </script>
+</body>
+</html>
+

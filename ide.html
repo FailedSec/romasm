@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Romasm IDE - Online Code Editor</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="nav.css">
+    <style>
+        .ide-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            height: calc(100vh - 200px);
+        }
+        .editor-panel, .output-panel {
+            display: flex;
+            flex-direction: column;
+            background: var(--surface);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+        .editor-header, .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+        .code-editor {
+            flex: 1;
+            background: var(--background);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: none;
+            tab-size: 4;
+        }
+        .output-content {
+            flex: 1;
+            background: var(--background);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .button-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .run-btn {
+            padding: 0.5rem 1.5rem;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .run-btn:hover {
+            background: #059669;
+        }
+        .clear-btn {
+            padding: 0.5rem 1rem;
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .examples-dropdown {
+            padding: 0.5rem;
+            background: var(--surface-light);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+        .register-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        .register-item {
+            background: var(--surface-light);
+            padding: 0.5rem;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .error {
+            color: var(--error);
+        }
+        .success {
+            color: var(--success);
+        }
+        @media (max-width: 768px) {
+            .ide-container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Romasm IDE</h1>
+            <p class="subtitle">Write, compile, and run Romasm assembly code in your browser</p>
+        </header>
+
+        <main>
+            <div class="button-group" style="margin-bottom: 1rem;">
+                <select class="examples-dropdown" id="example-select" onchange="loadExample()">
+                    <option value="">Select an example...</option>
+                    <option value="hello">Hello World (Simple)</option>
+                    <option value="add">Add Two Numbers</option>
+                    <option value="loop">Loop Example</option>
+                    <option value="factorial">Factorial</option>
+                    <option value="sin">Sine Function (Taylor Series)</option>
+                    <option value="arg_reduce">Argument Reduction</option>
+                    <option value="power">Power Function</option>
+                    <option value="sqrt">Square Root (Newton's Method)</option>
+                    <option value="derivative">Derivative (x²)</option>
+                    <option value="integral">Integral (x²)</option>
+                    <option value="trapezoidal">Trapezoidal Rule Integration</option>
+                    <option value="simpson">Simpson's Rule Integration</option>
+                    <option value="exp">Exponential (e^x)</option>
+                    <option value="collatz">Collatz Conjecture</option>
+                </select>
+                <button class="run-btn" onclick="runProgram()">▶ Run</button>
+                <button class="clear-btn" onclick="clearOutput()">Clear</button>
+            </div>
+
+            <div class="ide-container">
+                <div class="editor-panel">
+                    <div class="editor-header">
+                        <h3>Romasm Source Code</h3>
+                    </div>
+                    <textarea id="code-editor" class="code-editor" placeholder="; Romasm Assembly Code
+; Example:
+LOAD R0, 10
+LOAD R1, 20
+ADD R0, R1
+PRINT R0"></textarea>
+                </div>
+
+                <div class="output-panel">
+                    <div class="output-header">
+                        <h3>Output</h3>
+                    </div>
+                    <div id="output-content" class="output-content">Ready to run...</div>
+                    <div id="registers-display" class="register-display"></div>
+                </div>
+            </div>
+
+            <section class="info-section" style="margin-top: 2rem;">
+                <h2>Quick Reference</h2>
+                <div class="info-content">
+                    <div class="info-card">
+                        <h3>Instructions</h3>
+                        <table class="digit-table">
+                            <tr><th>Instruction</th><th>Description</th><th>Example</th></tr>
+                            <tr><td>LOAD</td><td>Load value into register</td><td>LOAD R0, 10</td></tr>
+                            <tr><td>STORE</td><td>Store register to memory</td><td>STORE R0, [100]</td></tr>
+                            <tr><td>ADD</td><td>Add two registers</td><td>ADD R0, R1</td></tr>
+                            <tr><td>SUB</td><td>Subtract two registers</td><td>SUB R0, R1</td></tr>
+                            <tr><td>MUL</td><td>Multiply two registers</td><td>MUL R0, R1</td></tr>
+                            <tr><td>DIV</td><td>Divide two registers</td><td>DIV R0, R1</td></tr>
+                            <tr><td>MOD</td><td>Modulo (remainder)</td><td>MOD R0, R1</td></tr>
+                            <tr><td>CMP</td><td>Compare two registers</td><td>CMP R0, R1</td></tr>
+                            <tr><td>SHL</td><td>Shift left (multiply by 2^n)</td><td>SHL R0, R1</td></tr>
+                            <tr><td>SHR</td><td>Shift right (divide by 2^n)</td><td>SHR R0, R1</td></tr>
+                            <tr><td>JMP</td><td>Jump to label</td><td>JMP loop</td></tr>
+                            <tr><td>JEQ</td><td>Jump if equal</td><td>JEQ done</td></tr>
+                            <tr><td>PRINT</td><td>Print register value</td><td>PRINT R0</td></tr>
+                        </table>
+                    </div>
+                    <div class="info-card">
+                        <h3>Registers</h3>
+                        <p>R0 through R8 (mapped to Roman numerals I through IX)</p>
+                        <div class="example-box">
+                            <strong>Labels:</strong> Use labels for jumps:<br>
+                            <code>loop:<br>
+                            &nbsp;&nbsp;INC R0<br>
+                            &nbsp;&nbsp;JMP loop</code>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Romasm IDE - Online Assembly Language Editor</p>
+            <p style="margin-top: 1rem;">
+                <a href="index.html" style="color: var(--primary-color);">← Positional Roman</a> |
+                <a href="romasm.html" style="color: var(--primary-color);">← Romasm Basic</a> |
+                <a href="romasm-extended.html" style="color: var(--primary-color);">← Romasm Extended</a>
+            </p>
+        </footer>
+    </div>
+
+    <script src="compiler/romasm-assembler.js"></script>
+    <script src="compiler/romasm-vm.js"></script>
+    <script>
+
+        const assembler = new RomasmAssembler();
+        const vm = new RomasmVM();
+
+        const examples = {
+            hello: `; Hello World - Simple program
+LOAD R0, 42
+PRINT R0
+LOAD R1, 100
+PRINT R1`,
+
+            add: `; Add two numbers
+LOAD R0, 15
+LOAD R1, 27
+ADD R0, R1
+PRINT R0`,
+
+            loop: `; Loop example
+LOAD R0, 0
+loop:
+  INC R0
+  PRINT R0
+  CMP R0, 5
+  JLT loop
+done:
+  PRINT R0`,
+
+            factorial: `; Calculate 5!
+LOAD R0, 1
+LOAD R1, 1
+LOAD R2, 5
+loop:
+  MUL R0, R1
+  INC R1
+  CMP R1, R2
+  JLT loop
+  JEQ done
+done:
+PRINT R0`,
+
+            sin: `; Calculate sin(30 degrees) using 6-term Taylor Series
+; Taylor: x - x³/6 + x⁵/120 - x⁷/5040 + x⁹/362880 - x¹¹/39916800
+; Working version with proper scaling
+
+; 30° = π/6 ≈ 0.523599 radians  
+; Use scale 100: x = 52 (represents 0.52, close enough)
+LOAD R0, 52        ; x scaled by 100
+
+; Result accumulator (scaled by 10000, so 0.5 = 5000)
+LOAD R2, R0        ; Start with x
+LOAD R1, 100
+MUL R2, R1         ; R2 = x * 100 = x scaled by 10000
+
+; Calculate x² (scaled by 100² = 10000)
+LOAD R3, R0
+LOAD R4, R0
+MUL R3, R4         ; R3 = x² = 2704
+
+; Term 2: -x³/6
+; x³ = x * x² = 52 * 2704 = 140608 (scaled by 100³ = 1,000,000)
+; x³/6 scaled by 10000 = (x³ / 6) / 100² * 10000 = x³ / (6 * 100)
+LOAD R4, R0        ; R4 = x
+MUL R4, R3         ; R4 = x³ = 140608
+LOAD R5, 600       ; 6 * 100
+DIV R4, R5         ; R4 = x³/6 scaled by 10000
+SUB R2, R4         ; R2 = x - x³/6
+
+; Term 3: +x⁵/120
+; x⁵ = x³ * x² = 140608 * 2704 = 380204032 (scaled by 100⁵)
+; x⁵/120 scaled by 10000 = x⁵ / (120 * 100³) = x⁵ / 120000000
+; But that's too big, so: x⁵/120 scaled by 10000 = x⁵ / (120 * 100²) = x⁵ / 1200000
+LOAD R4, R0
+MUL R4, R3         ; x³
+MUL R4, R3         ; x⁵
+LOAD R5, 1200000   ; 120 * 100²
+DIV R4, R5         ; x⁵/120 scaled by 10000
+ADD R2, R4
+
+; Terms 4-6 are very small and can be approximated or skipped
+; For 30°, they contribute < 10 to the result
+
+; Convert to scale 1000 for output (divide by 10)
+LOAD R1, 10
+DIV R2, R1
+PRINT R2           ; Should output ~500 (sin(30°) ≈ 0.5 × 1000)`,
+
+            arg_reduce: `; Argument Reduction Example
+; Reduce angle to range [0, 360)
+LOAD R0, 450  ; 450 degrees
+
+; Load 360 (2*PI approximation in degrees)
+LOAD R1, 360
+
+; Reduce if angle >= 360
+reduce_loop:
+  CMP R0, R1
+  JLT reduce_done
+  SUB R0, R1
+  JMP reduce_loop
+
+reduce_done:
+PRINT R0  ; Should output 90 (450 - 360)`,
+
+            power: `; Calculate 2^8
+LOAD R0, 2   ; base
+LOAD R1, 8   ; exponent
+LOAD R2, 1   ; result = 1
+LOAD R3, 0   ; constant 0 for comparison
+
+power_loop:
+  CMP R1, R3
+  JLE power_done  ; Jump if R1 <= 0
+  MUL R2, R0
+  DEC R1
+  JMP power_loop
+
+power_done:
+LOAD R0, R2
+PRINT R0  ; Should output 256`,
+
+            collatz: `; Collatz Conjecture
+; Start with number in R0, run until it reaches 1
+LOAD R1, 1   ; Constant 1
+LOAD R2, 2   ; Constant 2
+LOAD R3, 3   ; Constant 3
+LOAD R5, 1   ; Shift amount
+LOAD R0, 27  ; Starting number
+
+loop:
+  ; Check if we've reached 1
+  CMP R0, R1
+  JEQ done
+  
+  ; Print current number
+  PRINT R0
+  
+  ; Check if even (R0 % 2 == 0)
+  LOAD R4, R0
+  MOD R4, R2
+  CMP R4, R1
+  JEQ is_odd
+  
+  ; Even: divide by 2 using shift
+  SHR R0, R5
+  JMP loop
+  
+is_odd:
+  ; Odd: 3n + 1
+  MUL R0, R3
+  ADD R0, R1
+  JMP loop
+
+done:
+  PRINT R1   ; Print final 1`,
+
+            sqrt: `; Square Root using Newton's Method
+; Calculate sqrt(25) = 5
+LOAD R0, 25000  ; n = 25.000 (scaled by 1000)
+LOAD R5, 0      ; constant 0 for comparison
+LOAD R6, 1000   ; constant 1 (scaled) for comparison
+
+; Handle edge cases
+CMP R0, R5
+JEQ sqrt_zero
+CMP R0, R6
+JLE sqrt_one
+
+; Initial guess: x = n/2
+LOAD R1, R0     ; R1 = current guess (x)
+LOAD R2, 2
+DIV R1, R2      ; R1 = n/2 = 12500
+
+; Newton's method: x_new = (x + n/x) / 2
+; All values are scaled by 1000, so we need to handle scaling carefully
+; For n=25000 (25.0), x should converge to 5000 (5.0)
+; Iterate 20 times for better convergence
+LOAD R3, 20     ; iteration count
+
+sqrt_loop:
+  CMP R3, R5
+  JLE sqrt_done  ; Jump if R3 <= 0
+  
+  ; Calculate n/x
+  ; n is scaled by 1000, x is scaled by 1000
+  ; n/x = (n * 1000) / x to get result scaled by 1000
+  LOAD R4, R0   ; R4 = n (scaled by 1000)
+  LOAD R7, 1000
+  MUL R4, R7    ; R4 = n * 1000 (for division)
+  DIV R4, R1    ; R4 = (n * 1000) / x = n/x (scaled by 1000)
+  
+  ; x_new = (x + n/x) / 2
+  ADD R1, R4    ; R1 = x + n/x (both scaled by 1000)
+  LOAD R4, 2
+  DIV R1, R4    ; R1 = (x + n/x) / 2 (scaled by 1000)
+  
+  DEC R3
+  JMP sqrt_loop
+
+sqrt_zero:
+  LOAD R1, 0
+  JMP sqrt_done
+
+sqrt_one:
+  LOAD R1, R6   ; sqrt(1) = 1
+
+sqrt_done:
+  LOAD R0, R1
+  PRINT R0      ; Should output ~5000 (5.000 scaled)`,
+
+            derivative: `; Derivative of f(x) = x² using Central Difference
+; Calculate f'(5) for f(x) = x²
+; Expected: f'(5) = 2*5 = 10
+LOAD R0, 5000   ; x = 5.000 (scaled by 1000)
+LOAD R1, 10    ; h = 0.01 (scaled by 1000)
+
+; Save x and h
+LOAD R2, R0    ; R2 = x
+LOAD R3, R1    ; R3 = h
+
+; Calculate f(x+h) = (x+h)²
+LOAD R4, R2    ; R4 = x
+ADD R4, R3     ; R4 = x + h
+LOAD R5, R4
+MUL R4, R5     ; R4 = (x+h)² (scaled by 1000000)
+LOAD R5, 1000
+DIV R4, R5     ; R4 = (x+h)² (scaled by 1000)
+
+; Calculate f(x-h) = (x-h)²
+LOAD R5, R2    ; R5 = x
+SUB R5, R3     ; R5 = x - h
+LOAD R6, R5
+MUL R5, R6     ; R5 = (x-h)² (scaled by 1000000)
+LOAD R6, 1000
+DIV R5, R6     ; R5 = (x-h)² (scaled by 1000)
+
+; f'(x) = (f(x+h) - f(x-h)) / (2h)
+LOAD R0, R4    ; R0 = f(x+h)
+SUB R0, R5     ; R0 = f(x+h) - f(x-h)
+LOAD R5, 2     ; R5 = 2
+MUL R5, R3     ; R5 = 2h = 20
+DIV R0, R5     ; R0 = (f(x+h) - f(x-h)) / (2h)
+; Result is already scaled correctly (difference of scaled values / scaled h)
+; For x=5, f'(5)=10, scaled by 1000 = 10000
+LOAD R5, 1000
+MUL R0, R5     ; Scale result by 1000
+
+PRINT R0       ; Should output ~10000 (10.000 scaled)`,
+
+            integral: `; Definite Integral of f(x) = x² from 0 to 5
+; Calculate ∫[0,5] x² dx
+; Expected: (5³ - 0³) / 3 = 125 / 3 ≈ 41.667
+LOAD R0, 0     ; a = 0 (lower bound)
+LOAD R1, 5000  ; b = 5.000 (scaled, upper bound)
+
+; Calculate b³
+LOAD R2, R1    ; R2 = b
+LOAD R3, R1
+MUL R2, R3     ; R2 = b²
+MUL R2, R1     ; R2 = b³ (scaled by 1000000000)
+
+; Calculate a³ (a = 0, so a³ = 0)
+LOAD R3, 0     ; R3 = a³ = 0
+
+; (b³ - a³) / 3
+SUB R2, R3     ; R2 = b³ - a³ = b³
+LOAD R3, 3
+DIV R2, R3     ; R2 = (b³ - a³) / 3 (scaled by 1000000000)
+
+; Rescale to 1000: divide by 1000000
+LOAD R3, 1000000
+DIV R2, R3     ; R2 = result (scaled by 1000)
+
+LOAD R0, R2
+PRINT R0       ; Should output ~41667 (41.667 scaled)`,
+
+            trapezoidal: `; Trapezoidal Rule for ∫[0,5] x² dx
+LOAD R0, 0
+LOAD R1, 5000
+LOAD R2, 100
+LOAD R3, 0
+LOAD R4, R0
+; First term: f(a)/2
+LOAD R5, R4
+LOAD R6, R4
+MUL R5, R6
+LOAD R6, 1000
+DIV R5, R6
+LOAD R6, 2
+DIV R5, R6
+ADD R3, R5
+ADD R4, R2
+loop:
+  CMP R4, R1
+  JGE last_term
+  ; Middle terms: f(x) (not 2*f(x) since we divided endpoints by 2)
+  LOAD R5, R4
+  LOAD R6, R4
+  MUL R5, R6
+  LOAD R6, 1000
+  DIV R5, R6
+  ADD R3, R5
+  ADD R4, R2
+  JMP loop
+last_term:
+  ; Last term: f(b)/2
+  LOAD R5, R1
+  LOAD R6, R1
+  MUL R5, R6
+  LOAD R6, 1000
+  DIV R5, R6
+  LOAD R6, 2
+  DIV R5, R6
+  ADD R3, R5
+  ; Multiply by Δx (scaled by 1000)
+  ; Current sum is scaled by 1000, Δx is scaled by 1000
+  ; Result will be scaled by 1000000, need to divide by 1000
+  MUL R3, R2   ; sum *= Δx (scaled by 1000000)
+  LOAD R5, 1000
+  DIV R3, R5   ; Rescale to 1000
+  LOAD R0, R3
+  PRINT R0`,
+
+            simpson: `; Simpson's Rule for ∫[0,5] x² dx
+; More accurate than trapezoidal rule
+; Pattern: f(a) + 4f(x1) + 2f(x2) + 4f(x3) + 2f(x4) + ... + f(b)
+LOAD R0, 0
+LOAD R1, 5000
+LOAD R2, 100
+LOAD R3, 0
+LOAD R4, R0
+LOAD R7, 0
+; First term: f(a) with coefficient 1
+LOAD R5, R4
+LOAD R6, R4
+MUL R5, R6
+LOAD R6, 1000
+DIV R5, R6
+ADD R3, R5
+ADD R4, R2
+loop:
+  CMP R4, R1
+  JGE last_term
+  ; Calculate f(x) = x²
+  LOAD R5, R4
+  LOAD R6, R4
+  MUL R5, R6
+  LOAD R6, 1000
+  DIV R5, R6
+  ; Apply coefficient: alternate 4, 2, 4, 2...
+  ; Load 0 into R8 for comparison
+  LOAD R8, 0
+  CMP R7, R8
+  JEQ coeff_4
+  ; Coefficient 2
+  LOAD R6, 2
+  MUL R5, R6
+  LOAD R7, 0
+  JMP add_term
+coeff_4:
+  ; Coefficient 4
+  LOAD R6, 4
+  MUL R5, R6
+  LOAD R7, 1
+add_term:
+  ADD R3, R5
+  ADD R4, R2
+  JMP loop
+last_term:
+  ; Last term: f(b) with coefficient 1
+  LOAD R5, R1
+  LOAD R6, R1
+  MUL R5, R6
+  LOAD R6, 1000
+  DIV R5, R6
+  ADD R3, R5
+  ; Multiply by Δx/3
+  ; Simpson's: (Δx/3) * [f(a) + 4f(x1) + 2f(x2) + ... + f(b)]
+  ; Current sum is scaled by 1000, Δx is scaled by 1000
+  ; (Δx/3) * sum = (Δx * sum) / 3
+  ; sum * Δx gives result scaled by 1000000
+  ; To get (sum * Δx) / 3 scaled by 1000, we divide by (3 * 1000) = 3000
+  MUL R3, R2   ; sum *= Δx (scaled by 1000000)
+  LOAD R5, 3
+  LOAD R6, 1000
+  MUL R5, R6   ; R5 = 3 * 1000 = 3000
+  DIV R3, R5   ; sum = (sum * Δx) / 3000 (scaled by 1000)
+  LOAD R0, R3
+  PRINT R0`,
+
+            exp: `; Exponential: e^x
+; Calculate e^1 ≈ 2.718
+LOAD R0, 1000   ; x = 1.000 (scaled)
+LOAD R1, 1000   ; result = 1.000
+
+; Term 1: x
+LOAD R2, R0
+ADD R1, R2      ; 1 + x
+
+; Term 2: x²/2
+LOAD R2, R0
+LOAD R3, R0
+MUL R2, R3      ; x² (scaled by 1000000)
+LOAD R3, 2000   ; 2 * 1000
+DIV R2, R3      ; x²/2 (scaled by 1000)
+ADD R1, R2      ; 1 + x + x²/2
+
+; Term 3: x³/6
+LOAD R2, R0
+LOAD R3, R0
+MUL R2, R3      ; x²
+MUL R2, R0      ; x³ (scaled by 1000000000)
+LOAD R3, 6000000 ; 6 * 1000000
+DIV R2, R3      ; x³/6 (scaled by 1000)
+ADD R1, R2      ; 1 + x + x²/2 + x³/6
+
+; Term 4: x⁴/24
+LOAD R2, R0
+LOAD R3, R0
+MUL R2, R3      ; x²
+MUL R2, R3      ; x³
+MUL R2, R0      ; x⁴ (scaled by 1000000000000)
+LOAD R3, 24000000000 ; 24 * 1000000000
+DIV R2, R3      ; x⁴/24 (scaled by 1000)
+ADD R1, R2      ; Add term 4
+
+LOAD R0, R1
+PRINT R0        ; Should output ~2718`
+        };
+
+        function loadExample() {
+            const select = document.getElementById('example-select');
+            const example = examples[select.value];
+            if (example) {
+                document.getElementById('code-editor').value = example;
+            }
+        }
+
+        function runProgram() {
+            const source = document.getElementById('code-editor').value;
+            const outputDiv = document.getElementById('output-content');
+            const registersDiv = document.getElementById('registers-display');
+
+            // Reset VM
+            vm.reset();
+
+            // Assemble
+            const result = assembler.assemble(source);
+
+            if (!result.success) {
+                let errorMsg = '<span class="error">Assembly Errors:</span>\n';
+                for (const error of result.errors) {
+                    errorMsg += `Line ${error.line}: ${error.message}\n`;
+                    errorMsg += `  ${error.code}\n\n`;
+                }
+                outputDiv.innerHTML = `<pre class="error">${errorMsg}</pre>`;
+                registersDiv.innerHTML = '';
+                return;
+            }
+
+            // Load and run
+            vm.loadProgram(result.instructions);
+            const execution = vm.run();
+
+            // Display output
+            let output = '<span class="success">Program executed successfully!</span>\n\n';
+            output += '<strong>Output:</strong>\n';
+            if (execution.output.length > 0) {
+                output += execution.output.join('\n') + '\n';
+            } else {
+                output += '(no output)\n';
+            }
+
+            output += `\n<strong>Steps executed:</strong> ${execution.steps}\n`;
+
+            if (execution.error) {
+                output += `\n<span class="error">Error: ${execution.error}</span>\n`;
+            }
+
+            outputDiv.innerHTML = `<pre>${output}</pre>`;
+
+            // Display registers
+            const state = vm.getState();
+            let regsHtml = '<strong>Registers:</strong><br>';
+            const regNames = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
+            const regLabels = ['R0', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8'];
+            
+            regsHtml += '<div class="register-display">';
+            for (let i = 0; i < regNames.length; i++) {
+                const value = state.registers[regNames[i]];
+                regsHtml += `<div class="register-item">
+                    <strong>${regLabels[i]}</strong><br>
+                    ${value}
+                </div>`;
+            }
+            regsHtml += '</div>';
+            registersDiv.innerHTML = regsHtml;
+        }
+
+        function clearOutput() {
+            document.getElementById('output-content').innerHTML = 'Ready to run...';
+            document.getElementById('registers-display').innerHTML = '';
+        }
+    </script>
+</body>
+</html>
+

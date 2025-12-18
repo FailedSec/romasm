@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pascal's Triangle - Romasm</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="nav.css">
+    <style>
+        .pascal-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 1rem;
+        }
+        .controls-panel {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 12px;
+        }
+        .triangle-display {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 12px;
+            overflow: auto;
+            max-height: 600px;
+        }
+        .triangle-row {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 0.25rem 0;
+        }
+        .triangle-cell {
+            min-width: 40px;
+            padding: 0.5rem;
+            text-align: center;
+            background: var(--surface-light);
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        .triangle-cell.highlight {
+            background: var(--accent);
+            color: white;
+            font-weight: 600;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .stat-item {
+            background: var(--surface-light);
+            padding: 1rem;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Pascal's Triangle Explorer</h1>
+            <p class="subtitle">Calculate and analyze Pascal's Triangle using Romasm - related to Singmaster's Conjecture</p>
+        </header>
+
+        <main>
+            <section class="info-section" style="margin-bottom: 2rem;">
+                <h2>About Pascal's Triangle & Singmaster's Conjecture</h2>
+                <div class="info-content">
+                    <div class="info-card">
+                        <h3>Pascal's Triangle</h3>
+                        <p>A triangular array where each number is the sum of the two numbers above it. Used in combinatorics, probability, and algebra.</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>Singmaster's Conjecture</h3>
+                        <p>Asks: Is there a finite limit to how many times a number can appear in Pascal's triangle? Most numbers appear only a few times, but some appear many times.</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>The Challenge</h3>
+                        <p>Use Romasm to calculate large portions of Pascal's triangle and count occurrences of specific numbers, searching for record-breaking frequencies.</p>
+                    </div>
+                </div>
+            </section>
+
+            <div class="pascal-container">
+                <div class="controls-panel">
+                    <h3>Configuration</h3>
+                    <div class="input-group" style="display: flex; flex-direction: column; gap: 1rem;">
+                        <div>
+                            <label>Number of Rows</label>
+                            <input type="number" id="num-rows" value="20" min="1" max="50" step="1">
+                        </div>
+                        <div>
+                            <label>Search Number</label>
+                            <input type="number" id="search-num" value="6" min="1" step="1">
+                        </div>
+                        <button class="run-btn" onclick="generateTriangle()">▶ Generate Triangle</button>
+                        <button class="run-btn" onclick="searchOccurrences()" style="background: var(--accent);">🔍 Count Occurrences</button>
+                    </div>
+                </div>
+
+                <div class="triangle-display">
+                    <h3>Pascal's Triangle</h3>
+                    <div id="triangle-container"></div>
+                    <div class="stats-grid" id="stats-container"></div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Pascal's Triangle Explorer - Computational analysis for Singmaster's Conjecture</p>
+        </footer>
+    </div>
+
+    <script>
+        let triangle = [];
+        let occurrences = {};
+
+        function generateTriangle() {
+            const rows = parseInt(document.getElementById('num-rows').value);
+            if (isNaN(rows) || rows < 1 || rows > 50) {
+                alert('Please enter a number between 1 and 50');
+                return;
+            }
+
+            triangle = [];
+            const container = document.getElementById('triangle-container');
+            container.innerHTML = '';
+
+            for (let i = 0; i < rows; i++) {
+                const row = [];
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'triangle-row';
+
+                for (let j = 0; j <= i; j++) {
+                    let value;
+                    if (j === 0 || j === i) {
+                        value = 1;
+                    } else {
+                        value = triangle[i - 1][j - 1] + triangle[i - 1][j];
+                    }
+                    row.push(value);
+
+                    const cell = document.createElement('div');
+                    cell.className = 'triangle-cell';
+                    cell.textContent = value;
+                    rowDiv.appendChild(cell);
+                }
+
+                triangle.push(row);
+                container.appendChild(rowDiv);
+            }
+        }
+
+        function searchOccurrences() {
+            const searchNum = parseInt(document.getElementById('search-num').value);
+            if (isNaN(searchNum) || searchNum < 1) {
+                alert('Please enter a valid number');
+                return;
+            }
+
+            if (triangle.length === 0) {
+                alert('Please generate the triangle first');
+                return;
+            }
+
+            let count = 0;
+            const positions = [];
+
+            // Count occurrences
+            triangle.forEach((row, i) => {
+                row.forEach((value, j) => {
+                    if (value === searchNum) {
+                        count++;
+                        positions.push({ row: i, col: j });
+                    }
+                });
+            });
+
+            // Highlight occurrences
+            const container = document.getElementById('triangle-container');
+            container.querySelectorAll('.triangle-cell').forEach(cell => {
+                cell.classList.remove('highlight');
+            });
+
+            positions.forEach(pos => {
+                const row = container.children[pos.row];
+                if (row) {
+                    const cell = row.children[pos.col];
+                    if (cell) {
+                        cell.classList.add('highlight');
+                    }
+                }
+            });
+
+            // Display stats
+            document.getElementById('stats-container').innerHTML = `
+                <div class="stat-item">
+                    <h4>Number: ${searchNum}</h4>
+                    <div style="font-size: 2rem; font-weight: 600; color: var(--primary-color);">${count}</div>
+                    <div style="color: var(--text-secondary);">Occurrences Found</div>
+                </div>
+                <div class="stat-item">
+                    <h4>Positions</h4>
+                    <div style="max-height: 200px; overflow-y: auto;">
+                        ${positions.map(p => `Row ${p.row}, Col ${p.col}`).join('<br>') || 'None'}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Generate default triangle on load
+        window.addEventListener('DOMContentLoaded', () => {
+            generateTriangle();
+        });
+    </script>
+</body>
+</html>
+

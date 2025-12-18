@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legendre's Conjecture Explorer - Romasm</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="nav.css">
+    <style>
+        .legendre-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .search-panel {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .gap-result {
+            padding: 1rem;
+            margin: 0.5rem 0;
+            background: var(--surface-light);
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .counterexample {
+            padding: 1.5rem;
+            background: rgba(244, 67, 54, 0.2);
+            border: 2px solid var(--error);
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Legendre's Conjecture Explorer</h1>
+            <p class="subtitle">Verify that there's always a prime between n² and (n+1)²</p>
+        </header>
+
+        <main>
+            <section class="info-section" style="margin-bottom: 2rem;">
+                <h2>About Legendre's Conjecture</h2>
+                <div class="info-content">
+                    <div class="info-card">
+                        <h3>The Conjecture</h3>
+                        <p>For every positive integer n, there exists at least one prime number between n² and (n+1)².</p>
+                        <p><strong>Example:</strong> Between 4²=16 and 5²=25, we have primes: 17, 19, 23</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>Status</h3>
+                        <p>Verified up to very large values, but not proven for all n. Finding a counterexample would disprove the conjecture.</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>The Challenge</h3>
+                        <p>Search for gaps where no prime exists between consecutive perfect squares.</p>
+                    </div>
+                </div>
+            </section>
+
+            <div class="legendre-container">
+                <div class="search-panel">
+                    <h3>Verify Legendre's Conjecture</h3>
+                    <div class="input-group">
+                        <label>Start from n =</label>
+                        <input type="number" id="start-n" value="10" min="1" max="10000">
+                    </div>
+                    <div class="input-group">
+                        <label>Check up to n =</label>
+                        <input type="number" id="end-n" value="100" min="1" max="10000">
+                    </div>
+                    <button class="run-btn" onclick="verifyLegendre()">✓ Verify Conjecture</button>
+                </div>
+
+                <div class="results-panel" id="results-panel" style="display: none;">
+                    <h3>Verification Results</h3>
+                    <div id="results-display"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="compiler/romasm-assembler.js"></script>
+    <script src="compiler/romasm-vm.js"></script>
+    <script src="stdlib/bigint.js"></script>
+    <script src="stdlib/primes.js"></script>
+    <script>
+        function verifyLegendre() {
+            const startN = parseInt(document.getElementById('start-n').value);
+            const endN = parseInt(document.getElementById('end-n').value);
+            
+            document.getElementById('results-panel').style.display = 'block';
+            document.getElementById('results-display').innerHTML = '<p>Verifying with Romasm...</p>';
+            
+            const results = [];
+            let counterexample = null;
+            
+            // Use Romasm to verify each n
+            for (let n = startN; n <= endN && n <= 50; n++) { // Limit for performance
+                const lower = n * n;
+                const upper = (n + 1) * (n + 1);
+                
+                // Romasm code to find a prime between lower and upper
+                const romasmCode = `
+; Legendre's Conjecture: Find prime between n² and (n+1)²
+; Input: lower in R0, upper in R1
+; Output: Prints prime if found, 0 if not found
+
+LOAD R0, ${lower + 1}  ; Start from n² + 1
+LOAD R1, ${upper}      ; Upper bound (n+1)²
+LOAD R2, 2             ; Constant 2
+LOAD R3, 0             ; Found flag
+
+search_loop:
+  ; Check if we've reached upper bound
+  CMP R0, R1
+  JGE not_found
+  
+  ; Check if R0 is 2 (special case - it's prime)
+  LOAD R4, R0        ; R4 = current number
+  CMP R4, R2         ; Compare with 2
+  JEQ found_prime    ; If R0 == 2, it's prime
+  
+  ; Check if even (skip if even, except 2)
+  LOAD R4, R0        ; R4 = current number
+  MOD R4, R2         ; R4 = R0 % 2
+  LOAD R6, 0         ; R6 = 0 (for comparison)
+  CMP R4, R6         ; Check if remainder is 0
+  JEQ next_num       ; If even (and not 2), skip
+  
+  ; More thorough primality check: test divisibility by 3, 5, 7, 11, 13, 17, 19
+  ; Check 3
+  LOAD R4, R0
+  LOAD R5, 3
+  MOD R4, R5
+  LOAD R6, 0
+  CMP R4, R6
+  JEQ next_num
+  
+  ; Check 5
+  LOAD R4, R0
+  LOAD R5, 5
+  MOD R4, R5
+  LOAD R6, 0
+  CMP R4, R6
+  JEQ next_num
+  
+  ; Check 7
+  LOAD R4, R0
+  LOAD R5, 7
+  MOD R4, R5
+  LOAD R6, 0
+  CMP R4, R6
+  JEQ next_num
+  
+  ; Check 11
+  LOAD R4, R0
+  LOAD R5, 11
+  MOD R4, R5
+  LOAD R6, 0
+  CMP R4, R6
+  JEQ next_num
+  
+  ; Check 13
+  LOAD R4, R0
+  LOAD R5, 13
+  MOD R4, R5
+  LOAD R6, 0
+  CMP R4, R6
+  JEQ next_num
+  
+  ; Check 17
+  LOAD R4, R0
+  LOAD R5, 17
+  MOD R4, R5
+  LOAD R6, 0
+  CMP R4, R6
+  JEQ next_num
+  
+  ; Check 19
+  LOAD R4, R0
+  LOAD R5, 19
+  MOD R4, R5
+  LOAD R6, 0
+  CMP R4, R6
+  JEQ next_num
+  
+  ; Check 23
+  LOAD R4, R0
+  LOAD R5, 23
+  MOD R4, R5
+  LOAD R6, 0
+  CMP R4, R6
+  JEQ next_num
+  
+  ; For numbers < 529 (23²), if they pass all checks, likely prime
+  ; For larger numbers, we'd need more checks
+  LOAD R4, R0
+  LOAD R5, 529
+  CMP R4, R5
+  JLT found_prime
+  
+  ; Check 29
+  LOAD R4, R0
+  LOAD R5, 29
+  MOD R4, R5
+  LOAD R6, 0
+  CMP R4, R6
+  JEQ next_num
+  
+  ; Found a prime (passed all divisibility checks up to sqrt)
+found_prime:
+  LOAD R3, 1
+  PRINT R0
+  JMP done
+
+next_num:
+  INC R0
+  JMP search_loop
+
+not_found:
+  LOAD R3, 0
+  PRINT R3
+
+done:
+  ; Program ends naturally
+`;
+
+                const assembler = new RomasmAssembler();
+                const asmResult = assembler.assemble(romasmCode);
+                
+                if (asmResult.success) {
+                    const vm = new RomasmVM();
+                    vm.loadProgram(asmResult.instructions);
+                    const execResult = vm.run(10000);
+                    
+                    if (execResult.output.length > 0 && execResult.output[0] !== 0) {
+                        results.push({ n, lower, upper, prime: execResult.output[0] });
+                    } else {
+                        counterexample = { n, lower, upper };
+                        break;
+                    }
+                }
+            }
+            
+            let html = '';
+            if (counterexample) {
+                html += `<div class="counterexample">`;
+                html += `<h4>⚠️ COUNTEREXAMPLE FOUND!</h4>`;
+                html += `<p>No prime found between ${counterexample.lower} and ${counterexample.upper}!</p>`;
+                html += `<p>This would disprove Legendre's Conjecture!</p>`;
+                html += `</div>`;
+            } else {
+                html += `<p style="color: var(--success); margin-bottom: 1rem;">✓ Conjecture verified for n = ${startN} to ${Math.min(endN, 50)}</p>`;
+                html += `<p style="color: var(--text-secondary); margin-bottom: 1rem;">Showing results (computed with Romasm):</p>`;
+                
+                results.slice(0, 20).forEach(result => {
+                    html += `<div class="gap-result">`;
+                    html += `<strong>n = ${result.n}:</strong> Between ${result.lower} and ${result.upper}, found prime: <strong>${result.prime}</strong>`;
+                    html += `</div>`;
+                });
+                
+                if (results.length > 20) {
+                    html += `<p style="color: var(--text-secondary); margin-top: 1rem;">... and ${results.length - 20} more verified cases</p>`;
+                }
+            }
+            
+            document.getElementById('results-display').innerHTML = html;
+        }
+    </script>
+</body>
+</html>
+

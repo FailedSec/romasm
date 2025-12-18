@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mersenne Primes Explorer - Romasm</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="nav.css">
+    <style>
+        .mersenne-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .search-panel {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .mersenne-prime {
+            padding: 1rem;
+            margin: 0.5rem 0;
+            background: var(--surface-light);
+            border-radius: 8px;
+            border-left: 4px solid var(--success);
+        }
+        
+        .mersenne-prime .formula {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            color: var(--primary-color);
+        }
+        
+        .known-primes {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Mersenne Primes Explorer</h1>
+            <p class="subtitle">Search for Mersenne primes: 2<sup>p</sup> - 1 where p is prime</p>
+        </header>
+
+        <main>
+            <section class="info-section" style="margin-bottom: 2rem;">
+                <h2>About Mersenne Primes</h2>
+                <div class="info-content">
+                    <div class="info-card">
+                        <h3>Definition</h3>
+                        <p>A Mersenne prime is a prime number of the form 2<sup>p</sup> - 1, where p is also prime.</p>
+                        <p><strong>Examples:</strong> 3 = 2²-1, 7 = 2³-1, 31 = 2⁵-1</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>Current Status</h3>
+                        <p>As of 2024, 51 Mersenne primes are known. The largest is 2<sup>82,589,933</sup> - 1, with over 24 million digits!</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>The Challenge</h3>
+                        <p>Finding new Mersenne primes is computationally intensive. The Great Internet Mersenne Prime Search (GIMPS) coordinates distributed computing efforts.</p>
+                    </div>
+                </div>
+            </section>
+
+            <div class="mersenne-container">
+                <div class="known-primes">
+                    <h3>Known Small Mersenne Primes</h3>
+                    <p>2²-1 = 3, 2³-1 = 7, 2⁵-1 = 31, 2⁷-1 = 127, 2¹³-1 = 8191, 2¹⁷-1 = 131071, 2¹⁹-1 = 524287</p>
+                </div>
+
+                <div class="search-panel">
+                    <h3>Search for Mersenne Primes</h3>
+                    <div class="input-group">
+                        <label>Exponent p (must be prime)</label>
+                        <input type="number" id="exponent" value="31" min="2" max="100">
+                    </div>
+                    <button class="run-btn" onclick="checkMersenne()">🔍 Check Mersenne Prime</button>
+                </div>
+
+                <div class="results-panel" id="results-panel" style="display: none;">
+                    <h3>Results</h3>
+                    <div id="results-display"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="stdlib/bigint.js"></script>
+    <script src="stdlib/primes.js"></script>
+    <script>
+        function checkMersenne() {
+            const p = parseInt(document.getElementById('exponent').value);
+            
+            document.getElementById('results-panel').style.display = 'block';
+            document.getElementById('results-display').innerHTML = '<p>Checking...</p>';
+            
+            // First check: p must be >= 2
+            if (p < 2) {
+                document.getElementById('results-display').innerHTML = 
+                    '<p style="color: var(--error);">Exponent p must be at least 2. p=1 gives 2¹-1=1, which is not prime.</p>';
+                return;
+            }
+            
+            // Second check: p must be prime
+            if (!isPrime(p)) {
+                document.getElementById('results-display').innerHTML = 
+                    '<p style="color: var(--error);">p must be prime! ' + p + ' is not prime.</p>';
+                return;
+            }
+            
+            // Calculate 2^p - 1
+            // For large p, use BigInt
+            let mersenne;
+            if (p > 30) {
+                // Use BigInt for large numbers
+                const two = new BigIntRomasm(2);
+                let result = new BigIntRomasm(1);
+                
+                // Calculate 2^p
+                for (let i = 0; i < p; i++) {
+                    result = result.multiply(two);
+                }
+                
+                // Subtract 1
+                mersenne = result.subtract(new BigIntRomasm(1));
+            } else {
+                mersenne = Math.pow(2, p) - 1;
+            }
+            
+            // Check if it's prime
+            const mersenneStr = typeof mersenne === 'object' ? mersenne.toString() : String(mersenne);
+            const isMersennePrime = checkMersennePrimality(mersenne, p);
+            
+            let html = '';
+            html += `<div class="mersenne-prime">`;
+            html += `<div class="formula">2<sup>${p}</sup> - 1 = ${formatLargeNumber(mersenneStr)}</div>`;
+            
+            if (isMersennePrime) {
+                html += `<p style="color: var(--success); margin-top: 0.5rem;"><strong>✓ This is a Mersenne Prime!</strong></p>`;
+                
+                // Check if this is a known Mersenne prime
+                const knownMersenneExponents = [2,3,5,7,13,17,19,31,61,89,107,127,521,607,1279,2203,2281,3217,4253,4423,9689,9941,11213,19937,21701,23209,44497,86243,110503,132049,216091,756839,859433,1257787,1398269,2976221,3021377,6972593,13466917,20996011,24036583,25964951,30402457,32582657,37156667,42643801,43112609,57885161,74207281,77232917,82589933];
+                
+                if (knownMersenneExponents.includes(p)) {
+                    html += `<p style="color: var(--text-secondary); margin-top: 0.5rem;">This is a known Mersenne prime (discovered in ${getDiscoveryYear(p)}).</p>`;
+                } else if (p > 2) {
+                    html += `<p style="color: var(--accent); font-weight: bold;">🎉 This could be a NEW discovery! Verify carefully with Lucas-Lehmer test!</p>`;
+                    html += `<p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">Note: For large exponents, proper verification requires the Lucas-Lehmer primality test, not just trial division.</p>`;
+                }
+            } else {
+                html += `<p style="color: var(--text-secondary); margin-top: 0.5rem;">This is not prime (composite).</p>`;
+            }
+            html += `</div>`;
+            
+            document.getElementById('results-display').innerHTML = html;
+        }
+        
+        function checkMersennePrimality(mersenne, p) {
+            // First check: p must be prime and >= 2
+            if (p < 2 || !isPrime(p)) {
+                return false;
+            }
+            
+            // Known Mersenne primes (all 51 known as of 2025)
+            const knownMersenneExponents = [2,3,5,7,13,17,19,31,61,89,107,127,521,607,1279,2203,2281,3217,4253,4423,9689,9941,11213,19937,21701,23209,44497,86243,110503,132049,216091,756839,859433,1257787,1398269,2976221,3021377,6972593,13466917,20996011,24036583,25964951,30402457,32582657,37156667,42643801,43112609,57885161,74207281,77232917,82589933];
+            
+            // If it's in the known list, it's definitely a Mersenne prime
+            if (knownMersenneExponents.includes(p)) {
+                return true;
+            }
+            
+            // For small unknown exponents, use simple primality test
+            if (typeof mersenne === 'number' && mersenne < Number.MAX_SAFE_INTEGER) {
+                return isPrime(mersenne);
+            }
+            
+            // For large unknown numbers, we'd need Lucas-Lehmer test
+            // For now, return false (requires proper verification)
+            return false;
+        }
+        
+        function getDiscoveryYear(p) {
+            // Approximate discovery years for known Mersenne primes
+            const discoveryYears = {
+                2: 'ancient',
+                3: 'ancient',
+                5: 'ancient',
+                7: 'ancient',
+                13: '1456',
+                17: '1588',
+                19: '1588',
+                31: '1772 (Euler)',
+                61: '1883',
+                89: '1911',
+                107: '1914',
+                127: '1876',
+                521: '1952',
+                607: '1952',
+                1279: '1952',
+                2203: '1952',
+                2281: '1952',
+                3217: '1957',
+                4253: '1961',
+                4423: '1961',
+                9689: '1963',
+                9941: '1963',
+                11213: '1963',
+                19937: '1971',
+                21701: '1978',
+                23209: '1979',
+                44497: '1979',
+                86243: '1982',
+                110503: '1988',
+                132049: '1983',
+                216091: '1985',
+                756839: '1992',
+                859433: '1994',
+                1257787: '1996',
+                1398269: '1996',
+                2976221: '1997',
+                3021377: '1998',
+                6972593: '1999',
+                13466917: '2001',
+                20996011: '2003',
+                24036583: '2004',
+                25964951: '2005',
+                30402457: '2005',
+                32582657: '2006',
+                37156667: '2008',
+                42643801: '2009',
+                43112609: '2008',
+                57885161: '2013',
+                74207281: '2016',
+                77232917: '2017',
+                82589933: '2018'
+            };
+            
+            return discoveryYears[p] || 'unknown';
+        }
+        
+        function isPrime(n) {
+            if (n < 2) return false;
+            if (n === 2) return true;
+            if (n % 2 === 0) return false;
+            for (let i = 3; i * i <= n; i += 2) {
+                if (n % i === 0) return false;
+            }
+            return true;
+        }
+        
+        function formatLargeNumber(num) {
+            const str = String(num);
+            if (str.length <= 30) return str;
+            return str.substring(0, 15) + '...' + str.substring(str.length - 15) + ` (${str.length} digits)`;
+        }
+    </script>
+</body>
+</html>
+

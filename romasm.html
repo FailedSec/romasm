@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Romasm - Roman Numeral Assembly Language</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="nav.css">
+    <style>
+        .register-display {
+            background: var(--surface-light);
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            border: 2px solid var(--border-color);
+        }
+        .register-bits {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+        .bit {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 600;
+            min-width: 60px;
+            text-align: center;
+        }
+        .bit.on {
+            background: var(--success);
+            color: white;
+        }
+        .bit.off {
+            background: var(--background);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+        .operation-panel {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 1rem 0;
+        }
+        .operation-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .operation-btn {
+            padding: 0.75rem;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .operation-btn:hover {
+            background: #7c3aed;
+            transform: translateY(-2px);
+        }
+        .vm-state {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .code-example {
+            background: var(--background);
+            padding: 1rem;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            margin: 1rem 0;
+            border-left: 4px solid var(--accent);
+        }
+        .code-example code {
+            color: var(--accent);
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Romasm - Roman Numeral Assembly Language</h1>
+            <p class="subtitle">Binary-like operations using Roman numerals as register states</p>
+        </header>
+
+        <main>
+            <!-- Concept Explanation -->
+            <section class="info-section">
+                <h2>What is Romasm?</h2>
+                <div class="info-content">
+                    <div class="info-card">
+                        <h3>Register System</h3>
+                        <p>In binary, each position represents a power of 2. In Romasm, each Roman symbol (I, V, X, L, C, D, M) represents a fixed value that can be "on" or "off" in registers, like binary bits.</p>
+                        <div class="example-box">
+                            <strong>Example Register State:</strong>
+                            <div class="register-bits">
+                                <span class="bit on">I: ON</span>
+                                <span class="bit off">V: OFF</span>
+                                <span class="bit on">X: ON</span>
+                                <span class="bit off">L: OFF</span>
+                            </div>
+                            <p>Value: 1 + 10 = 11</p>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <h3>Pure Additive</h3>
+                        <p>No subtraction rules (IV, IX). In Romasm, 4 must be IIII. This allows direct 1:1 mapping to hardware states - you can't have a "subtractive" transistor.</p>
+                        <div class="example-box">
+                            <strong>Standard Roman:</strong> IV (subtractive)<br>
+                            <strong>Romasm:</strong> IIII (pure additive)
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <h3>Binary Operations</h3>
+                        <p>Romasm supports binary logic operations (AND, OR, XOR) by comparing register states, just like binary operations compare bits.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Register Display -->
+            <section class="converter-section">
+                <h2>Register Operations</h2>
+                
+                <div class="operation-panel">
+                    <h3>Register A</h3>
+                    <div class="register-display" id="register-a">
+                        <div class="register-bits" id="bits-a"></div>
+                        <div style="margin-top: 1rem;">
+                            <strong>Value:</strong> <span id="value-a">0</span> | 
+                            <strong>Roman:</strong> <code id="roman-a">N</code>
+                        </div>
+                    </div>
+                    <input type="number" id="input-a" placeholder="Enter decimal value" min="0" style="width: 200px; margin-right: 1rem;">
+                    <button onclick="loadRegister('A')">Load into Register A</button>
+                </div>
+
+                <div class="operation-panel">
+                    <h3>Register B</h3>
+                    <div class="register-display" id="register-b">
+                        <div class="register-bits" id="bits-b"></div>
+                        <div style="margin-top: 1rem;">
+                            <strong>Value:</strong> <span id="value-b">0</span> | 
+                            <strong>Roman:</strong> <code id="roman-b">N</code>
+                        </div>
+                    </div>
+                    <input type="number" id="input-b" placeholder="Enter decimal value" min="0" style="width: 200px; margin-right: 1rem;">
+                    <button onclick="loadRegister('B')">Load into Register B</button>
+                </div>
+
+                <div class="operation-panel">
+                    <h3>Operations</h3>
+                    <div class="operation-buttons">
+                        <button class="operation-btn" onclick="executeOperation('OR')">OR</button>
+                        <button class="operation-btn" onclick="executeOperation('AND')">AND</button>
+                        <button class="operation-btn" onclick="executeOperation('XOR')">XOR</button>
+                        <button class="operation-btn" onclick="executeOperation('ADD')">ADD</button>
+                        <button class="operation-btn" onclick="executeOperation('MULTIPLY')">MULTIPLY</button>
+                    </div>
+                    <div id="operation-result" style="margin-top: 1rem;"></div>
+                </div>
+            </section>
+
+            <!-- VM State -->
+            <section class="comparison-section">
+                <h2>Virtual Machine State</h2>
+                <div class="vm-state" id="vm-state"></div>
+            </section>
+
+            <!-- Examples -->
+            <section class="examples-section">
+                <h2>Romasm Examples</h2>
+                <div class="examples-grid" id="romasm-examples"></div>
+            </section>
+
+            <!-- Code Examples -->
+            <section class="info-section">
+                <h2>Romasm Operations</h2>
+                <div class="info-content">
+                    <div class="info-card">
+                        <h3>OR Operation</h3>
+                        <p>Combine active registers from both inputs</p>
+                        <div class="code-example">
+                            <code>Register A: X I (value: 11)</code><br>
+                            <code>Register B: V I (value: 6)</code><br>
+                            <code>OR Result: X V I (value: 16)</code>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <h3>AND Operation</h3>
+                        <p>Only keep registers active in both inputs</p>
+                        <div class="code-example">
+                            <code>Register A: X I (value: 11)</code><br>
+                            <code>Register B: V I (value: 6)</code><br>
+                            <code>AND Result: I (value: 1)</code>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <h3>Peasant Multiplication</h3>
+                        <p>Binary multiplication using duplation and mediation (ancient Roman method)</p>
+                        <div class="code-example">
+                            <code>Multiply 7 × 13:</code><br>
+                            <code>7 × 1 = 7 (odd, add)</code><br>
+                            <code>14 × 0 = 0 (even, skip)</code><br>
+                            <code>28 × 0 = 0 (even, skip)</code><br>
+                            <code>Result: 7</code>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Romasm - Combining Roman numerals with binary logic operations</p>
+            <p style="margin-top: 1rem;">
+                <a href="romasm-extended.html" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">
+                    → Try Romasm Extended (Fractions, Negatives, ISA)
+                </a>
+            </p>
+        </footer>
+    </div>
+
+    <script src="romasm.js"></script>
+    <script>
+        // Global VM instance
+        const vm = new RomasmVM();
+
+        // Initialize display
+        function updateDisplay() {
+            updateRegisterDisplay('A');
+            updateRegisterDisplay('B');
+            updateVMState();
+        }
+
+        function updateRegisterDisplay(regName) {
+            const reg = vm.getRegister(regName);
+            const value = reg.getValue();
+            const roman = reg.toString() || 'N';
+            const bits = reg.registers;
+
+            // Update value and roman
+            document.getElementById(`value-${regName.toLowerCase()}`).textContent = value;
+            document.getElementById(`roman-${regName.toLowerCase()}`).textContent = roman;
+
+            // Update bit display
+            const bitsContainer = document.getElementById(`bits-${regName.toLowerCase()}`);
+            bitsContainer.innerHTML = '';
+            
+            // Display symbols from largest to smallest (M, D, C, L, X, V, I)
+            for (const symbol of ROMAN_SYMBOLS.slice().reverse()) {
+                const bit = document.createElement('span');
+                bit.className = `bit ${bits[symbol] ? 'on' : 'off'}`;
+                bit.textContent = `${symbol}: ${bits[symbol] ? 'ON' : 'OFF'}`;
+                bitsContainer.appendChild(bit);
+            }
+        }
+
+        function updateVMState() {
+            const state = vm.getState();
+            const container = document.getElementById('vm-state');
+            container.innerHTML = '';
+
+            for (const [name, regState] of Object.entries(state)) {
+                const card = document.createElement('div');
+                card.className = 'register-display';
+                card.innerHTML = `
+                    <h3>Register ${name}</h3>
+                    <div><strong>Value:</strong> ${regState.value}</div>
+                    <div><strong>Roman:</strong> <code>${regState.roman || 'N'}</code></div>
+                    <div class="register-bits">
+                        ${ROMAN_SYMBOLS.slice().reverse().map(sym => {
+                            const val = regState.registers[sym];
+                            return `<span class="bit ${val ? 'on' : 'off'}">${sym}: ${val ? 'ON' : 'OFF'}</span>`;
+                        }).join('')}
+                    </div>
+                `;
+                container.appendChild(card);
+            }
+        }
+
+        function loadRegister(regName) {
+            const input = document.getElementById(`input-${regName.toLowerCase()}`);
+            const value = parseInt(input.value);
+            
+            if (isNaN(value) || value < 0) {
+                alert('Please enter a valid non-negative number');
+                return;
+            }
+
+            vm.load(regName, value);
+            updateDisplay();
+        }
+
+        function executeOperation(op) {
+            try {
+                const result = vm.execute(op, 'A', 'B', 'ACC');
+                const resultDiv = document.getElementById('operation-result');
+                resultDiv.innerHTML = `
+                    <div class="register-display" style="background: var(--accent); color: white;">
+                        <h3>${op} Result (in ACC):</h3>
+                        <div><strong>Value:</strong> ${result.getValue()}</div>
+                        <div><strong>Roman:</strong> <code>${result.toString() || 'N'}</code></div>
+                        <div class="register-bits">
+                            ${Object.entries(result.registers).map(([sym, val]) => 
+                                `<span class="bit ${val ? 'on' : 'off'}" style="background: ${val ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'}">${sym}: ${val ? 'ON' : 'OFF'}</span>`
+                            ).join('')}
+                        </div>
+                    </div>
+                `;
+                updateDisplay();
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        // Initialize examples
+        function initializeExamples() {
+            const examples = [
+                {
+                    title: 'OR Operation',
+                    description: 'Combine registers: X I (11) OR V I (6) = X V I (16)',
+                    code: () => {
+                        vm.load('A', 11);
+                        vm.load('B', 6);
+                        vm.execute('OR', 'A', 'B', 'ACC');
+                        updateDisplay();
+                    }
+                },
+                {
+                    title: 'AND Operation',
+                    description: 'Common registers: X I (11) AND V I (6) = I (1)',
+                    code: () => {
+                        vm.load('A', 11);
+                        vm.load('B', 6);
+                        vm.execute('AND', 'A', 'B', 'ACC');
+                        updateDisplay();
+                    }
+                },
+                {
+                    title: 'Multiplication',
+                    description: 'Peasant multiplication: 7 × 13 = 91',
+                    code: () => {
+                        vm.load('A', 7);
+                        vm.load('B', 13);
+                        vm.execute('MULTIPLY', 'A', 'B', 'ACC');
+                        updateDisplay();
+                    }
+                }
+            ];
+
+            const container = document.getElementById('romasm-examples');
+            examples.forEach(example => {
+                const card = document.createElement('div');
+                card.className = 'example-card';
+                card.innerHTML = `
+                    <h3>${example.title}</h3>
+                    <p class="example-description">${example.description}</p>
+                    <button class="operation-btn" onclick="(${example.code.toString()})()" style="width: 100%; margin-top: 1rem;">
+                        Run Example
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', () => {
+            updateDisplay();
+            initializeExamples();
+        });
+    </script>
+</body>
+</html>
+

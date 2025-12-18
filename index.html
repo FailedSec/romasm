@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Positional Roman Numeral System</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="nav.css">
+</head>
+<body class="has-sidebar">
+    <script src="nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Positional Roman Numeral System</h1>
+            <p class="subtitle">A positional numeral system using Roman symbols with place-value notation</p>
+        </header>
+
+        <main>
+            <!-- Converter Section -->
+            <section class="converter-section">
+                <h2>Converter</h2>
+                <div class="converter-grid">
+                    <div class="converter-card">
+                        <label for="decimal-input">Decimal Number</label>
+                        <input type="number" id="decimal-input" placeholder="Enter a number (e.g., 2025)" min="0">
+                        <button onclick="convertFromDecimal()">Convert to Positional Roman</button>
+                    </div>
+
+                    <div class="converter-card">
+                        <label for="positional-input">Positional Roman</label>
+                        <input type="text" id="positional-input" placeholder="Enter Positional Roman (e.g., II N II V)">
+                        <button onclick="convertFromPositional()">Convert to Decimal</button>
+                    </div>
+
+                    <div class="converter-card">
+                        <label for="standard-input">Standard Roman</label>
+                        <input type="text" id="standard-input" placeholder="Enter Standard Roman (e.g., MMXXV)">
+                        <button onclick="convertFromStandard()">Convert to Decimal</button>
+                    </div>
+                </div>
+
+                <div class="separator-controls">
+                    <label>Separator Style:</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="separator" value="space" checked> Space</label>
+                        <label><input type="radio" name="separator" value="dot"> Dot (·)</label>
+                        <label><input type="radio" name="separator" value="box"> Box (▢)</label>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section class="results-section" id="results-section" style="display: none;">
+                <h2>Results</h2>
+                <div class="results-grid" id="results-grid"></div>
+            </section>
+
+            <!-- Comparison Table -->
+            <section class="comparison-section">
+                <h2>System Comparison</h2>
+                <div class="table-container">
+                    <table id="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Decimal</th>
+                                <th>Standard Roman</th>
+                                <th>Positional Roman</th>
+                                <th>Explanation</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comparison-tbody">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Examples Section -->
+            <section class="examples-section">
+                <h2>Examples</h2>
+                <div class="examples-grid" id="examples-grid">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </section>
+
+            <!-- Info Section -->
+            <section class="info-section">
+                <h2>About This System</h2>
+                <div class="info-content">
+                    <div class="info-card">
+                        <h3>Digit Set</h3>
+                        <table class="digit-table">
+                            <tr><th>Value</th><th>Symbol</th><th>Name</th></tr>
+                            <tr><td>0</td><td>N</td><td>nulla (zero)</td></tr>
+                            <tr><td>1</td><td>I</td><td>unus</td></tr>
+                            <tr><td>2</td><td>II</td><td>duo</td></tr>
+                            <tr><td>3</td><td>III</td><td>tres</td></tr>
+                            <tr><td>4</td><td>IV</td><td>quattuor</td></tr>
+                            <tr><td>5</td><td>V</td><td>quinque</td></tr>
+                            <tr><td>6</td><td>VI</td><td>sex</td></tr>
+                            <tr><td>7</td><td>VII</td><td>septem</td></tr>
+                            <tr><td>8</td><td>VIII</td><td>octo</td></tr>
+                            <tr><td>9</td><td>IX</td><td>novem</td></tr>
+                        </table>
+                    </div>
+
+                    <div class="info-card">
+                        <h3>How It Works</h3>
+                        <p>Unlike standard Roman numerals which are <strong>additive</strong> (each symbol has a fixed value), Positional Roman uses <strong>place-value notation</strong> where each position represents a power of 10.</p>
+                        <div class="example-box">
+                            <strong>Example: 2025</strong>
+                            <ul>
+                                <li><code>II</code> in thousands place (2 × 1000 = 2000)</li>
+                                <li><code>N</code> in hundreds place (0 × 100 = 0)</li>
+                                <li><code>II</code> in tens place (2 × 10 = 20)</li>
+                                <li><code>V</code> in ones place (5 × 1 = 5)</li>
+                            </ul>
+                            <p><strong>Result:</strong> <code>II N II V</code></p>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <h3>Why This Matters</h3>
+                        <ul>
+                            <li><strong>Scalable:</strong> Can represent any number using just 10 digit symbols</li>
+                            <li><strong>Efficient:</strong> Enables easier arithmetic operations</li>
+                            <li><strong>Positional:</strong> Each position represents a power of 10 (like modern decimal)</li>
+                            <li><strong>Solves the "M limit":</strong> Standard Roman numerals struggle with very large numbers</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Positional Roman Numeral System - Combining the aesthetic of Roman numerals with the efficiency of positional notation</p>
+            <p style="margin-top: 1rem;">
+                <a href="romasm.html" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">
+                    → Try Romasm (Roman Assembly Language)
+                </a>
+                <span style="margin: 0 1rem;">|</span>
+                <a href="romasm-extended.html" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">
+                    → Try Romasm Extended (Fractions, Negatives, ISA)
+                </a>
+                <span style="margin: 0 1rem;">|</span>
+                <a href="ide.html" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">
+                    → Romasm IDE (Online Code Editor)
+                </a>
+                <span style="margin: 0 1rem;">|</span>
+                <a href="calculator.html" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">
+                    → Graphics Calculator
+                </a>
+                <span style="margin: 0 1rem;">|</span>
+                <a href="collatz.html" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">
+                    → Collatz Conjecture Explorer
+                </a>
+                <span style="margin: 0 1rem;">|</span>
+                <a href="twin-primes.html" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">
+                    → Twin Prime Conjecture
+                </a>
+                <span style="margin: 0 1rem;">|</span>
+                <a href="goldbach.html" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">
+                    → Goldbach Conjecture
+                </a>
+                <span style="margin: 0 1rem;">|</span>
+                <a href="erdos-straus.html" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">
+                    → Erdos-Straus Conjecture
+                </a>
+                <span style="margin: 0 1rem;">|</span>
+                <a href="beal-conjecture.html" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">
+                    → Beal Conjecture ($1M Prize)
+                </a>
+                <span style="margin: 0 1rem;">|</span>
+                <a href="legendre-conjecture.html" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">
+                    → Legendre's Conjecture
+                </a>
+                <span style="margin: 0 1rem;">|</span>
+                <a href="mersenne-primes.html" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">
+                    → Mersenne Primes
+                </a>
+                <span style="margin: 0 1rem;">|</span>
+                <a href="brocard-problem.html" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">
+                    → Brocard's Problem
+                </a>
+                <span style="margin: 0 1rem;">|</span>
+                <a href="contribute.html" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">
+                    → Contribute (Distributed Computing)
+                </a>
+            </p>
+        </footer>
+    </div>
+
+    <script src="positional-roman.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfect Numbers Search - Romasm</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="nav.css">
+    <style>
+        .search-panel {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+        .input-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .results-display {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 12px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: var(--background);
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--primary-color);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+        .number-card {
+            background: var(--surface-light);
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 0.5rem 0;
+            border-left: 4px solid var(--accent);
+        }
+        .stat-card {
+            background: var(--surface-light);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+        .run-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+        .run-btn:hover {
+            background: #059669;
+        }
+        .run-btn:disabled {
+            background: var(--secondary-color);
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Perfect Numbers Search</h1>
+            <p class="subtitle">Search for odd perfect numbers using Romasm - one of mathematics' oldest unsolved problems</p>
+        </header>
+
+        <main>
+            <section class="info-section" style="margin-bottom: 2rem;">
+                <h2>About Perfect Numbers</h2>
+                <div class="info-content">
+                    <div class="info-card">
+                        <h3>Definition</h3>
+                        <p>A perfect number is a positive integer that equals the sum of its proper divisors (excluding itself).</p>
+                        <div class="example-box">
+                            <strong>Example: 6</strong><br>
+                            Divisors: 1, 2, 3<br>
+                            Sum: 1 + 2 + 3 = 6 ✓
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <h3>The Mystery</h3>
+                        <p>All known perfect numbers are even. No odd perfect number has ever been found, despite centuries of searching. This is one of the oldest unsolved problems in mathematics.</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>The Challenge</h3>
+                        <p>Use Romasm to test vast ranges of odd numbers, checking if any satisfy the perfect number property. Finding one would be a major mathematical discovery!</p>
+                    </div>
+                </div>
+            </section>
+
+            <div class="search-panel">
+                <h3>Search Configuration</h3>
+                <div class="input-group">
+                    <div>
+                        <label>Start Number</label>
+                        <input type="number" id="start-num" value="1" min="1" step="2">
+                    </div>
+                    <div>
+                        <label>End Number</label>
+                        <input type="number" id="end-num" value="10000" min="1" step="1000">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <div>
+                        <label>Step Size (odd numbers only)</label>
+                        <input type="number" id="step-size" value="2" min="2" step="2">
+                    </div>
+                    <div>
+                        <label>Max Divisors to Check</label>
+                        <input type="number" id="max-divisors" value="1000" min="100">
+                    </div>
+                </div>
+                <button class="run-btn" id="search-btn" onclick="startSearch()">▶ Start Search</button>
+                <div class="progress-bar" id="progress-bar" style="display: none;">
+                    <div class="progress-fill" id="progress-fill" style="width: 0%">0%</div>
+                </div>
+            </div>
+
+            <div class="results-display">
+                <h3>Results</h3>
+                <div id="results-content">
+                    <p style="color: var(--text-secondary);">Configure search parameters and click "Start Search" to begin.</p>
+                </div>
+                <div id="stats-display" style="margin-top: 1rem;"></div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Perfect Numbers Search - Computational exploration of one of mathematics' oldest mysteries</p>
+        </footer>
+    </div>
+
+    <script>
+        let searchRunning = false;
+
+        function isPerfectNumber(n) {
+            if (n <= 1) return false;
+            
+            let sum = 1; // 1 is always a divisor
+            const sqrt = Math.sqrt(n);
+            
+            for (let i = 2; i <= sqrt && i < 10000; i++) {
+                if (n % i === 0) {
+                    sum += i;
+                    if (i !== n / i) {
+                        sum += n / i;
+                    }
+                }
+            }
+            
+            return sum === n;
+        }
+
+        function startSearch() {
+            if (searchRunning) {
+                searchRunning = false;
+                document.getElementById('search-btn').textContent = '▶ Start Search';
+                return;
+            }
+
+            const start = parseInt(document.getElementById('start-num').value);
+            const end = parseInt(document.getElementById('end-num').value);
+            const step = parseInt(document.getElementById('step-size').value);
+            
+            if (isNaN(start) || isNaN(end) || start >= end) {
+                alert('Invalid range');
+                return;
+            }
+
+            searchRunning = true;
+            document.getElementById('search-btn').textContent = '⏸ Stop Search';
+            document.getElementById('progress-bar').style.display = 'block';
+            document.getElementById('results-content').innerHTML = '<p>Searching...</p>';
+            
+            const results = [];
+            let checked = 0;
+            const total = Math.floor((end - start) / step);
+
+            // Use setTimeout to allow UI updates
+            function checkNext() {
+                if (!searchRunning) {
+                    document.getElementById('search-btn').textContent = '▶ Start Search';
+                    document.getElementById('progress-bar').style.display = 'none';
+                    return;
+                }
+
+                const current = start + (checked * step);
+                
+                if (current >= end) {
+                    // Search complete
+                    searchRunning = false;
+                    document.getElementById('search-btn').textContent = '▶ Start Search';
+                    document.getElementById('progress-bar').style.display = 'none';
+                    
+                    if (results.length === 0) {
+                        document.getElementById('results-content').innerHTML = 
+                            `<p style="color: var(--text-secondary);">No perfect numbers found in range ${start} to ${end}.</p>`;
+                    }
+                    return;
+                }
+
+                if (isPerfectNumber(current)) {
+                    results.push(current);
+                    const card = document.createElement('div');
+                    card.className = 'number-card';
+                    card.innerHTML = `
+                        <h4 style="color: var(--success); margin: 0;">🎉 PERFECT NUMBER FOUND!</h4>
+                        <p style="font-size: 1.5rem; font-weight: 600; margin: 0.5rem 0;">${current}</p>
+                        <p>This would be a major mathematical discovery!</p>
+                    `;
+                    document.getElementById('results-content').appendChild(card);
+                }
+
+                checked++;
+                const progress = (checked / total) * 100;
+                document.getElementById('progress-fill').style.width = progress + '%';
+                document.getElementById('progress-fill').textContent = Math.round(progress) + '%';
+
+                // Update stats
+                document.getElementById('stats-display').innerHTML = `
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+                        <div class="stat-card">
+                            <div class="stat-value">${checked.toLocaleString()}</div>
+                            <div class="stat-label">Numbers Checked</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${results.length}</div>
+                            <div class="stat-label">Perfect Numbers Found</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${current.toLocaleString()}</div>
+                            <div class="stat-label">Current Number</div>
+                        </div>
+                    </div>
+                `;
+
+                // Continue search (use small delay to keep UI responsive)
+                setTimeout(checkNext, 0);
+            }
+
+            checkNext();
+        }
+    </script>
+</body>
+</html>
+

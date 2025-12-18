@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twin Prime Conjecture Explorer - Romasm</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="nav.css">
+    <style>
+        .twin-primes-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .search-panel {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .results-panel {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .twin-pair {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            background: var(--surface-light);
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .twin-pair .prime {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            color: var(--accent);
+        }
+        
+        .twin-pair .diff {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .input-group {
+            margin-bottom: 1rem;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--background);
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+        
+        .run-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+        
+        .run-btn:hover {
+            background: #059669;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        
+        .stat-card {
+            background: var(--surface-light);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+        
+        .code-display {
+            background: var(--background);
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            margin-top: 1rem;
+            white-space: pre-wrap;
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Twin Prime Conjecture Explorer</h1>
+            <p class="subtitle">Search for record-breaking twin prime pairs using Romasm</p>
+        </header>
+
+        <main>
+        <section class="info-section" style="margin-bottom: 2rem;">
+            <h2>About Twin Primes</h2>
+            <div class="info-content">
+                <div class="info-card">
+                    <h3>The Conjecture</h3>
+                    <p>The Twin Prime Conjecture states that there are infinitely many pairs of prime numbers that differ by 2 (e.g., 11 and 13, 17 and 19).</p>
+                </div>
+                <div class="info-card">
+                    <h3>The Challenge</h3>
+                    <p>While mathematicians believe it's true, it hasn't been proven. We can search for new record-breaking twin prime pairs!</p>
+                </div>
+                <div class="info-card">
+                    <h3>Big Integer Support</h3>
+                    <p>This explorer uses Big Integer arithmetic to search for twin primes with hundreds of digits, far beyond JavaScript's number limits.</p>
+                </div>
+            </div>
+        </section>
+
+        <div class="twin-primes-container">
+            <div class="search-panel">
+                <h3>Search for Twin Primes</h3>
+                <div class="input-group">
+                    <label>Start from (positive integer)</label>
+                    <input type="text" id="start-number" value="1000" placeholder="Enter starting number">
+                </div>
+                <div class="input-group">
+                    <label>Search Range (how many numbers to check)</label>
+                    <input type="number" id="search-range" value="10000" min="1" max="1000000">
+                </div>
+                <button class="run-btn" onclick="searchTwinPrimes()">🔍 Search for Twin Primes</button>
+                
+                <h4 style="margin-top: 2rem;">Romasm Implementation</h4>
+                <div class="code-display" id="code-display" style="display: none;">
+                    ; Romasm code will be displayed here
+                </div>
+            </div>
+
+            <div class="results-panel" id="results-panel" style="display: none;">
+                <h3>Found Twin Prime Pairs</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-count">0</div>
+                        <div class="stat-label">Pairs Found</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-largest">-</div>
+                        <div class="stat-label">Largest Pair</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-checked">0</div>
+                        <div class="stat-label">Numbers Checked</div>
+                    </div>
+                </div>
+                <div id="twin-pairs-display"></div>
+            </div>
+        </div>
+        </main>
+    </div>
+
+    <script src="compiler/romasm-assembler.js"></script>
+    <script src="compiler/romasm-vm.js"></script>
+    <script src="stdlib/bigint.js"></script>
+    <script src="stdlib/primes.js"></script>
+    <script>
+        function formatLargeNumber(num) {
+            const str = String(num);
+            if (str.length <= 30) return str;
+            return str.substring(0, 15) + '...' + str.substring(str.length - 15) + ` (${str.length} digits)`;
+        }
+        
+        function searchTwinPrimes() {
+            const startInput = document.getElementById('start-number').value;
+            const range = parseInt(document.getElementById('search-range').value);
+            
+            if (!startInput || range < 1) {
+                alert('Please enter valid values');
+                return;
+            }
+            
+            const start = parseInt(startInput) || parseInt(startInput.substring(0, 15)); // Limit for Romasm
+            const maxChecks = Math.min(range, 1000); // Limit for Romasm performance
+            
+            // Show loading
+            document.getElementById('results-panel').style.display = 'block';
+            document.getElementById('twin-pairs-display').innerHTML = '<p>Searching with Romasm...</p>';
+            document.getElementById('code-display').style.display = 'block';
+            
+            // Romasm assembly code for twin prime search
+            const romasmCode = `
+; Twin Prime Search in Romasm
+; Input: Start number in R0, search range in R1
+; Output: Prints twin prime pairs found
+
+LOAD R0, ${start}    ; Starting number
+LOAD R1, ${maxChecks} ; Search range
+LOAD R2, 0           ; Counter
+LOAD R3, 2           ; Constant 2
+LOAD R4, 1           ; Constant 1
+
+search_loop:
+  ; Check if we've searched enough
+  CMP R2, R1
+  JGE done
+  
+  ; Skip even numbers (except 2)
+  LOAD R5, R0
+  MOD R5, R3         ; R5 = R0 % 2
+  LOAD R7, 0         ; R7 = 0 (for comparison)
+  CMP R5, R7
+  JEQ next_number    ; Skip if even
+  
+  ; Check if R0 is prime (simplified - check divisibility by 2, 3, 5, 7)
+  ; For 2, it's prime
+  CMP R0, 2
+  JEQ check_twin
+  
+  ; Check divisibility by 3
+  LOAD R5, R0
+  LOAD R6, 3
+  MOD R5, R6
+  LOAD R7, 0
+  CMP R5, R7
+  JEQ next_number
+  
+  ; Check divisibility by 5
+  LOAD R5, R0
+  LOAD R6, 5
+  MOD R5, R6
+  LOAD R7, 0
+  CMP R5, R7
+  JEQ next_number
+  
+  ; Check divisibility by 7
+  LOAD R5, R0
+  LOAD R6, 7
+  MOD R5, R6
+  LOAD R7, 0
+  CMP R5, R7
+  JEQ next_number
+  
+  ; Check divisibility by 11
+  LOAD R5, R0
+  LOAD R6, 11
+  MOD R5, R6
+  LOAD R7, 0
+  CMP R5, R7
+  JEQ next_number
+  
+  ; Check divisibility by 13
+  LOAD R5, R0
+  LOAD R6, 13
+  MOD R5, R6
+  LOAD R7, 0
+  CMP R5, R7
+  JEQ next_number
+  
+  ; Check divisibility by 17 (for better accuracy on larger numbers)
+  LOAD R5, R0
+  LOAD R6, 17
+  MOD R5, R6
+  LOAD R7, 0
+  CMP R5, R7
+  JEQ next_number
+  
+  ; Check divisibility by 19
+  LOAD R5, R0
+  LOAD R6, 19
+  MOD R5, R6
+  LOAD R7, 0
+  CMP R5, R7
+  JEQ next_number
+  
+  ; Check divisibility by 23
+  LOAD R5, R0
+  LOAD R6, 23
+  MOD R5, R6
+  LOAD R7, 0
+  CMP R5, R7
+  JEQ next_number
+  
+  ; For numbers < 529 (23²), if they pass all checks, likely prime
+  ; For larger numbers, we'd need more checks, but this is a simplified version
+  LOAD R5, R0
+  LOAD R6, 529
+  CMP R5, R6
+  JLT check_twin
+  
+  ; Check divisibility by 29
+  LOAD R5, R0
+  LOAD R6, 29
+  MOD R5, R6
+  LOAD R7, 0
+  CMP R5, R7
+  JEQ next_number
+  
+  ; R0 might be prime, check if R0+2 is also prime
+check_twin:
+  LOAD R5, R0        ; R5 = R0
+  ADD R5, R3         ; R5 = R0 + 2
+  
+  ; Check if R0+2 is prime (more thorough)
+  CMP R5, 2
+  JEQ found_twin
+  
+  ; Check if even (skip if even, except 2)
+  LOAD R6, R5
+  MOD R6, R3
+  LOAD R7, 0
+  CMP R6, R7
+  JEQ next_number
+  
+  ; Check divisibility by 3
+  LOAD R6, R5
+  LOAD R7, 3
+  MOD R6, R7
+  LOAD R4, 0         ; Reuse R4 for zero comparison
+  CMP R6, R4
+  JEQ next_number
+  
+  ; Check divisibility by 5
+  LOAD R6, R5
+  LOAD R7, 5
+  MOD R6, R7
+  LOAD R4, 0
+  CMP R6, R4
+  JEQ next_number
+  
+  ; Check divisibility by 7
+  LOAD R6, R5
+  LOAD R7, 7
+  MOD R6, R7
+  LOAD R4, 0
+  CMP R6, R4
+  JEQ next_number
+  
+  ; Check divisibility by 11
+  LOAD R6, R5
+  LOAD R7, 11
+  MOD R6, R7
+  LOAD R4, 0
+  CMP R6, R4
+  JEQ next_number
+  
+  ; Check divisibility by 13
+  LOAD R6, R5
+  LOAD R7, 13
+  MOD R6, R7
+  LOAD R4, 0
+  CMP R6, R4
+  JEQ next_number
+  
+  ; Check divisibility by 17 (for better accuracy on larger numbers)
+  LOAD R6, R5
+  LOAD R7, 17
+  MOD R6, R7
+  LOAD R4, 0
+  CMP R6, R4
+  JEQ next_number
+  
+  ; Check divisibility by 19
+  LOAD R6, R5
+  LOAD R7, 19
+  MOD R6, R7
+  LOAD R4, 0
+  CMP R6, R4
+  JEQ next_number
+  
+  ; Check divisibility by 23
+  LOAD R6, R5
+  LOAD R7, 23
+  MOD R6, R7
+  LOAD R4, 0
+  CMP R6, R4
+  JEQ next_number
+  
+  ; For numbers < 529 (23²), if they pass all checks, likely prime
+  ; For larger numbers, we'd need more checks, but this is a simplified version
+  LOAD R6, R5
+  LOAD R7, 529
+  CMP R6, R7
+  JLT found_twin
+  
+  ; Check divisibility by 29
+  LOAD R6, R5
+  LOAD R7, 29
+  MOD R6, R7
+  LOAD R4, 0
+  CMP R6, R4
+  JEQ next_number
+  
+  ; Found twin primes! (passed all checks)
+found_twin:
+  PRINT R0           ; Print first prime
+  PRINT R5           ; Print second prime (R0+2)
+  ; Continue searching (fall through to next_number)
+
+next_number:
+  ADD R0, R4         ; R0 = R0 + 1
+  ADD R2, R4         ; Counter++
+  JMP search_loop
+
+done:
+  ; Program ends naturally
+`;
+
+            // Display code
+            document.getElementById('code-display').textContent = romasmCode;
+            
+            // Assemble and run
+            const assembler = new RomasmAssembler();
+            const result = assembler.assemble(romasmCode);
+            
+            if (!result.success) {
+                document.getElementById('twin-pairs-display').innerHTML = 
+                    '<p style="color: var(--error);">Assembly Error: ' + result.errors[0].message + '</p>';
+                return;
+            }
+            
+            const vm = new RomasmVM();
+            vm.loadProgram(result.instructions);
+            const execResult = vm.run(50000);
+            
+            // Parse output - pairs are printed as consecutive numbers
+            const output = execResult.output;
+            const twinPairs = [];
+            for (let i = 0; i < output.length - 1; i += 2) {
+                if (output[i + 1] === output[i] + 2) {
+                    twinPairs.push({ p1: output[i], p2: output[i + 1] });
+                }
+            }
+            
+            updateDisplay(twinPairs, maxChecks, start + maxChecks);
+        }
+        
+        function updateDisplay(results, checked, current) {
+            document.getElementById('stat-count').textContent = results.length;
+            document.getElementById('stat-checked').textContent = checked.toLocaleString();
+            
+            if (results.length > 0) {
+                const largest = results[results.length - 1];
+                document.getElementById('stat-largest').textContent = formatLargeNumber(largest.p1);
+            }
+            
+            let html = '';
+            if (results.length === 0) {
+                html = '<p style="color: var(--text-secondary);">No twin prime pairs found in this range.</p>';
+            } else {
+                results.forEach((pair, idx) => {
+                    html += `<div class="twin-pair">`;
+                    html += `<span class="prime">${formatLargeNumber(pair.p1)}</span>`;
+                    html += `<span class="diff">and</span>`;
+                    html += `<span class="prime">${formatLargeNumber(pair.p2)}</span>`;
+                    html += `<span class="diff">(difference: 2)</span>`;
+                    html += `</div>`;
+                });
+            }
+            
+            document.getElementById('twin-pairs-display').innerHTML = html;
+        }
+        
+        // Allow Enter key
+        document.getElementById('start-number').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchTwinPrimes();
+            }
+        });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collatz Conjecture - Romasm</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="nav.css">
+    <style>
+        .collatz-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        .input-panel, .output-panel {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 12px;
+        }
+        .sequence-display {
+            background: var(--background);
+            padding: 1rem;
+            border-radius: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin-top: 1rem;
+        }
+        .sequence-item {
+            padding: 0.25rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .sequence-item:last-child {
+            border-bottom: none;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .stat-card {
+            background: var(--surface-light);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+        .run-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+        .run-btn:hover {
+            background: #059669;
+        }
+        .input-group {
+            margin-bottom: 1rem;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+        .input-group input {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--background);
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+        .code-display {
+            background: var(--background);
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            margin-top: 1rem;
+        }
+        @media (max-width: 768px) {
+            .collatz-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Collatz Conjecture Explorer</h1>
+            <p class="subtitle">Test the Collatz Conjecture using Romasm assembly language</p>
+        </header>
+
+        <main>
+            <section class="info-section" style="margin-bottom: 2rem;">
+                <h2>About the Collatz Conjecture</h2>
+                <div class="info-content">
+                    <div class="info-card">
+                        <h3>The Problem</h3>
+                        <p>Start with any positive integer n. If n is even, divide by 2. If n is odd, multiply by 3 and add 1. Repeat. The conjecture states that all sequences eventually reach 1.</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>The Rules</h3>
+                        <ul>
+                            <li>If n is even: n → n/2</li>
+                            <li>If n is odd: n → 3n + 1</li>
+                            <li>Repeat until n = 1</li>
+                        </ul>
+                    </div>
+                    <div class="info-card">
+                        <h3>Status</h3>
+                        <p>This is one of the most famous unsolved problems in mathematics. No counterexample has been found, but it hasn't been proven for all numbers.</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>Big Integer Support</h3>
+                        <p>This explorer uses Big Integer arithmetic to handle arbitrarily large numbers, bypassing JavaScript's floating-point limits. You can test numbers with hundreds or thousands of digits!</p>
+                    </div>
+                </div>
+            </section>
+
+            <div class="collatz-container">
+                <div class="input-panel">
+                    <h3>Run Collatz Sequence</h3>
+                    <div class="input-group">
+                        <label>Starting Number (supports arbitrarily large numbers!)</label>
+                        <input type="text" id="start-number" value="27" placeholder="Enter any positive integer">
+                        <small style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.25rem; display: block;">
+                            💡 Try a huge number! Numbers with 15+ digits automatically use Big Integer arithmetic.
+                        </small>
+                    </div>
+                    <button class="run-btn" onclick="runCollatz()">▶ Run Collatz Sequence</button>
+
+                    <h4 style="margin-top: 2rem;">Romasm Implementation</h4>
+                    <div class="code-display" id="code-display">
+; Collatz Conjecture in Romasm
+; Input: Starting number in R0
+; Output: Sequence printed to console
+
+LOAD R1, 1        ; Constant 1
+LOAD R2, 2        ; Constant 2 for modulo
+LOAD R3, 3        ; Constant 3 for multiplication
+LOAD R5, 1        ; Shift amount for SHR
+
+loop:
+  ; Check if current number is 1
+  CMP R0, R1
+  JEQ done
+  
+  ; Print current number
+  PRINT R0
+  
+  ; Check if even (R0 % 2 == 0)
+  LOAD R4, R0     ; Copy R0 to R4
+  MOD R4, R2      ; R4 = R0 % 2
+  CMP R4, R1      ; Compare with 1
+  JEQ is_odd      ; If R4 == 1, it's odd
+  
+  ; Even: divide by 2
+  SHR R0, R1      ; R0 = R0 >> 1 (divide by 2)
+  JMP loop
+  
+is_odd:
+  ; Odd: multiply by 3 and add 1
+  MUL R0, R3      ; R0 = R0 * 3
+  ADD R0, R1      ; R0 = R0 + 1
+  JMP loop
+
+done:
+  PRINT R1        ; Print final 1
+                    </div>
+                </div>
+
+                <div class="output-panel">
+                    <h3>Results</h3>
+                    <div id="sequence-display" class="sequence-display">
+                        Click "Run Collatz Sequence" to see results...
+                    </div>
+                    <div class="stats" id="stats">
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-steps">-</div>
+                            <div class="stat-label">Steps</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-max">-</div>
+                            <div class="stat-label">Peak Value</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-odds">-</div>
+                            <div class="stat-label">Odd Steps</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-evens">-</div>
+                            <div class="stat-label">Even Steps</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Collatz Conjecture Explorer - Testing one of mathematics' greatest unsolved problems</p>
+            <p style="margin-top: 1rem;">
+                <a href="index.html" style="color: var(--primary-color);">← Positional Roman</a> |
+                <a href="ide.html" style="color: var(--primary-color);">← Romasm IDE</a>
+            </p>
+        </footer>
+    </div>
+
+    <script src="compiler/romasm-assembler.js"></script>
+    <script src="compiler/romasm-vm.js"></script>
+    <script src="stdlib/bigint.js"></script>
+    <script>
+        const assembler = new RomasmAssembler();
+        let useBigInt = false;
+        
+        function runCollatz() {
+            const startInput = document.getElementById('start-number').value;
+            
+            // Check if input is too large for regular numbers
+            const regularNum = parseInt(startInput);
+            if (isNaN(regularNum) || startInput.length > 15) {
+                // Use BigInt for very large numbers
+                useBigInt = true;
+                runCollatzBigInt(startInput);
+                return;
+            }
+            
+            if (regularNum < 1) {
+                alert('Please enter a positive integer');
+                return;
+            }
+            
+            useBigInt = false;
+            runCollatzRegular(regularNum);
+        }
+        
+        function runCollatzBigInt(startInput) {
+            try {
+                const start = new BigIntRomasm(startInput);
+                if (start.isZero()) {
+                    alert('Please enter a positive integer');
+                    return;
+                }
+
+                const sequence = [start.toString()];
+                let steps = 0;
+                let maxValue = start;
+                let oddSteps = 0;
+                let evenSteps = 0;
+                let current = start;
+                const one = new BigIntRomasm(1);
+
+                // Show initial message
+                document.getElementById('sequence-display').innerHTML = 
+                    '<p style="color: var(--accent);">Computing with Big Integer support...</p>';
+
+                // Run until we reach 1 (with safety limit)
+                const maxSteps = 1000000; // Increased limit for big numbers
+                while (current.compare(one) !== 0 && steps < maxSteps) {
+                    if (current.isEven()) {
+                        current = current.divideBy2();
+                        evenSteps++;
+                    } else {
+                        current = current.multiply3Add1();
+                        oddSteps++;
+                    }
+                    sequence.push(current.toString());
+                    
+                    // Update max value
+                    if (current.compare(maxValue) > 0) {
+                        maxValue = new BigIntRomasm(current.toString());
+                    }
+                    
+                    steps++;
+                    
+                    // Update display periodically for long sequences
+                    if (steps % 100 === 0) {
+                        updateDisplay(sequence, steps, maxValue.toString(), oddSteps, evenSteps, true);
+                    }
+                }
+                
+                updateDisplay(sequence, steps, maxValue.toString(), oddSteps, evenSteps, false);
+                
+                if (steps >= maxSteps) {
+                    document.getElementById('sequence-display').innerHTML += 
+                        '<p style="color: var(--error); margin-top: 1rem;">⚠️ Maximum steps reached. Sequence may not have converged to 1.</p>';
+                }
+            } catch (error) {
+                document.getElementById('sequence-display').innerHTML = 
+                    '<span class="error">Error: ' + error.message + '</span>';
+            }
+        }
+        
+        function runCollatzRegular(startNum) {
+            const sequence = [startNum];
+            let steps = 0;
+            let maxValue = startNum;
+            let oddSteps = 0;
+            let evenSteps = 0;
+            let current = startNum;
+
+            // Run until we reach 1
+            while (current !== 1 && steps < 10000) {
+                if (current % 2 === 0) {
+                    current = current / 2;
+                    evenSteps++;
+                } else {
+                    current = current * 3 + 1;
+                    oddSteps++;
+                }
+                sequence.push(current);
+                maxValue = Math.max(maxValue, current);
+                steps++;
+            }
+
+            updateDisplay(sequence, steps, maxValue, oddSteps, evenSteps, false);
+        }
+        
+        function runCollatzRegular(startNum) {
+            const sequence = [startNum];
+            let steps = 0;
+            let maxValue = startNum;
+            let oddSteps = 0;
+            let evenSteps = 0;
+            let current = startNum;
+
+            // Run until we reach 1
+            while (current !== 1 && steps < 10000) {
+                if (current % 2 === 0) {
+                    current = current / 2;
+                    evenSteps++;
+                } else {
+                    current = current * 3 + 1;
+                    oddSteps++;
+                }
+                sequence.push(current);
+                maxValue = Math.max(maxValue, current);
+                steps++;
+            }
+            
+            updateDisplay(sequence.map(n => String(n)), steps, String(maxValue), oddSteps, evenSteps, false);
+        }
+        
+        function updateDisplay(sequence, steps, maxValue, oddSteps, evenSteps, isPartial) {
+            // Display sequence
+            let html = isPartial ? '<strong>Sequence (partial, still computing...):</strong><br><br>' : '<strong>Sequence:</strong><br><br>';
+            
+            // Show last 50 items for very long sequences
+            const displaySequence = sequence.length > 50 ? 
+                [...sequence.slice(0, 10), '...', ...sequence.slice(-40)] : 
+                sequence;
+            
+            displaySequence.forEach((num, idx) => {
+                if (num === '...') {
+                    html += `<div class="sequence-item" style="color: var(--text-secondary); text-align: center;">... (${sequence.length - 50} more steps) ...</div>`;
+                    return;
+                }
+                
+                const actualIndex = sequence.length > 50 && idx > 10 ? 
+                    sequence.length - (displaySequence.length - idx) : 
+                    idx;
+                
+                const numBig = new BigIntRomasm(num);
+                const isEven = numBig.isEven();
+                const isOne = numBig.compare(new BigIntRomasm(1)) === 0;
+                const color = isOne ? 'var(--success)' : (isEven ? 'var(--primary-color)' : 'var(--accent)');
+                
+                html += `<div class="sequence-item" style="color: ${color}">`;
+                html += `Step ${actualIndex}: <strong>${formatLargeNumber(num)}</strong>`;
+                if (!isOne) {
+                    html += ` → ${isEven ? 'even' : 'odd'}`;
+                }
+                html += '</div>';
+            });
+
+            document.getElementById('sequence-display').innerHTML = html;
+
+            // Update stats
+            document.getElementById('stat-steps').textContent = steps.toLocaleString();
+            document.getElementById('stat-max').textContent = formatLargeNumber(maxValue);
+            document.getElementById('stat-odds').textContent = oddSteps.toLocaleString();
+            document.getElementById('stat-evens').textContent = evenSteps.toLocaleString();
+        }
+        
+        function formatLargeNumber(num) {
+            const str = String(num);
+            if (str.length <= 20) return str;
+            // Show first 10 and last 10 digits for very large numbers
+            return str.substring(0, 10) + '...' + str.substring(str.length - 10) + ` (${str.length} digits)`;
+        }
+
+        // Allow Enter key to run
+        document.getElementById('start-number').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                runCollatz();
+            }
+        });
+    </script>
+</body>
+</html>
+

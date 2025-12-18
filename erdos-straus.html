@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Erdos-Straus Conjecture Explorer - Romasm</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="nav.css">
+    <style>
+        .erdos-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .search-panel {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .results-panel {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .solution {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            background: var(--surface-light);
+            border-radius: 8px;
+            border-left: 4px solid var(--success);
+            flex-wrap: wrap;
+        }
+        
+        .solution .formula {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            color: var(--primary-color);
+        }
+        
+        .solution .fraction {
+            display: inline-block;
+            text-align: center;
+        }
+        
+        .solution .fraction .numerator {
+            border-bottom: 1px solid var(--text);
+            padding: 0 0.25rem;
+        }
+        
+        .solution .fraction .denominator {
+            padding: 0 0.25rem;
+        }
+        
+        .no-solution {
+            padding: 1.5rem;
+            background: rgba(244, 67, 54, 0.2);
+            border: 2px solid var(--error);
+            border-radius: 8px;
+            color: var(--error);
+            text-align: center;
+        }
+        
+        .input-group {
+            margin-bottom: 1rem;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--background);
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+        
+        .run-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+        
+        .run-btn:hover {
+            background: #059669;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Erdos-Straus Conjecture Explorer</h1>
+            <p class="subtitle">Search for counterexamples: Can 4/n be expressed as sum of three unit fractions?</p>
+        </header>
+
+        <main>
+        <section class="info-section" style="margin-bottom: 2rem;">
+            <h2>About the Erdos-Straus Conjecture</h2>
+            <div class="info-content">
+                <div class="info-card">
+                    <h3>The Conjecture</h3>
+                    <p>For all integers n ≥ 2, the fraction <strong>4/n</strong> can be expressed as the sum of three unit fractions:</p>
+                    <p style="text-align: center; font-size: 1.2rem; margin: 1rem 0;">
+                        <strong>4/n = 1/x + 1/y + 1/z</strong>
+                    </p>
+                    <p>where x, y, and z are positive integers.</p>
+                </div>
+                <div class="info-card">
+                    <h3>Examples</h3>
+                    <p><strong>n = 5:</strong> 4/5 = 1/2 + 1/4 + 1/20</p>
+                    <p><strong>n = 7:</strong> 4/7 = 1/2 + 1/7 + 1/14</p>
+                    <p><strong>n = 11:</strong> 4/11 = 1/3 + 1/11 + 1/33</p>
+                </div>
+                <div class="info-card">
+                    <h3>The Challenge</h3>
+                    <p>Verified up to massive numbers, but not proven for all n. Finding a counterexample would be a major discovery!</p>
+                </div>
+            </div>
+        </section>
+
+        <div class="erdos-container">
+            <div class="search-panel">
+                <h3>Search for Solutions</h3>
+                <div class="input-group">
+                    <label>Value of n (≥ 2)</label>
+                    <input type="text" id="n-value" value="100" placeholder="Enter n">
+                </div>
+                <div class="input-group">
+                    <label>Search Bound (max value for x, y, z)</label>
+                    <input type="number" id="search-bound" value="1000" min="10" max="10000">
+                </div>
+                <button class="run-btn" onclick="searchErdosStraus()">🔍 Find Solution</button>
+                
+                <h4 style="margin-top: 2rem;">Romasm Implementation</h4>
+                <div class="code-display" id="code-display" style="display: none;">
+                    ; Romasm code will be displayed here
+                </div>
+            </div>
+
+            <div class="results-panel" id="results-panel" style="display: none;">
+                <h3>Search Results</h3>
+                <div id="solution-display"></div>
+            </div>
+        </div>
+        </main>
+    </div>
+
+    <script src="compiler/romasm-assembler.js"></script>
+    <script src="compiler/romasm-vm.js"></script>
+    <script src="stdlib/bigint.js"></script>
+    <script>
+        function formatLargeNumber(num) {
+            const str = String(num);
+            if (str.length <= 20) return str;
+            return str.substring(0, 10) + '...' + str.substring(str.length - 10) + ` (${str.length} digits)`;
+        }
+        
+        function searchErdosStraus() {
+            const nInput = document.getElementById('n-value').value;
+            const bound = parseInt(document.getElementById('search-bound').value);
+            
+            if (!nInput || bound < 10) {
+                alert('Please enter valid values');
+                return;
+            }
+            
+            const n = parseInt(nInput);
+            
+            if (n < 2) {
+                alert('n must be at least 2');
+                return;
+            }
+            
+            document.getElementById('results-panel').style.display = 'block';
+            document.getElementById('code-display').style.display = 'block';
+            document.getElementById('solution-display').innerHTML = '<p>Searching with Romasm...</p>';
+            
+            // Romasm code for Erdos-Straus: 4/n = 1/x + 1/y + 1/z
+            // Rearranging: z = nxy / (4xy - nx - ny)
+            const limitedBound = Math.min(bound, 100); // Limit for Romasm performance
+            
+            const romasmCode = `
+; Erdos-Straus Conjecture: Find x, y, z such that 4/n = 1/x + 1/y + 1/z
+; Input: n in R0
+; Output: Prints x, y, z if found, else prints 0, 0, 0
+
+LOAD R0, ${n}        ; n
+LOAD R1, 2           ; x (start from 2)
+LOAD R2, ${limitedBound} ; max x, y, z
+LOAD R3, 4           ; Constant 4
+LOAD R4, 0           ; Found flag
+
+; Try different x and y
+x_loop:
+  CMP R1, R2
+  JGE not_found
+  
+  LOAD R5, R1        ; y = x
+y_loop:
+  CMP R5, R2
+  JGE next_x
+  
+  ; Calculate denominator: 4xy - nx - ny
+  ; First: 4xy
+  LOAD R6, R3        ; R6 = 4
+  MUL R6, R1         ; R6 = 4x
+  MUL R6, R5         ; R6 = 4xy
+  
+  ; Calculate: nx
+  LOAD R7, R0        ; R7 = n
+  MUL R7, R1         ; R7 = nx
+  
+  ; Calculate: ny
+  LOAD R8, R0        ; R8 = n
+  MUL R8, R5         ; R8 = ny
+  
+  ; Calculate: 4xy - nx - ny
+  SUB R6, R7         ; R6 = 4xy - nx
+  SUB R6, R8         ; R6 = 4xy - nx - ny
+  
+  ; Check if denominator > 0
+  LOAD R7, 0
+  CMP R6, R7
+  JLE next_y
+  
+  ; Calculate numerator: nxy
+  LOAD R7, R0        ; R7 = n
+  MUL R7, R1         ; R7 = nx
+  MUL R7, R5         ; R7 = nxy
+  
+  ; Calculate z = nxy / (4xy - nx - ny)
+  LOAD R8, R7        ; R8 = nxy
+  DIV R8, R6         ; R8 = z
+  
+  ; Check if z is positive integer and within bound
+  LOAD R4, 0         ; Reuse R4 for comparison
+  CMP R8, R4
+  JLE next_y
+  CMP R8, R2
+  JGT next_y
+  
+  ; Verify: check if nxy is divisible by (4xy - nx - ny)
+  ; Use MOD to check if remainder is 0
+  LOAD R4, R7        ; R4 = nxy (reuse R4)
+  MOD R4, R6         ; R4 = nxy mod (4xy - nx - ny)
+  LOAD R7, 0         ; R7 = 0 (for comparison)
+  CMP R4, R7         ; Check if remainder is 0
+  JEQ found_solution
+  
+next_y:
+  INC R5
+  JMP y_loop
+
+next_x:
+  INC R1
+  JMP x_loop
+
+found_solution:
+  LOAD R4, 1
+  PRINT R1           ; Print x
+  PRINT R5           ; Print y
+  PRINT R8           ; Print z
+  JMP done
+
+not_found:
+  LOAD R1, 0
+  LOAD R5, 0
+  LOAD R8, 0
+  PRINT R1
+  PRINT R5
+  PRINT R8
+
+done:
+  ; Program ends naturally
+`;
+
+            // Display code
+            document.getElementById('code-display').textContent = romasmCode;
+            
+            const assembler = new RomasmAssembler();
+            const result = assembler.assemble(romasmCode);
+            
+            if (!result.success) {
+                document.getElementById('solution-display').innerHTML = 
+                    '<p style="color: var(--error);">Assembly Error: ' + result.errors[0].message + '</p>';
+                return;
+            }
+            
+            const vm = new RomasmVM();
+            vm.loadProgram(result.instructions);
+            const execResult = vm.run(100000);
+            
+            let html = '';
+            if (execResult.output.length >= 3 && execResult.output[0] !== 0) {
+                const x = execResult.output[0];
+                const y = execResult.output[1];
+                const z = execResult.output[2];
+                
+                html += `<div class="solution">`;
+                html += `<span class="formula">4/${n} = </span>`;
+                html += `<span class="fraction"><span class="numerator">1</span><span class="denominator">${x}</span></span>`;
+                html += `<span> + </span>`;
+                html += `<span class="fraction"><span class="numerator">1</span><span class="denominator">${y}</span></span>`;
+                html += `<span> + </span>`;
+                html += `<span class="fraction"><span class="numerator">1</span><span class="denominator">${z}</span></span>`;
+                html += `</div>`;
+                
+                html += `<p style="margin-top: 1rem; color: var(--success);">✓ Solution found! The conjecture holds for n = ${n}</p>`;
+                html += `<div style="margin-top: 1rem; padding: 1rem; background: var(--surface-light); border-radius: 8px;">`;
+                html += `<h4>Romasm Execution:</h4>`;
+                html += `<p>Steps executed: ${execResult.steps}</p>`;
+                html += `<p>Output: ${execResult.output.join(', ')}</p>`;
+                html += `</div>`;
+            } else {
+                html += `<div class="no-solution">`;
+                html += `<h4>⚠️ No solution found</h4>`;
+                html += `<p>Romasm program did not find a solution for n = ${n} within the search bound.</p>`;
+                html += `<p style="font-size: 0.9rem; margin-top: 0.5rem;">Try increasing the search bound or note that this might be a counterexample (though unlikely).</p>`;
+                html += `</div>`;
+            }
+            
+            document.getElementById('solution-display').innerHTML = html;
+        }
+        
+        // Allow Enter key
+        document.getElementById('n-value').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchErdosStraus();
+            }
+        });
+    </script>
+</body>
+</html>
+

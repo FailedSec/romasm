@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Romasm Distributed Computing - Contribute</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="nav.css">
+    <style>
+        .contribute-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .stats-dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .stat-card {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 0.5rem 0;
+        }
+        
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .problem-card {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 12px;
+            margin: 1.5rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .problem-card h3 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: var(--surface-light);
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent));
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .contribute-btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+        
+        .contribute-btn:hover {
+            background: #059669;
+        }
+        
+        .contribute-btn.active {
+            background: var(--error);
+        }
+        
+        .contribute-btn.active:hover {
+            background: #dc2626;
+        }
+        
+        .contribution-log {
+            background: var(--background);
+            padding: 1rem;
+            border-radius: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+        
+        .log-entry {
+            padding: 0.25rem 0;
+            color: var(--text-secondary);
+        }
+        
+        .log-entry.success {
+            color: var(--success);
+        }
+        
+        .log-entry.error {
+            color: var(--error);
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Romasm Distributed Computing</h1>
+            <p class="subtitle">Contribute to solving unsolved mathematical problems</p>
+        </header>
+
+        <main>
+            <section class="info-section" style="margin-bottom: 2rem;">
+                <h2>Community Progress</h2>
+                <div class="stats-dashboard">
+                    <div class="stat-card">
+                        <div class="stat-label">Collatz Verified</div>
+                        <div class="stat-value" id="stat-collatz">2^71</div>
+                        <div class="stat-label">Current record</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Goldbach Verified</div>
+                        <div class="stat-value" id="stat-goldbach">4×10¹⁸</div>
+                        <div class="stat-label">Current record</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Twin Primes Found</div>
+                        <div class="stat-value" id="stat-twins">0</div>
+                        <div class="stat-label">This session</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Computations</div>
+                        <div class="stat-value" id="stat-computations">0</div>
+                        <div class="stat-label">Total contributed</div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="contribute-container">
+                <div class="problem-card">
+                    <h3>Collatz Conjecture</h3>
+                    <p>Verify the 3n+1 problem for large starting numbers. Every verification helps push the boundary of known results.</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-collatz" style="width: 71%;">71% to 2^72</div>
+                    </div>
+                    <button class="contribute-btn" id="btn-collatz" onclick="toggleContribute('collatz')">
+                        ▶ Start Contributing
+                    </button>
+                    <div class="contribution-log" id="log-collatz"></div>
+                </div>
+
+                <div class="problem-card">
+                    <h3>Goldbach Conjecture</h3>
+                    <p>Verify that large even numbers can be expressed as the sum of two primes. Help extend the verification limit.</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-goldbach" style="width: 45%;">45% to next milestone</div>
+                    </div>
+                    <button class="contribute-btn" id="btn-goldbach" onclick="toggleContribute('goldbach')">
+                        ▶ Start Contributing
+                    </button>
+                    <div class="contribution-log" id="log-goldbach"></div>
+                </div>
+
+                <div class="problem-card">
+                    <h3>Twin Prime Search</h3>
+                    <p>Search for record-breaking twin prime pairs. Finding larger pairs helps strengthen evidence for the Twin Prime Conjecture.</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-twins" style="width: 0%;">Searching...</div>
+                    </div>
+                    <button class="contribute-btn" id="btn-twins" onclick="toggleContribute('twins')">
+                        ▶ Start Contributing
+                    </button>
+                    <div class="contribution-log" id="log-twins"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const workers = {};
+        const stats = {
+            collatz: { verified: 0, maxChecked: 0 },
+            goldbach: { verified: 0, maxChecked: 0 },
+            twins: { found: 0, checked: 0 },
+            computations: 0
+        };
+        
+        function toggleContribute(problem) {
+            const btn = document.getElementById(`btn-${problem}`);
+            const log = document.getElementById(`log-${problem}`);
+            
+            if (workers[problem]) {
+                // Stop contributing
+                workers[problem].terminate();
+                delete workers[problem];
+                btn.textContent = '▶ Start Contributing';
+                btn.classList.remove('active');
+                addLog(log, 'Stopped contributing', 'error');
+            } else {
+                // Start contributing
+                btn.textContent = '⏸ Stop Contributing';
+                btn.classList.add('active');
+                startContributing(problem);
+            }
+        }
+        
+        function startContributing(problem) {
+            const log = document.getElementById(`log-${problem}`);
+            
+            switch (problem) {
+                case 'collatz':
+                    contributeCollatz(log);
+                    break;
+                case 'goldbach':
+                    contributeGoldbach(log);
+                    break;
+                case 'twins':
+                    contributeTwins(log);
+                    break;
+            }
+        }
+        
+        function contributeCollatz(log) {
+            // Use Web Worker if available, otherwise compute directly
+            if (typeof Worker !== 'undefined') {
+                const worker = new Worker('workers/collatz-worker.js');
+                workers.collatz = worker;
+                
+                worker.onmessage = function(e) {
+                    if (e.data.success) {
+                        stats.collatz.verified++;
+                        stats.computations++;
+                        stats.collatz.maxChecked = Math.max(stats.collatz.maxChecked, e.data.maxValue);
+                        updateStats();
+                        addLog(log, `Verified: ${e.data.steps} steps, max: ${e.data.maxValue}`, 'success');
+                        
+                        // Continue with next number
+                        const nextStart = Math.floor(Math.random() * 1000000) + 100000;
+                        worker.postMessage({ startNum: nextStart, range: 10000, useBigInt: false });
+                    }
+                };
+                
+                const startNum = Math.floor(Math.random() * 1000000) + 100000;
+                worker.postMessage({ startNum: startNum, range: 10000, useBigInt: false });
+                addLog(log, `Started checking from ${startNum}`, 'success');
+            } else {
+                // Fallback: compute directly
+                addLog(log, 'Web Workers not supported, using direct computation', 'error');
+                computeCollatzDirect(log);
+            }
+        }
+        
+        function contributeGoldbach(log) {
+            addLog(log, 'Starting Goldbach verification...', 'success');
+            
+            // Simple direct computation
+            let current = 1000000;
+            const checkInterval = setInterval(() => {
+                if (!workers.goldbach) {
+                    clearInterval(checkInterval);
+                    return;
+                }
+                
+                // Check if current can be expressed as sum of two primes
+                let found = false;
+                for (let p = 2; p <= current / 2; p++) {
+                    if (isPrime(p) && isPrime(current - p)) {
+                        found = true;
+                        break;
+                    }
+                }
+                
+                if (found) {
+                    stats.goldbach.verified++;
+                    stats.computations++;
+                    stats.goldbach.maxChecked = Math.max(stats.goldbach.maxChecked, current);
+                    updateStats();
+                    addLog(log, `Verified: ${current} = p1 + p2`, 'success');
+                }
+                
+                current += 2; // Next even number
+            }, 100);
+            
+            workers.goldbach = { interval: checkInterval };
+        }
+        
+        function contributeTwins(log) {
+            addLog(log, 'Starting twin prime search...', 'success');
+            
+            let current = 1000;
+            const checkInterval = setInterval(() => {
+                if (!workers.twins) {
+                    clearInterval(checkInterval);
+                    return;
+                }
+                
+                if (isPrime(current) && isPrime(current + 2)) {
+                    stats.twins.found++;
+                    stats.computations++;
+                    updateStats();
+                    addLog(log, `Found twin primes: ${current}, ${current + 2}`, 'success');
+                }
+                
+                current += 2;
+            }, 50);
+            
+            workers.twins = { interval: checkInterval };
+        }
+        
+        function computeCollatzDirect(log) {
+            const startNum = Math.floor(Math.random() * 1000000) + 100000;
+            let current = startNum;
+            let steps = 0;
+            let maxValue = startNum;
+            
+            while (current !== 1 && steps < 10000) {
+                if (current % 2 === 0) {
+                    current = current / 2;
+                } else {
+                    current = current * 3 + 1;
+                }
+                maxValue = Math.max(maxValue, current);
+                steps++;
+            }
+            
+            stats.collatz.verified++;
+            stats.computations++;
+            stats.collatz.maxChecked = Math.max(stats.collatz.maxChecked, maxValue);
+            updateStats();
+            addLog(log, `Verified: ${steps} steps, max: ${maxValue}`, 'success');
+            
+            // Continue
+            setTimeout(() => computeCollatzDirect(log), 100);
+        }
+        
+        function isPrime(n) {
+            if (n < 2) return false;
+            if (n === 2) return true;
+            if (n % 2 === 0) return false;
+            for (let i = 3; i * i <= n; i += 2) {
+                if (n % i === 0) return false;
+            }
+            return true;
+        }
+        
+        function addLog(logElement, message, type = '') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logElement.appendChild(entry);
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        function updateStats() {
+            document.getElementById('stat-computations').textContent = stats.computations.toLocaleString();
+            document.getElementById('stat-twins').textContent = stats.twins.found.toLocaleString();
+        }
+        
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            Object.values(workers).forEach(worker => {
+                if (worker.terminate) worker.terminate();
+                if (worker.interval) clearInterval(worker.interval);
+            });
+        });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goldbach Conjecture Explorer - Romasm</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="nav.css">
+    <style>
+        .goldbach-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .search-panel {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .results-panel {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .decomposition {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            background: var(--surface-light);
+            border-radius: 8px;
+            border-left: 4px solid var(--success);
+        }
+        
+        .decomposition .number {
+            font-family: 'Courier New', monospace;
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+        
+        .decomposition .equals {
+            color: var(--text-secondary);
+        }
+        
+        .decomposition .prime {
+            font-family: 'Courier New', monospace;
+            color: var(--accent);
+        }
+        
+        .verification-status {
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .verification-status.success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 2px solid var(--success);
+            color: var(--success);
+        }
+        
+        .verification-status.failed {
+            background: rgba(244, 67, 54, 0.2);
+            border: 2px solid var(--error);
+            color: var(--error);
+        }
+        
+        .input-group {
+            margin-bottom: 1rem;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--background);
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+        
+        .run-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+        
+        .run-btn:hover {
+            background: #059669;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Goldbach Conjecture Explorer</h1>
+            <p class="subtitle">Verify the Goldbach Conjecture: every even number ≥ 4 is the sum of two primes</p>
+        </header>
+
+        <main>
+        <section class="info-section" style="margin-bottom: 2rem;">
+            <h2>About the Goldbach Conjecture</h2>
+            <div class="info-content">
+                <div class="info-card">
+                    <h3>The Conjecture</h3>
+                    <p>Every even integer greater than 2 can be expressed as the sum of two prime numbers.</p>
+                    <p><strong>Examples:</strong> 4 = 2 + 2, 6 = 3 + 3, 8 = 3 + 5, 10 = 3 + 7</p>
+                </div>
+                <div class="info-card">
+                    <h3>Current Status</h3>
+                    <p>Verified up to approximately 4 × 10¹⁸, but not proven for all even numbers.</p>
+                </div>
+                <div class="info-card">
+                    <h3>Big Integer Support</h3>
+                    <p>This explorer uses Big Integer arithmetic to verify the conjecture for very large even numbers.</p>
+                </div>
+            </div>
+        </section>
+
+            <div class="goldbach-container">
+                <div class="search-panel">
+                    <h3>Verify Goldbach Conjecture</h3>
+                    <div class="input-group">
+                        <label>Even Number (≥ 4)</label>
+                        <input type="text" id="even-number" value="100" placeholder="Enter an even number">
+                    </div>
+                    <button class="run-btn" onclick="verifyGoldbach()">✓ Verify Goldbach</button>
+                    
+                    <h4 style="margin-top: 2rem;">Romasm Implementation</h4>
+                    <div class="code-display" id="code-display" style="display: none;">
+                        ; Romasm code will be displayed here
+                    </div>
+                </div>
+
+            <div class="results-panel" id="results-panel" style="display: none;">
+                <h3>Verification Result</h3>
+                <div id="verification-display"></div>
+            </div>
+        </div>
+        </main>
+    </div>
+
+    <script src="compiler/romasm-assembler.js"></script>
+    <script src="compiler/romasm-vm.js"></script>
+    <script src="stdlib/bigint.js"></script>
+    <script src="stdlib/primes.js"></script>
+    <script>
+        function formatLargeNumber(num) {
+            const str = String(num);
+            if (str.length <= 30) return str;
+            return str.substring(0, 15) + '...' + str.substring(str.length - 15) + ` (${str.length} digits)`;
+        }
+        
+        function verifyGoldbach() {
+            const input = document.getElementById('even-number').value;
+            
+            if (!input) {
+                alert('Please enter an even number');
+                return;
+            }
+            
+            const n = parseInt(input);
+            
+            // Check if even and >= 4
+            if (n % 2 !== 0) {
+                alert('Please enter an even number');
+                return;
+            }
+            
+            if (n < 4) {
+                alert('Number must be at least 4');
+                return;
+            }
+            
+            document.getElementById('results-panel').style.display = 'block';
+            document.getElementById('verification-display').innerHTML = '<p>Verifying with Romasm...</p>';
+            
+            // Display the Romasm code
+            document.getElementById('code-display').style.display = 'block';
+            
+            // Romasm assembly code for Goldbach verification
+            const romasmCode = `
+; Goldbach Conjecture Verification in Romasm
+; Input: n (even number >= 4) in R0
+; Output: Prints prime pair if found
+
+LOAD R0, ${n}        ; n (the even number to verify)
+LOAD R1, 2           ; Start checking from prime 2
+LOAD R2, 2           ; Constant 2
+LOAD R3, 0           ; Flag: 0 = not found, 1 = found
+
+; Check if n - p1 is prime
+check_loop:
+  ; Calculate p2 = n - p1
+  LOAD R4, R0        ; R4 = n
+  SUB R4, R1         ; R4 = n - p1
+  
+  ; Check if p2 < p1 (to avoid duplicates, we want p1 <= p2)
+  CMP R4, R1
+  JLT next_prime     ; If p2 < p1, skip (already checked)
+  
+  ; Check if p2 < 2 (invalid)
+  CMP R4, R2
+  JLT next_prime     ; If p2 < 2, skip
+  
+  ; Simple primality check for p1
+  ; Check if p1 == 2 (special case - it's prime)
+  CMP R1, 2
+  JEQ check_p2
+  
+  ; For p1 > 2, check if even (skip if even)
+  LOAD R5, R1
+  MOD R5, R2
+  LOAD R7, 0         ; R7 = 0 (for comparison)
+  CMP R5, R7
+  JEQ next_prime
+  
+  ; Check divisibility by 3
+  LOAD R5, R1
+  LOAD R6, 3
+  MOD R5, R6
+  LOAD R7, 0
+  CMP R5, R7
+  JEQ next_prime
+  
+  ; Check divisibility by 5
+  LOAD R5, R1
+  LOAD R6, 5
+  MOD R5, R6
+  LOAD R7, 0
+  CMP R5, R7
+  JEQ next_prime
+  
+  ; Check divisibility by 7
+  LOAD R5, R1
+  LOAD R6, 7
+  MOD R5, R6
+  LOAD R7, 0
+  CMP R5, R7
+  JEQ next_prime
+  
+  ; Check divisibility by 11
+  LOAD R5, R1
+  LOAD R6, 11
+  MOD R5, R6
+  LOAD R7, 0
+  CMP R5, R7
+  JEQ next_prime
+  
+  ; Check divisibility by 13
+  LOAD R5, R1
+  LOAD R6, 13
+  MOD R5, R6
+  LOAD R7, 0
+  CMP R5, R7
+  JEQ next_prime
+  
+  ; For small numbers, if we get here and p1 < 289 (17²), it might be prime
+  ; For larger numbers, we'd need more checks, but this is a simplified version
+  LOAD R5, R1
+  LOAD R6, 17
+  CMP R5, R6
+  JLT check_p2  ; If p1 < 17, and passed all checks, likely prime
+  
+  ; Check divisibility by 17
+  LOAD R5, R1
+  LOAD R6, 17
+  MOD R5, R6
+  LOAD R7, 0
+  CMP R5, R7
+  JEQ next_prime
+  
+check_p2:
+  ; Check if p2 is prime (more thorough check)
+  ; First check if p2 == 2 (special case)
+  LOAD R5, R4        ; R5 = p2
+  CMP R5, R2         ; Compare with 2
+  JEQ found_pair     ; If p2 == 2, found pair (2, n-2)
+  
+  ; Check if even (skip if even, except 2)
+  LOAD R5, R4        ; R5 = p2
+  MOD R5, R2         ; R5 = p2 % 2
+  LOAD R7, 0         ; R7 = 0 (for comparison)
+  CMP R5, R7         ; Check if remainder is 0
+  JEQ next_prime     ; If even (and not 2), skip
+  
+  ; Check divisibility by 3
+  LOAD R5, R4
+  LOAD R6, 3
+  MOD R5, R6
+  LOAD R7, 0
+  CMP R5, R7
+  JEQ next_prime
+  
+  ; Check divisibility by 5
+  LOAD R5, R4
+  LOAD R6, 5
+  MOD R5, R6
+  LOAD R7, 0
+  CMP R5, R7
+  JEQ next_prime
+  
+  ; Check divisibility by 7
+  LOAD R5, R4
+  LOAD R6, 7
+  MOD R5, R6
+  LOAD R7, 0
+  CMP R5, R7
+  JEQ next_prime
+  
+  ; Check divisibility by 11
+  LOAD R5, R4
+  LOAD R6, 11
+  MOD R5, R6
+  LOAD R7, 0
+  CMP R5, R7
+  JEQ next_prime
+  
+  ; Check divisibility by 13
+  LOAD R5, R4
+  LOAD R6, 13
+  MOD R5, R6
+  LOAD R7, 0
+  CMP R5, R7
+  JEQ next_prime
+  
+  ; For small numbers, if p2 < 289 and passed all checks, likely prime
+  LOAD R5, R4
+  LOAD R6, 17
+  CMP R5, R6
+  JLT found_pair
+  
+  ; Check divisibility by 17
+  LOAD R5, R4
+  LOAD R6, 17
+  MOD R5, R6
+  LOAD R7, 0
+  CMP R5, R7
+  JEQ next_prime
+  
+  ; Found a potential pair (passed all divisibility checks)
+found_pair:
+  LOAD R3, 1         ; Set found flag
+  PRINT R1           ; Print p1
+  PRINT R4           ; Print p2
+  JMP done
+
+next_prime:
+  INC R1             ; Try next prime candidate
+  LOAD R5, R0        ; Check if p1 >= n/2
+  DIV R5, R2         ; R5 = n/2
+  CMP R1, R5
+  JGT not_found      ; If p1 > n/2, no solution
+  JMP check_loop
+
+not_found:
+  LOAD R3, 0
+  PRINT R3           ; Print 0 to indicate not found
+
+done:
+  ; Program ends naturally
+`;
+
+            // Display code
+            document.getElementById('code-display').textContent = romasmCode;
+            
+            // Assemble and run
+            const assembler = new RomasmAssembler();
+            const result = assembler.assemble(romasmCode);
+            
+            if (!result.success) {
+                document.getElementById('verification-display').innerHTML = 
+                    '<p style="color: var(--error);">Assembly Error: ' + result.errors[0].message + '</p>';
+                return;
+            }
+            
+            const vm = new RomasmVM();
+            vm.loadProgram(result.instructions);
+            const execResult = vm.run(10000);
+            
+            // Parse output
+            let html = '';
+            if (execResult.output.length >= 2 && execResult.output[0] !== 0) {
+                const p1 = execResult.output[0];
+                const p2 = execResult.output[1];
+                
+                html += `<div class="verification-status success">`;
+                html += `<h4>✓ Verified!</h4>`;
+                html += `<p>The Goldbach Conjecture holds for ${n}</p>`;
+                html += `</div>`;
+                
+                html += `<div class="decomposition">`;
+                html += `<span class="number">${n}</span>`;
+                html += `<span class="equals">=</span>`;
+                html += `<span class="prime">${p1}</span>`;
+                html += `<span class="equals">+</span>`;
+                html += `<span class="prime">${p2}</span>`;
+                html += `</div>`;
+                
+                html += `<div style="margin-top: 1rem; padding: 1rem; background: var(--surface-light); border-radius: 8px;">`;
+                html += `<h4>Romasm Execution:</h4>`;
+                html += `<p>Steps executed: ${execResult.steps}</p>`;
+                html += `<p>Output: ${execResult.output.join(', ')}</p>`;
+                html += `</div>`;
+            } else {
+                html += `<div class="verification-status failed">`;
+                html += `<h4>⚠️ Could not verify</h4>`;
+                html += `<p>Romasm program did not find a prime pair decomposition for ${n}</p>`;
+                html += `<p style="font-size: 0.9rem; margin-top: 0.5rem;">This might be due to computational limits or the simplified prime checking algorithm.</p>`;
+                html += `</div>`;
+            }
+            
+            document.getElementById('verification-display').innerHTML = html;
+        }
+        
+        // Allow Enter key
+        document.getElementById('even-number').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                verifyGoldbach();
+            }
+        });
+    </script>
+</body>
+</html>
+

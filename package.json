@@ -1,0 +1,21 @@
+{
+  "name": "positional-roman-numerals",
+  "version": "1.0.0",
+  "description": "A positional numeral system using Roman symbols with place-value notation",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx http-server -p 6969 -o",
+    "dev": "npx http-server -p 6969 -o"
+  },
+  "keywords": [
+    "roman-numerals",
+    "positional-notation",
+    "number-system",
+    "converter"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {},
+  "dependencies": {}
+}
+
