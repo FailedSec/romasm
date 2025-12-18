@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beal Conjecture Explorer - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .info-box {
+            background: var(--surface);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Beal Conjecture Explorer</h1>
+            <p class="subtitle">Searching for counterexamples to A^x + B^y = C^z</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section>
+                <h2>Overview</h2>
+                <p>The Beal Conjecture Explorer searches for counterexamples to the Beal Conjecture, which is a generalization of Fermat's Last Theorem. All power calculations are performed using Romasm assembly.</p>
+            </section>
+
+            <section>
+                <h2>The Beal Conjecture</h2>
+                <div class="info-box">
+                    <h3>What is it?</h3>
+                    <p>The <strong>Beal Conjecture</strong> states that if:</p>
+                    <p style="text-align: center; font-size: 1.2rem; margin: 1rem 0;"><strong>A^x + B^y = C^z</strong></p>
+                    <p>where A, B, C, x, y, z are positive integers with x, y, z > 2, then A, B, and C must have a common prime factor.</p>
+                    <p><strong>Status:</strong> Unproven. A prize of $1 million is offered for a proof or counterexample.</p>
+                    <p><strong>Note:</strong> If A, B, C share a common factor, solutions exist (e.g., 2³ + 2³ = 2⁴).</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>Romasm Implementation</h2>
+                <p>The explorer uses Romasm assembly to calculate powers and search for solutions:</p>
+                <pre><code>; Check if A^x + B^y = C^z
+; Uses stdlib power function
+; Input: R0 = A, R1 = x, R2 = B, R3 = y
+
+; Calculate A^x
+LOAD R4, R0
+LOAD R5, R1
+CALL power      ; R0 = A^x
+
+; Calculate B^y
+LOAD R4, R2
+LOAD R5, R3
+CALL power      ; R0 = B^y
+LOAD R6, R0     ; Store B^y in R6
+
+; Add them
+LOAD R0, R4     ; R0 = A^x
+ADD R0, R6      ; R0 = A^x + B^y
+
+; Now search for C^z that equals this value
+; (Simplified - actual implementation searches systematically)</code></pre>
+            </section>
+
+            <section>
+                <h2>Using the Explorer</h2>
+                <ol>
+                    <li>Enter values for A, B, x, y (or let it search automatically)</li>
+                    <li>Click "Search for Counterexample"</li>
+                    <li>View any solutions found</li>
+                    <li>Check if A, B, C share a common factor</li>
+                </ol>
+            </section>
+
+            <section>
+                <h2>Related Documentation</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="stdlib-math.html">Math Library</a> - Power function</li>
+                    <li><a href="../../beal-conjecture.html">Try the Explorer</a> - Open it now!</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+

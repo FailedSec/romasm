@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legendre's Conjecture Explorer - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .info-box {
+            background: var(--surface);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Legendre's Conjecture Explorer</h1>
+            <p class="subtitle">Verifying primes between n² and (n+1)²</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section>
+                <h2>Overview</h2>
+                <p>Legendre's Conjecture Explorer verifies that there is always at least one prime number between n² and (n+1)² for any positive integer n. All prime checking and square calculations are performed using Romasm assembly.</p>
+            </section>
+
+            <section>
+                <h2>Legendre's Conjecture</h2>
+                <div class="info-box">
+                    <h3>What is it?</h3>
+                    <p><strong>Legendre's Conjecture</strong> states that for every positive integer n, there exists at least one prime number between n² and (n+1)².</p>
+                    <p>Examples:</p>
+                    <ul>
+                        <li>n=1: Between 1²=1 and 2²=4, we have primes: 2, 3</li>
+                        <li>n=2: Between 2²=4 and 3²=9, we have primes: 5, 7</li>
+                        <li>n=3: Between 3²=9 and 4²=16, we have primes: 11, 13</li>
+                        <li>n=4: Between 4²=16 and 5²=25, we have primes: 17, 19, 23</li>
+                    </ul>
+                    <p><strong>Status:</strong> Unproven, but verified for very large values of n.</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>Romasm Implementation</h2>
+                <p>The explorer uses Romasm assembly to calculate squares and check for primes:</p>
+                <pre><code>; Check Legendre's Conjecture for n
+; Input: R0 = n
+; Output: List of primes between n² and (n+1)²
+
+; Calculate n²
+LOAD R1, R0
+MUL R1, R0       ; R1 = n²
+
+; Calculate (n+1)²
+LOAD R2, R0
+INC R2           ; R2 = n+1
+LOAD R3, R2
+MUL R3, R2       ; R3 = (n+1)²
+
+; Search for primes in range [n²+1, (n+1)²-1]
+LOAD R4, R1
+INC R4           ; Start from n²+1
+
+search_loop:
+  INC R4
+  CMP R4, R3
+  JGE done       ; If R4 >= (n+1)², done
+  
+  ; Check if R4 is prime
+  LOAD R0, R4
+  CALL is_prime
+  CMP R0, 1
+  JEQ found_prime  ; If prime, add to list
+  
+  JMP search_loop
+
+found_prime:
+  PRINT R4       ; Print the prime
+  JMP search_loop
+
+done:
+  RET</code></pre>
+            </section>
+
+            <section>
+                <h2>Using the Explorer</h2>
+                <ol>
+                    <li>Enter a value for n</li>
+                    <li>Click "Verify Conjecture"</li>
+                    <li>View all primes found between n² and (n+1)²</li>
+                    <li>See verification that at least one prime exists</li>
+                </ol>
+            </section>
+
+            <section>
+                <h2>Related Documentation</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="../../legendre-conjecture.html">Try the Explorer</a> - Open it now!</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+

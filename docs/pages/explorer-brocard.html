@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brocard's Problem Explorer - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .info-box {
+            background: var(--surface);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Brocard's Problem Explorer</h1>
+            <p class="subtitle">Finding solutions to n! + 1 = m²</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section>
+                <h2>Overview</h2>
+                <p>Brocard's Problem Explorer searches for solutions to the equation n! + 1 = m², where n! is the factorial of n and m is an integer. All factorial and square calculations are performed using Romasm assembly.</p>
+            </section>
+
+            <section>
+                <h2>Brocard's Problem</h2>
+                <div class="info-box">
+                    <h3>What is it?</h3>
+                    <p><strong>Brocard's Problem</strong> asks: For which positive integers n does the equation</p>
+                    <p style="text-align: center; font-size: 1.2rem; margin: 1rem 0;"><strong>n! + 1 = m²</strong></p>
+                    <p>have integer solutions?</p>
+                    <p>Known solutions:</p>
+                    <ul>
+                        <li>n=4: 4! + 1 = 24 + 1 = 25 = 5²</li>
+                        <li>n=5: 5! + 1 = 120 + 1 = 121 = 11²</li>
+                        <li>n=7: 7! + 1 = 5040 + 1 = 5041 = 71²</li>
+                    </ul>
+                    <p><strong>Status:</strong> Only three solutions are known. It is unknown if there are more.</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>Romasm Implementation</h2>
+                <p>The explorer uses Romasm assembly to calculate factorials and check for perfect squares:</p>
+                <pre><code>; Check if n! + 1 is a perfect square
+; Input: R0 = n
+; Output: R0 = m if solution found, 0 if not
+
+; Calculate n!
+CALL factorial   ; R0 = n!
+
+; Add 1
+INC R0           ; R0 = n! + 1
+
+; Check if it's a perfect square
+; Calculate sqrt(n! + 1)
+CALL sqrt        ; R0 = sqrt(n! + 1)
+
+; Square it back to verify
+LOAD R1, R0
+MUL R1, R0       ; R1 = (sqrt(n! + 1))²
+
+; Compare with original
+LOAD R2, R0      ; R2 = n! + 1
+CMP R1, R2
+JEQ found_solution
+
+; Not a perfect square
+LOAD R0, 0
+RET
+
+found_solution:
+  ; R0 already contains sqrt(n! + 1) = m
+  RET</code></pre>
+            </section>
+
+            <section>
+                <h2>Using the Explorer</h2>
+                <ol>
+                    <li>Enter a value for n (or let it search automatically)</li>
+                    <li>Click "Search for Solution"</li>
+                    <li>View the calculated n! + 1</li>
+                    <li>See if it's a perfect square and find m</li>
+                </ol>
+            </section>
+
+            <section>
+                <h2>Related Documentation</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="stdlib-math.html">Math Library</a> - Factorial and square root functions</li>
+                    <li><a href="../../brocard-problem.html">Try the Explorer</a> - Open it now!</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+

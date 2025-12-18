@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twin Primes Explorer - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .info-box {
+            background: var(--surface);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Twin Primes Explorer</h1>
+            <p class="subtitle">Searching for large twin prime pairs with Romasm</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section>
+                <h2>Overview</h2>
+                <p>The Twin Primes Explorer searches for pairs of prime numbers that differ by exactly 2 (e.g., 11 and 13, 17 and 19). All prime checking is performed using Romasm assembly.</p>
+            </section>
+
+            <section>
+                <h2>The Twin Prime Conjecture</h2>
+                <div class="info-box">
+                    <h3>What is it?</h3>
+                    <p><strong>Twin primes</strong> are pairs of prime numbers that differ by 2. Examples include:</p>
+                    <ul>
+                        <li>(3, 5)</li>
+                        <li>(11, 13)</li>
+                        <li>(17, 19)</li>
+                        <li>(29, 31)</li>
+                    </ul>
+                    <p>The <strong>Twin Prime Conjecture</strong> states that there are infinitely many twin prime pairs.</p>
+                    <p><strong>Status:</strong> Unproven, but bounded gaps between primes have been proven. The largest known twin primes have over 200,000 digits.</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>Romasm Implementation</h2>
+                <p>The explorer uses Romasm assembly to check for primality:</p>
+                <pre><code>; Check if a number is prime (simplified)
+; Input: R0 = number to check
+; Output: R0 = 1 if prime, 0 if not
+
+LOAD R1, 2        ; Start checking from 2
+LOAD R2, 1        ; Constant 1
+
+check_loop:
+  MUL R3, R1, R1  ; R3 = divisor²
+  CMP R3, R0      ; Compare with number
+  JGT is_prime    ; If divisor² > number, it's prime
+  
+  MOD R4, R0, R1  ; R4 = number % divisor
+  CMP R4, 0       ; Check if divisible
+  JEQ not_prime   ; If divisible, not prime
+  
+  INC R1          ; Try next divisor
+  JMP check_loop
+
+is_prime:
+  LOAD R0, 1      ; Return 1 (prime)
+  RET
+
+not_prime:
+  LOAD R0, 0      ; Return 0 (not prime)
+  RET</code></pre>
+            </section>
+
+            <section>
+                <h2>BigInt Support</h2>
+                <p>The explorer supports BigInt for searching very large twin prime pairs:</p>
+                <ul>
+                    <li>Can search ranges with hundreds of digits</li>
+                    <li>Uses efficient prime checking algorithms</li>
+                    <li>Displays twin pairs as they're found</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Using the Explorer</h2>
+                <ol>
+                    <li>Enter a starting number (or range)</li>
+                    <li>Click "Search for Twin Primes"</li>
+                    <li>View twin prime pairs as they're discovered</li>
+                    <li>See statistics about the search</li>
+                </ol>
+            </section>
+
+            <section>
+                <h2>Related Documentation</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="stdlib-bigint.html">Big Integer Support</a> - How BigInt works</li>
+                    <li><a href="../../twin-primes.html">Try the Explorer</a> - Open it now!</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+

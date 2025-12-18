@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfect Numbers Explorer - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .info-box {
+            background: var(--surface);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Perfect Numbers Explorer</h1>
+            <p class="subtitle">Searching for perfect numbers where sum of divisors equals the number</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section>
+                <h2>Overview</h2>
+                <p>The Perfect Numbers Explorer searches for perfect numbers - numbers where the sum of all proper divisors equals the number itself. All divisor calculations are performed using Romasm assembly.</p>
+            </section>
+
+            <section>
+                <h2>Perfect Numbers</h2>
+                <div class="info-box">
+                    <h3>What are they?</h3>
+                    <p>A <strong>perfect number</strong> is a positive integer that equals the sum of its proper divisors (divisors excluding the number itself).</p>
+                    <p>Examples:</p>
+                    <ul>
+                        <li>6: Divisors are 1, 2, 3. Sum = 1 + 2 + 3 = 6 ✓</li>
+                        <li>28: Divisors are 1, 2, 4, 7, 14. Sum = 1 + 2 + 4 + 7 + 14 = 28 ✓</li>
+                        <li>496: Divisors sum to 496 ✓</li>
+                        <li>8128: Divisors sum to 8128 ✓</li>
+                    </ul>
+                    <p><strong>Status:</strong> All known perfect numbers are even. It is unknown if any odd perfect numbers exist.</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>Romasm Implementation</h2>
+                <p>The explorer uses Romasm assembly to find divisors and check if a number is perfect:</p>
+                <pre><code>; Check if a number is perfect
+; Input: R0 = number to check
+; Output: R0 = 1 if perfect, 0 if not
+
+LOAD R1, 1        ; Start with divisor = 1
+LOAD R2, 0        ; Sum of divisors
+LOAD R3, R0       ; Store original number
+
+find_divisors:
+  ; Check if R1 divides R0
+  MOD R4, R0, R1  ; R4 = R0 % R1
+  CMP R4, 0
+  JNE next_divisor
+  
+  ; R1 is a divisor, add to sum
+  ADD R2, R1      ; sum += divisor
+  
+next_divisor:
+  INC R1
+  ; Only check up to n/2
+  LOAD R4, R0
+  LOAD R5, 2
+  DIV R4, R5      ; R4 = n/2
+  CMP R1, R4
+  JLE find_divisors
+
+; Check if sum equals original number
+CMP R2, R3
+JEQ is_perfect
+
+; Not perfect
+LOAD R0, 0
+RET
+
+is_perfect:
+  LOAD R0, 1
+  RET</code></pre>
+            </section>
+
+            <section>
+                <h2>Using the Explorer</h2>
+                <ol>
+                    <li>Enter a number to check (or let it search automatically)</li>
+                    <li>Click "Check if Perfect"</li>
+                    <li>View all divisors found</li>
+                    <li>See the sum of divisors and verification</li>
+                </ol>
+            </section>
+
+            <section>
+                <h2>Related Documentation</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="../../perfect-numbers.html">Try the Explorer</a> - Open it now!</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+

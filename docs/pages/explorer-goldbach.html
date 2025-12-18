@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goldbach Conjecture Explorer - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .info-box {
+            background: var(--surface);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>Goldbach Conjecture Explorer</h1>
+            <p class="subtitle">Verifying that every even number > 2 is the sum of two primes</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section>
+                <h2>Overview</h2>
+                <p>The Goldbach Conjecture Explorer verifies that every even integer greater than 2 can be expressed as the sum of two prime numbers. All computations are performed using Romasm assembly.</p>
+            </section>
+
+            <section>
+                <h2>The Goldbach Conjecture</h2>
+                <div class="info-box">
+                    <h3>What is it?</h3>
+                    <p>The <strong>Goldbach Conjecture</strong> (strong form) states:</p>
+                    <p><em>Every even integer greater than 2 can be expressed as the sum of two primes.</em></p>
+                    <p>Examples:</p>
+                    <ul>
+                        <li>4 = 2 + 2</li>
+                        <li>6 = 3 + 3</li>
+                        <li>8 = 3 + 5</li>
+                        <li>10 = 3 + 7 = 5 + 5</li>
+                        <li>12 = 5 + 7</li>
+                    </ul>
+                    <p><strong>Status:</strong> Verified up to ~4×10¹⁸, but unproven for all even numbers.</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>Romasm Implementation</h2>
+                <p>The explorer uses Romasm assembly to find prime decompositions:</p>
+                <pre><code>; Find two primes that sum to an even number
+; Input: R0 = even number
+; Output: R1, R2 = two primes that sum to R0
+
+LOAD R1, 2        ; Start with smallest prime (2)
+
+try_prime:
+  ; Check if R1 is prime (using prime check function)
+  CALL is_prime
+  CMP R0, 1
+  JNE next_prime  ; If not prime, try next
+  
+  ; Calculate R2 = R0 - R1
+  LOAD R2, R0
+  SUB R2, R1
+  
+  ; Check if R2 is prime
+  LOAD R0, R2
+  CALL is_prime
+  CMP R0, 1
+  JEQ found       ; If R2 is prime, we found a solution
+  
+next_prime:
+  INC R1
+  CMP R1, R0
+  JLT try_prime   ; Continue searching
+  
+found:
+  ; R1 and R2 are the two primes
+  RET</code></pre>
+            </section>
+
+            <section>
+                <h2>BigInt Support</h2>
+                <p>The explorer supports BigInt for testing very large even numbers:</p>
+                <ul>
+                    <li>Can test numbers with hundreds of digits</li>
+                    <li>Finds multiple decompositions when they exist</li>
+                    <li>Uses efficient prime generation and checking</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Using the Explorer</h2>
+                <ol>
+                    <li>Enter an even number greater than 2</li>
+                    <li>Click "Find Prime Decomposition"</li>
+                    <li>View all possible prime pairs that sum to the number</li>
+                    <li>See verification statistics</li>
+                </ol>
+            </section>
+
+            <section>
+                <h2>Related Documentation</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="stdlib-bigint.html">Big Integer Support</a> - How BigInt works</li>
+                    <li><a href="../../goldbach.html">Try the Explorer</a> - Open it now!</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+
