@@ -6,7 +6,7 @@
  */
 
 class RomasmX86Generator {
-    constructor() {
+    constructor(useSmartAllocation = true) {
         // Register mapping: Romasm registers → x86 registers
         // For 16-bit mode (boot sector)
         this.reg16Map = {
@@ -19,6 +19,21 @@ class RomasmX86Generator {
             'VII': 'BP', // R6 → BP
             'VIII': 'SP' // R7 → SP
         };
+        
+        // Smart register allocation
+        this.useSmartAllocation = useSmartAllocation;
+        if (useSmartAllocation) {
+            try {
+                const { RomasmRegisterAllocator } = require('./romasm-register-allocator.js');
+                this.allocator = new RomasmRegisterAllocator();
+            } catch (e) {
+                // Fallback to fixed allocation if allocator not available
+                this.useSmartAllocation = false;
+                this.allocator = null;
+            }
+        } else {
+            this.allocator = null;
+        }
         
         // For 32-bit mode (protected mode kernel)
         this.reg32Map = {
@@ -101,7 +116,21 @@ class RomasmX86Generator {
      * @returns {string} Complete boot sector x86 assembly
      */
     generateBootSector(instructions, data = [], labels = {}) {
-        const regMap = this.reg16Map;
+        // Use smart register allocation if enabled
+        let regMap = this.reg16Map;
+        if (this.useSmartAllocation && this.allocator) {
+            // Optimize register allocation using liveness analysis
+            try {
+                const allocation = this.allocator.optimizeAllocation(instructions);
+                // Merge optimized allocation with default map (fallback for unused registers)
+                regMap = { ...this.reg16Map, ...allocation };
+            } catch (e) {
+                // If allocation fails, use default mapping
+                console.warn('Register allocation failed, using default mapping:', e.message);
+                regMap = this.reg16Map;
+            }
+        }
+        
         const bits = 16;
         let asm = '';
         
@@ -287,9 +316,19 @@ class RomasmX86Generator {
                         // Load from immediate address
                         asm += `    MOV ${reg}, [${src.value}]\n`;
                     } else if (src.type === 'immediate') {
-                        asm += `    MOV ${reg}, ${src.value}\n`;
+                        // Optimize: Use XOR to zero register (smaller, faster)
+                        if (src.value === 0 || src.value === '0' || src.value === '0x0') {
+                            asm += `    XOR ${reg}, ${reg}\n`;
+                        } else {
+                            asm += `    MOV ${reg}, ${src.value}\n`;
+                        }
                     } else if (src.type === 'register') {
-                        asm += `    MOV ${reg}, ${regMap[src.value]}\n`;
+                        const srcReg = regMap[src.value];
+                        // Optimize: Skip MOV if source and dest are same
+                        if (reg !== srcReg) {
+                            asm += `    MOV ${reg}, ${srcReg}\n`;
+                        }
+                        // If same, skip (will be removed by peephole optimizer)
                     } else if (src.type === 'label' || src.labelName) {
                         // Loading address of a label (data label)
                         const labelName = src.labelName || this.findLabelName(src.value, labels);

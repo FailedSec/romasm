@@ -3,9 +3,9 @@ BITS 16
 ORG 0x7C00
 
 start:
-    MOV AX, 0
+    XOR AX, AX
     MOV DS, AX
-    MOV AX, 0
+    XOR AX, AX
     MOV SS, AX
     MOV SP, 31744
     CALL bios_clear_screen
@@ -37,7 +37,7 @@ bios_clear_screen:
     RET
 bios_get_key:
     PUSH BX
-    MOV AX, 0
+    XOR AX, AX
     INT 0x16
     POP BX
     RET
