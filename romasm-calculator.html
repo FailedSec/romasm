@@ -471,6 +471,8 @@ RET"></textarea>
     <script src="compiler/romasm-vm.js"></script>
     <script src="calcengine/romasm-math-engine.js"></script>
     <script src="linker/romasm-linker.js"></script>
+    <script src="calcengine/romasm-coordinate-system.js"></script>
+    <script src="calcengine/romasm-steps-manager.js"></script>
     <script src="calcengine/romasm-calculator-engine.js"></script>
     <script src="calcengine/romasm-expression-parser.js"></script>
     <script src="calcengine/romasm-calculator-ui.js"></script>
@@ -903,39 +905,52 @@ PRINT 1  ; Done`,
             plot_sine: `; Plot sin(x) wave using stdlib sin function
 ; Outputs (x, y) pairs that auto-plot on graph
 ; Note: This requires linking with stdlib (sin function)
-; x ranges from 0 to 360 degrees
-LOAD R2, 0      ; x from 0 to 360 (in degrees, scaled by 100)
-LOAD R3, 36000  ; max x (360 degrees scaled by 100)
-LOAD R4, 1000   ; step (10 degrees scaled by 100)
+; Graph window should be set to show -10 to 10 on both axes
+; This plots sin(x) where x is in graph units representing degrees/36
+; So x = -10 to 10 represents -360° to 360°
+
+; Start from x = -1000 (x = -10 in graph units, scaled by 100)
+; End at x = 1000 (x = 10 in graph units, scaled by 100)
+; Step size: 50 (0.5 in graph units, scaled by 100) - larger step for fewer iterations
+LOAD R2, -1000  ; x counter (graph units, scaled by 100)
+LOAD R3, 1000   ; max x (graph units, scaled by 100)
+LOAD R4, 50     ; step size (0.5 graph units, scaled by 100)
+LOAD R5, 0      ; constant 0 for comparison
 
 sine_loop:
-  ; Calculate y = sin(x) using stdlib
-  ; sin function expects: R0 = angle in degrees (scaled by 100)
-  ; Returns: R0 = sin(angle) scaled by 1000
-  LOAD R0, R2   ; x (degrees scaled by 100)
-  CALL sin      ; Call stdlib sin function
-  ; Result in R0 is sin(angle) scaled by 1000
+  ; Check if we're done BEFORE processing (saves steps)
+  CMP R2, R3
+  JGT sine_done  ; If R2 > R3, we're done
+  
+  ; Convert x from graph units to degrees for sin calculation
+  ; x_graph = -10 to 10 represents -360° to 360°
+  ; So: degrees = x_graph * 36
+  ; x_graph is scaled by 100, so: degrees_scaled = x_graph * 36
+  LOAD R0, R2   ; x_graph (scaled by 100)
+  LOAD R1, 36   ; Convert to degrees: x_graph * 36 = degrees_scaled
+  MUL R0, R1    ; R0 = degrees scaled by 100
+  
+  ; Call sin_fast function (optimized for plotting - much faster!)
+  ; Expects degrees scaled by 100, returns sin*1000
+  ; The sin_fast function handles full 0-360 range and negative angles
+  CALL sin_fast ; R0 = sin(angle) scaled by 1000 (fast version for plotting)
+  
   ; Scale result to match graph coordinates (divide by 10 to get scaled by 100)
+  ; sin returns *1000, we need *100 for graph
   LOAD R1, 10
   DIV R0, R1    ; R0 = sin(x) scaled by 100
   
-  ; Convert x from degrees to graph units (divide by 36 to get -10 to 10 range)
-  ; For display: x_graph = (x_degrees - 180) / 18
-  LOAD R5, R2   ; x in degrees
-  LOAD R1, 18000  ; 180 degrees scaled by 100
-  SUB R5, R1    ; x - 180
-  LOAD R1, 18
-  DIV R5, R1    ; (x - 180) / 18, scaled by 100
-  
-  ; Output coordinate pair
-  PRINT R5      ; x (in graph units, scaled by 100)
+  ; Output coordinate pair (x, y) both in graph units scaled by 100
+  PRINT R2      ; x (in graph units, scaled by 100)
   PRINT R0      ; y = sin(x) (scaled by 100)
   
-  ADD R2, R4
-  CMP R2, R3
-  JLE sine_loop
+  ADD R2, R4    ; Increment x
+  JMP sine_loop  ; Continue loop
   
-PRINT 1  ; Done`
+sine_done:
+  ; Done - output final marker
+  LOAD R0, 0
+  PRINT R0  ; Final marker`
         };
         
         // Load example from dropdown
@@ -969,8 +984,9 @@ PRINT 1  ; Done`
                     // Check if code needs stdlib functions
                     const codeUpper = code.toUpperCase();
                     const requiredStdlib = [];
-                    if (codeUpper.includes('CALL SIN')) {
+                    if (codeUpper.includes('CALL SIN') || codeUpper.includes('CALL SIN_FAST')) {
                         requiredStdlib.push('sin');
+                        requiredStdlib.push('sin_fast'); // Include fast version too
                     }
                     if (codeUpper.includes('CALL COS')) {
                         requiredStdlib.push('cos');
@@ -993,7 +1009,21 @@ PRINT 1  ; Done`
                     let result = userResult;
                     if (requiredStdlib.length > 0) {
                         const linker = new RomasmLinker();
-                        const linked = await linker.link(userResult.instructions, requiredStdlib);
+                        // Force reload to ensure we get the latest sin_fast function
+                        const linked = await linker.link(userResult.instructions, requiredStdlib, true);
+                        
+                        // Debug: Check if sin_fast is available
+                        const codeUpper = code.toUpperCase();
+                        if (codeUpper.includes('CALL SIN_FAST')) {
+                            console.log('All available functions:', Object.keys(linker.functionLabels));
+                            if (linker.functionLabels['sin_fast'] !== undefined) {
+                                console.log('✓ sin_fast found at address:', linker.functionLabels['sin_fast']);
+                            } else {
+                                console.error('✗ sin_fast NOT FOUND in linker!');
+                                consoleOutput.textContent += `\n⚠ ERROR: sin_fast function not found in stdlib!\n`;
+                            }
+                        }
+                        
                         result = {
                             success: true,
                             instructions: linked.instructions,
@@ -1015,16 +1045,10 @@ PRINT 1  ; Done`
                     }
                     
                     // Create a coordinate converter wrapper for the canvas
-                    // This converts graph coordinates to screen coordinates
+                    // This converts graph coordinates to screen coordinates using the coordinate system
                     let graphCanvasContext = null;
-                    if (canvasContext && engine && calculatorUI && calculatorUI.canvas) {
-                        const width = calculatorUI.canvas.width;
-                        const height = calculatorUI.canvas.height;
-                        const padding = 20;
-                        const graphWidth = width - 2 * padding;
-                        const graphHeight = height - 2 * padding;
-                        const xScale = graphWidth / (engine.xMax - engine.xMin);
-                        const yScale = graphHeight / (engine.yMax - engine.yMin);
+                    if (canvasContext && engine && calculatorUI && calculatorUI.canvas && calculatorUI.coords) {
+                        const coords = calculatorUI.coords;
                         
                         // Create wrapper that converts graph coords to screen coords
                         graphCanvasContext = {
@@ -1033,15 +1057,15 @@ PRINT 1  ; Done`
                                 // x, y are in graph coordinates (scaled by 100)
                                 const graphX = x / 100.0;
                                 const graphY = y / 100.0;
-                                const screenX = padding + (graphX - engine.xMin) * xScale;
-                                const screenY = padding + (engine.yMax - graphY) * yScale;
+                                const screenX = coords.graphToScreenX(graphX);
+                                const screenY = coords.graphToScreenY(graphY);
                                 canvasContext.moveTo(screenX, screenY);
                             },
                             lineTo: (x, y) => {
                                 const graphX = x / 100.0;
                                 const graphY = y / 100.0;
-                                const screenX = padding + (graphX - engine.xMin) * xScale;
-                                const screenY = padding + (engine.yMax - graphY) * yScale;
+                                const screenX = coords.graphToScreenX(graphX);
+                                const screenY = coords.graphToScreenY(graphY);
                                 canvasContext.lineTo(screenX, screenY);
                             },
                             stroke: () => canvasContext.stroke(),
@@ -1062,15 +1086,14 @@ PRINT 1  ; Done`
                     const vm = new RomasmVM(graphCanvasContext || canvasContext);
                     vm.loadProgram(result.instructions);
                     
-                    let output = 'Running...\n\n';
-                    let steps = 0;
-                    const maxSteps = 10000;
-                    let hasDrawing = false;
-                    let graphPoints = []; // Store points for graphing
+                    // Initialize Steps Manager for intelligent execution
+                    const stepsManager = new RomasmStepsManager();
                     
                     // Check if code uses drawing opcodes
                     const drawingOpcodes = ['MOV', 'DRW', 'STR', 'CLR'];
                     const codeUpperDraw = code.toUpperCase();
+                    let hasDrawing = false;
+                    
                     if (drawingOpcodes.some(op => codeUpperDraw.includes(op))) {
                         hasDrawing = true;
                         // Switch to graphing mode
@@ -1094,13 +1117,46 @@ PRINT 1  ; Done`
                         }
                     }
                     
-                    while (!vm.halted && steps < maxSteps) {
-                        const stepResult = vm.step();
-                        if (stepResult.error) {
-                            output += `\nError: ${stepResult.error}`;
-                            break;
+                    // Use Steps Manager for intelligent execution
+                    let output = 'Running...\n\n';
+                    let executionResult;
+                    
+                    try {
+                        // Progress callback for UI updates
+                        const onProgress = (progress) => {
+                            if (progress.percent > 0 && progress.percent % 10 === 0) {
+                                // Update output every 10% (not too spammy)
+                                consoleOutput.textContent = `Running... ${Math.floor(progress.percent)}% (${progress.steps} steps)\n`;
+                            }
+                        };
+                        
+                        executionResult = await stepsManager.execute(vm, code, onProgress);
+                        
+                        // Debug: Check if VM halted properly
+                        if (!vm.halted && executionResult.steps >= executionResult.analysis.maxSteps) {
+                            // VM didn't halt - might be infinite loop
+                            output += `\n⚠ WARNING: Script did not halt after ${executionResult.steps} steps!`;
+                            output += `\nThis suggests an infinite loop. Check your loop termination conditions.`;
+                            output += `\nCurrent PC: ${vm.pc}, Registers: R0=${vm.registers['I']}, R1=${vm.registers['II']}, R2=${vm.registers['III']}`;
                         }
-                        steps++;
+                        
+                        if (executionResult.error) {
+                            output += `\n⚠ ${executionResult.error}`;
+                        } else if (vm.halted) {
+                            output += `\n✓ Execution completed successfully`;
+                        }
+                        
+                        output += `\nTotal steps: ${executionResult.steps}`;
+                        if (executionResult.chunks) {
+                            output += ` (${executionResult.chunks} chunks)`;
+                        }
+                        if (executionResult.analysis) {
+                            output += `\nScript type: ${executionResult.analysis.type}`;
+                        }
+                    } catch (error) {
+                        output += `\nError: ${error.message}`;
+                        console.error('Execution error:', error);
+                        executionResult = { success: false, steps: 0, output: [], error: error.message };
                     }
                     
                     // Stroke if we were drawing
@@ -1114,6 +1170,11 @@ PRINT 1  ; Done`
                     // Check if output contains coordinate pairs (for graphing)
                     // If PRINT outputs pairs of numbers, treat them as (x, y) coordinates
                     // Also check if we should graph even if drawing opcodes were used
+                    if (executionResult && executionResult.output && executionResult.output.length >= 2) {
+                        // Use output from execution result
+                        vm.output = executionResult.output;
+                    }
+                    
                     if (vm.output.length >= 2) {
                         // Try to interpret output as coordinates
                         // Look for patterns: even number of outputs might be coordinate pairs
@@ -1146,61 +1207,70 @@ PRINT 1  ; Done`
                                 // Draw base graph first
                                 calculatorUI.drawGraph();
                                 
-                                // Plot points on graph
-                                if (canvasContext && calculatorUI.canvas) {
-                                    const width = calculatorUI.canvas.width;
-                                    const height = calculatorUI.canvas.height;
-                                    const padding = 20;
-                                    const graphWidth = width - 2 * padding;
-                                    const graphHeight = height - 2 * padding;
-                                    
-                                    // Get engine window bounds
+                                // Plot points on graph using coordinate system
+                                if (canvasContext && calculatorUI.canvas && calculatorUI.coords) {
+                                    const coordSystem = calculatorUI.coords;
                                     const engine = calculatorUI.engine;
-                                    const xScale = graphWidth / (engine.xMax - engine.xMin);
-                                    const yScale = graphHeight / (engine.yMax - engine.yMin);
                                     
-                                    // Draw points as a connected line
-                                    canvasContext.strokeStyle = '#00f';
-                                    canvasContext.fillStyle = '#00f';
-                                    canvasContext.lineWidth = 2;
-                                    canvasContext.beginPath();
+                                    // Sort points by x coordinate to ensure proper line connection
+                                    coords.sort((a, b) => a.x - b.x);
                                     
-                                    coords.forEach((point, idx) => {
-                                        const screenX = padding + (point.x - engine.xMin) * xScale;
-                                        const screenY = padding + (engine.yMax - point.y) * yScale;
+                                    // Filter out invalid points and points outside bounds
+                                    const validCoords = coords.filter(point => {
+                                        return isFinite(point.x) && isFinite(point.y) && 
+                                               !isNaN(point.x) && !isNaN(point.y) &&
+                                               point.x >= engine.xMin && point.x <= engine.xMax &&
+                                               point.y >= engine.yMin && point.y <= engine.yMax;
+                                    });
+                                    
+                                    if (validCoords.length > 0) {
+                                        // Draw points as a connected smooth line using coordinate system
+                                        canvasContext.strokeStyle = '#00f';
+                                        canvasContext.fillStyle = '#00f';
+                                        canvasContext.lineWidth = 2;
+                                        canvasContext.lineJoin = 'round';
+                                        canvasContext.lineCap = 'round';
+                                        canvasContext.beginPath();
                                         
-                                        if (screenX >= padding && screenX <= width - padding &&
-                                            screenY >= padding && screenY <= height - padding) {
-                                            if (idx === 0) {
-                                                canvasContext.moveTo(screenX, screenY);
-                                            } else {
-                                                canvasContext.lineTo(screenX, screenY);
+                                        validCoords.forEach((point, idx) => {
+                                            const screenX = coordSystem.graphToScreenX(point.x);
+                                            const screenY = coordSystem.graphToScreenY(point.y);
+                                            
+                                            if (coordSystem.isInGraphArea(screenX, screenY)) {
+                                                if (idx === 0) {
+                                                    canvasContext.moveTo(screenX, screenY);
+                                                } else {
+                                                    // Check if there's a large gap (discontinuity)
+                                                    const prevPoint = validCoords[idx - 1];
+                                                    const gap = Math.abs(point.x - prevPoint.x);
+                                                    // If gap is too large (> 1 unit), start a new path
+                                                    if (gap > 1.0) {
+                                                        canvasContext.moveTo(screenX, screenY);
+                                                    } else {
+                                                        canvasContext.lineTo(screenX, screenY);
+                                                    }
+                                                }
                                             }
-                                        }
-                                    });
-                                    
-                                    canvasContext.stroke();
-                                    
-                                    // Also draw individual points
-                                    coords.forEach((point) => {
-                                        const screenX = padding + (point.x - engine.xMin) * xScale;
-                                        const screenY = padding + (engine.yMax - point.y) * yScale;
+                                        });
                                         
-                                        if (screenX >= padding && screenX <= width - padding &&
-                                            screenY >= padding && screenY <= height - padding) {
-                                            canvasContext.fillRect(screenX - 2, screenY - 2, 4, 4);
-                                        }
-                                    });
-                                    
-                                    hasDrawing = true;
-                                    output += `\n✓ Plotted ${coords.length} points on graph`;
+                                        canvasContext.stroke();
+                                        
+                                        // Optionally draw individual points (smaller, for debugging)
+                                        // Uncomment to see individual points:
+                                        // validCoords.forEach((point) => {
+                                        //     const screenX = padding + (point.x - engine.xMin) * xScale;
+                                        //     const screenY = padding + (engine.yMax - point.y) * yScale;
+                                        //     canvasContext.fillRect(screenX - 1, screenY - 1, 2, 2);
+                                        // });
+                                        
+                                        hasDrawing = true;
+                                        output += `\n✓ Plotted ${validCoords.length} points on graph (${coords.length} total, ${coords.length - validCoords.length} filtered)`;
+                                    } else {
+                                        output += `\n⚠ No valid points to plot (all ${coords.length} points were invalid or out of bounds)`;
+                                    }
                                 }
                             }
                         }
-                    }
-                    
-                    if (steps >= maxSteps) {
-                        output += '\nWarning: Maximum steps exceeded';
                     }
                     
                     // Display output
