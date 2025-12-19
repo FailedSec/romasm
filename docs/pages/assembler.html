@@ -31,7 +31,12 @@
 
             <section>
                 <h2>Overview</h2>
-                <p>The Romasm Assembler (<code>romasm-assembler.js</code>) translates human-readable Romasm assembly code into executable instruction objects that the VM can execute.</p>
+                <p>The Romasm Assembler (<code>romasm-assembler.js</code>) translates human-readable Romasm assembly code into executable instruction objects.</p>
+                <p><strong>Two Output Paths:</strong></p>
+                <ul>
+                    <li><strong>VM Instructions:</strong> For execution in the browser VM</li>
+                    <li><strong>x86 Assembly:</strong> For compilation to real hardware (via <a href="x86-generator.html">x86 Generator</a> and <a href="romanos.html">RomanOS</a>)</li>
+                </ul>
             </section>
 
             <section>
@@ -164,9 +169,47 @@ sin → { type: 'label', value: 0, labelName: 'sin' }  // Unresolved, for linker
             </section>
 
             <section>
+                <h2>From Assembly to Execution</h2>
+                <div class="process-box">
+                    <h3>Path 1: Browser VM (Default)</h3>
+                    <pre><code>Romasm Source
+  ↓
+Assembler (romasm-assembler.js)
+  ↓
+VM Instructions
+  ↓
+Virtual Machine (romasm-vm.js)
+  ↓
+Execution in Browser</code></pre>
+                </div>
+
+                <div class="process-box">
+                    <h3>Path 2: Real Hardware (RomanOS)</h3>
+                    <pre><code>Romasm Source
+  ↓
+Assembler (romasm-assembler.js)
+  ↓
+VM Instructions
+  ↓
+x86 Generator (romasm-x86-generator.js)
+  ↓
+x86 Assembly
+  ↓
+NASM → Machine Code
+  ↓
+Bootable Image
+  ↓
+Real Hardware / QEMU</code></pre>
+                    <p><strong><a href="romanos.html">Learn more about RomanOS →</a></strong></p>
+                </div>
+            </section>
+
+            <section>
                 <h2>Related Documentation</h2>
                 <ul style="margin: 1rem 0; padding-left: 2rem;">
                     <li><a href="vm.html">Virtual Machine</a> - How instructions are executed</li>
+                    <li><a href="x86-generator.html">x86 Generator</a> - Compile to real hardware</li>
+                    <li><a href="romanos.html">RomanOS</a> - Build a real OS in Romasm</li>
                     <li><a href="linker.html">Linker</a> - How stdlib functions are linked</li>
                     <li><a href="instruction-set.html">Instruction Set</a> - All available instructions</li>
                 </ul>

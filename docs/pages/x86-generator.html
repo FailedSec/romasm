@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>x86 Code Generator - Romasm Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .code-block {
+            background: var(--code-background);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        .code-block code {
+            font-family: 'Courier New', monospace;
+            color: var(--code-color);
+        }
+        .reg-mapping {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+        .reg-item {
+            background: var(--surface);
+            padding: 0.5rem;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>x86 Code Generator</h1>
+            <p class="subtitle">How Romasm compiles to real x86 machine code</p>
+        </header>
+
+        <main>
+            <section class="info-section">
+                <h2>Overview</h2>
+                <div class="info-content">
+                    <p>The <strong>x86 Code Generator</strong> is the component that converts Romasm VM instructions into real x86 assembly code. This enables Romasm programs to run on actual hardware instead of just in a virtual machine.</p>
+                    
+                    <p><strong>Key Feature:</strong> Your Romasm code is compiled to native x86 assembly, assembled by NASM, and can run on real processors!</p>
+                </div>
+            </section>
+
+            <section class="info-section">
+                <h2>Register Mapping</h2>
+                <div class="info-content">
+                    <p>Romasm registers are mapped to x86 registers:</p>
+                    
+                    <h3>16-bit Mode (Boot Sectors)</h3>
+                    <div class="reg-mapping">
+                        <div class="reg-item"><code>R0 (I)</code> → <code>AX</code></div>
+                        <div class="reg-item"><code>R1 (II)</code> → <code>BX</code></div>
+                        <div class="reg-item"><code>R2 (III)</code> → <code>CX</code></div>
+                        <div class="reg-item"><code>R3 (IV)</code> → <code>DX</code></div>
+                        <div class="reg-item"><code>R4 (V)</code> → <code>SI</code></div>
+                        <div class="reg-item"><code>R5 (VI)</code> → <code>DI</code></div>
+                        <div class="reg-item"><code>R6 (VII)</code> → <code>BP</code></div>
+                        <div class="reg-item"><code>R7 (VIII)</code> → <code>SP</code></div>
+                    </div>
+
+                    <h3>32-bit Mode (Protected Mode)</h3>
+                    <div class="reg-mapping">
+                        <div class="reg-item"><code>R0 (I)</code> → <code>EAX</code></div>
+                        <div class="reg-item"><code>R1 (II)</code> → <code>EBX</code></div>
+                        <div class="reg-item"><code>R2 (III)</code> → <code>ECX</code></div>
+                        <div class="reg-item"><code>R3 (IV)</code> → <code>EDX</code></div>
+                        <div class="reg-item"><code>R4 (V)</code> → <code>ESI</code></div>
+                        <div class="reg-item"><code>R5 (VI)</code> → <code>EDI</code></div>
+                        <div class="reg-item"><code>R6 (VII)</code> → <code>EBP</code></div>
+                        <div class="reg-item"><code>R7 (VIII)</code> → <code>ESP</code></div>
+                    </div>
+
+                    <p><strong>Note:</strong> With smart register allocation enabled, the mapping can be optimized based on register liveness and interference analysis.</p>
+                </div>
+            </section>
+
+            <section class="info-section">
+                <h2>Instruction Translation</h2>
+                <div class="info-content">
+                    <p>Romasm VM instructions are translated to x86 assembly:</p>
+                    
+                    <div class="code-block">
+                        <code>
+<strong>Romasm</strong>              <strong>→</strong>  <strong>x86 Assembly</strong><br>
+LOAD R0, 42           →  MOV AX, 42<br>
+LOAD R0, 0            →  XOR AX, AX  (optimized)<br>
+ADD R0, R1            →  ADD AX, BX<br>
+LOAD R0, [R1]         →  MOV AX, [BX]<br>
+LOAD R0, [R1]         →  MOV AL, BYTE [BX] (8-bit)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;XOR AH, AH (zero-extend)<br>
+CALL bios_putc        →  CALL bios_putc<br>
+INT 0x10              →  INT 0x10<br>
+CMP R0, R1            →  CMP AX, BX<br>
+JEQ label             →  JE label<br>
+JMP label             →  JMP label
+                        </code>
+                    </div>
+                </div>
+            </section>
+
+            <section class="info-section">
+                <h2>Boot Sector Generation</h2>
+                <div class="info-content">
+                    <p>The generator creates proper boot sectors with:</p>
+                    
+                    <ul>
+                        <li><strong>BITS 16</strong> - 16-bit mode for boot sectors</li>
+                        <li><strong>ORG 0x7C00</strong> - Boot sector load address</li>
+                        <li><strong>Code Section</strong> - All instructions</li>
+                        <li><strong>Data Section</strong> - DB directives for strings/constants</li>
+                        <li><strong>Boot Signature</strong> - 0xAA55 at offset 510</li>
+                    </ul>
+
+                    <h3>Example Output Structure</h3>
+                    <div class="code-block">
+                        <code>
+; Boot sector generated from Romasm<br>
+BITS 16<br>
+ORG 0x7C00<br><br>
+
+start:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;XOR AX, AX<br>
+&nbsp;&nbsp;&nbsp;&nbsp;MOV DS, AX<br>
+&nbsp;&nbsp;&nbsp;&nbsp;... (code) ...<br><br>
+
+bios_putc:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;PUSH BX<br>
+&nbsp;&nbsp;&nbsp;&nbsp;... (BIOS functions) ...<br><br>
+
+; Data section<br>
+msg:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;db 72, 101, 108, ...<br><br>
+
+; Boot signature<br>
+times 510 - ($ - $$) db 0<br>
+dw 0xAA55
+                        </code>
+                    </div>
+                </div>
+            </section>
+
+            <section class="info-section">
+                <h2>Smart Register Allocation</h2>
+                <div class="info-content">
+                    <p>When enabled, the generator uses advanced register allocation:</p>
+                    
+                    <ul>
+                        <li><strong>Liveness Analysis:</strong> Tracks when registers are first and last used</li>
+                        <li><strong>Interference Graph:</strong> Identifies which registers conflict</li>
+                        <li><strong>Greedy Allocation:</strong> Assigns registers to minimize conflicts</li>
+                        <li><strong>Register Reuse:</strong> Reuses freed registers when possible</li>
+                    </ul>
+
+                    <p><strong>Benefits:</strong> Better register utilization, fewer conflicts, reduced spills, improved code quality</p>
+                </div>
+            </section>
+
+            <section class="info-section">
+                <h2>Special Features</h2>
+                <div class="info-content">
+                    <h3>8-bit Register Support</h3>
+                    <p>Correctly handles byte operations:</p>
+                    <div class="code-block">
+                        <code>
+LOAD8 R0, [R1]  →  MOV AL, BYTE [BX]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;XOR AH, AH  ; zero-extend
+                        </code>
+                    </div>
+
+                    <h3>Memory Addressing</h3>
+                    <p>Supports various addressing modes:</p>
+                    <div class="code-block">
+                        <code>
+LOAD R0, 42          ; Immediate<br>
+LOAD R0, R1          ; Register<br>
+LOAD R0, [R1]        ; Memory via register<br>
+LOAD R0, msg         ; Label address<br>
+LOAD R0, [0x1234]    ; Absolute address
+                        </code>
+                    </div>
+
+                    <h3>BIOS Interrupt Handling</h3>
+                    <p>Correctly generates BIOS interrupt calls:</p>
+                    <div class="code-block">
+                        <code>
+INT 0x10  ; Video services<br>
+INT 0x16  ; Keyboard services<br>
+INT 0x13  ; Disk services
+                        </code>
+                    </div>
+                </div>
+            </section>
+
+            <section class="info-section">
+                <h2>Usage</h2>
+                <div class="info-content">
+                    <p>The x86 generator is automatically used by the build system:</p>
+                    
+                    <div class="code-block">
+                        <code>
+const generator = new RomasmX86Generator(true);  // Enable smart allocation<br>
+const x86Asm = generator.generateBootSector(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;instructions,  // From assembler<br>
+&nbsp;&nbsp;&nbsp;&nbsp;data,          // Data bytes<br>
+&nbsp;&nbsp;&nbsp;&nbsp;labels         // Label addresses<br>
+);
+                        </code>
+                    </div>
+                </div>
+            </section>
+
+            <section class="info-section">
+                <h2>📖 Related Documentation</h2>
+                <div class="info-content">
+                    <ul>
+                        <li><a href="romanos.html">RomanOS</a> - Complete OS in Romasm</li>
+                        <li><a href="optimizer.html">Optimizer</a> - Code optimizations</li>
+                        <li><a href="assembler.html">Assembler</a> - How Romasm is assembled</li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p>Romasm Documentation - x86 Code Generator</p>
+        </footer>
+    </div>
+</body>
+</html>

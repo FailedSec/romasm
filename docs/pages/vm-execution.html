@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VM Execution & Step Limits - Documentation</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../../nav.css">
+    <style>
+        .info-box {
+            background: var(--surface);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+        .code-example {
+            background: var(--background);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1rem;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body class="has-sidebar">
+    <script src="../../nav.js"></script>
+    <div class="container">
+        <header>
+            <h1>VM Execution & Step Limits</h1>
+            <p class="subtitle">Understanding how the Romasm VM executes programs and why step limits exist</p>
+        </header>
+
+        <main>
+            <nav style="margin-bottom: 2rem;">
+                <a href="../index.html">← Back to Documentation</a>
+            </nav>
+
+            <section>
+                <h2>What is a "Step"?</h2>
+                <p>A <strong>step</strong> is the execution of a single Romasm instruction by the Virtual Machine.</p>
+                
+                <div class="info-box">
+                    <h3>Example:</h3>
+                    <div class="code-example">
+LOAD R0, 10    ; Step 1: Load instruction
+ADD R0, R1     ; Step 2: Add instruction
+PRINT R0       ; Step 3: Print instruction
+                    </div>
+                    <p>This program takes <strong>3 steps</strong> to execute.</p>
+                </div>
+
+                <p>Each instruction type takes exactly 1 step, regardless of complexity:</p>
+                <ul>
+                    <li><code>LOAD R0, 10</code> = 1 step</li>
+                    <li><code>ADD R0, R1</code> = 1 step</li>
+                    <li><code>CALL sin</code> = 1 step (but the sin function itself takes many steps)</li>
+                    <li><code>JMP loop</code> = 1 step</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Why Do We Have Step Limits?</h2>
+                <div class="info-box">
+                    <h3>Safety First!</h3>
+                    <p>Step limits prevent <strong>infinite loops</strong> from freezing your browser.</p>
+                    <p>Without limits, a buggy program like this would run forever:</p>
+                    <div class="code-example">
+loop:
+  PRINT R0
+  JMP loop  ; Infinite loop - never stops!
+                    </div>
+                    <p>This would freeze your browser tab, requiring you to force-close it.</p>
+                </div>
+
+                <h3>Default Limits:</h3>
+                <ul>
+                    <li><strong>Regular scripts:</strong> 10,000 steps</li>
+                    <li><strong>Plotting scripts:</strong> 50,000 steps</li>
+                    <li><strong>Plotting with trig functions:</strong> 200,000 steps</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>How Many Steps Do Programs Take?</h2>
+                
+                <h3>Simple Programs:</h3>
+                <ul>
+                    <li>Basic arithmetic: 5-10 steps</li>
+                    <li>Factorial of 5: ~50 steps</li>
+                    <li>Fibonacci sequence (10 numbers): ~100 steps</li>
+                </ul>
+
+                <h3>Complex Programs:</h3>
+                <ul>
+                    <li>Sine function call: ~100-200 steps (includes reduction loops, Taylor series)</li>
+                    <li>Plotting sine wave (41 points): ~8,000-16,000 steps</li>
+                    <li>Large loops with function calls: Can easily exceed 10,000 steps</li>
+                </ul>
+
+                <div class="info-box">
+                    <h3>Why Plotting Takes So Many Steps:</h3>
+                    <p>When plotting a sine wave:</p>
+                    <ol>
+                        <li>Loop runs 41 iterations (one per point)</li>
+                        <li>Each iteration calls <code>CALL sin</code></li>
+                        <li>Each sin call does:
+                            <ul>
+                                <li>Angle reduction (multiple loops)</li>
+                                <li>Taylor series calculation (many operations)</li>
+                                <li>Scaling and conversion</li>
+                            </ul>
+                        </li>
+                        <li>Each iteration also does PRINT (output coordinates)</li>
+                    </ol>
+                    <p><strong>Total:</strong> 41 × ~200 steps = ~8,200 steps minimum</p>
+                    <p>With overhead, it can easily reach 15,000+ steps!</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>Chunked Execution</h2>
+                <p>For plotting scripts, Romasm uses <strong>chunked execution</strong>:</p>
+                <ul>
+                    <li>Executes in chunks of 5,000-10,000 steps</li>
+                    <li>Yields to the browser between chunks (prevents freezing)</li>
+                    <li>Allows UI updates during long-running scripts</li>
+                    <li>Total limit: 100,000-200,000 steps for plotting</li>
+                </ul>
+
+                <div class="info-box">
+                    <h3>How It Works:</h3>
+                    <ol>
+                        <li>Execute 5,000 steps</li>
+                        <li>Yield to browser (allows UI updates)</li>
+                        <li>Continue with next 5,000 steps</li>
+                        <li>Repeat until program completes or limit reached</li>
+                    </ol>
+                </div>
+            </section>
+
+            <section>
+                <h2>What Happens When the Limit is Reached?</h2>
+                <p>If a program exceeds the step limit:</p>
+                <ul>
+                    <li>Execution stops immediately</li>
+                    <li>A warning message is displayed</li>
+                    <li>Any output generated so far is shown</li>
+                    <li>The browser remains responsive (doesn't freeze)</li>
+                </ul>
+
+                <div class="info-box">
+                    <h3>Example Warning:</h3>
+                    <div class="code-example">
+Warning: Maximum steps exceeded
+Final Registers:
+RII: 1000
+RIV: 500
+                    </div>
+                    <p>This means the program was stopped at the limit, but you can see what it computed so far.</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>Optimizing Your Programs</h2>
+                <p>To reduce step counts:</p>
+                <ul>
+                    <li><strong>Use larger step sizes</strong> in loops (fewer iterations)</li>
+                    <li><strong>Avoid nested loops</strong> when possible</li>
+                    <li><strong>Simplify calculations</strong> (use approximations for plotting)</li>
+                    <li><strong>Break large programs</strong> into smaller functions</li>
+                </ul>
+
+                <div class="info-box">
+                    <h3>Example: Optimized Sine Wave Plotting</h3>
+                    <p><strong>Before:</strong> Step size 20 (0.2 units) = 101 iterations = ~20,000 steps</p>
+                    <p><strong>After:</strong> Step size 50 (0.5 units) = 41 iterations = ~8,000 steps</p>
+                    <p>Still smooth enough for visualization, but much faster!</p>
+                </div>
+            </section>
+
+            <section>
+                <h2>Related Documentation</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="vm.html">Virtual Machine</a> - VM architecture details</li>
+                    <li><a href="instruction-set.html">Instruction Set</a> - All available instructions</li>
+                    <li><a href="stdlib-trig.html">Trigonometric Functions</a> - Why sin/cos take many steps</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+            <p><a href="../index.html">← Back to Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+

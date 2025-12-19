@@ -417,6 +417,112 @@ DRAW R0, R1          ; Draw line
 STROKE               ; Render it</code></pre>
                 </div>
             </section>
+
+            <section class="category">
+                <h2>System Instructions (RomanOS)</h2>
+                <p style="margin-bottom: 1rem; color: var(--text-secondary);">
+                    These instructions are available when building bootable OS programs with <a href="romanos.html">RomanOS</a>. They compile to real x86 system instructions.
+                </p>
+                <table class="instruction-table">
+                    <thead>
+                        <tr>
+                            <th>Instruction</th>
+                            <th>Opcode</th>
+                            <th>Operands</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>INT</code></td>
+                            <td><span class="opcode">INT</span></td>
+                            <td>number</td>
+                            <td>Software interrupt (e.g., BIOS calls: <code>INT 0x10</code> for video, <code>INT 0x16</code> for keyboard)</td>
+                        </tr>
+                        <tr>
+                            <td><code>IRET</code></td>
+                            <td><span class="opcode">IRET</span></td>
+                            <td>(none)</td>
+                            <td>Return from interrupt</td>
+                        </tr>
+                        <tr>
+                            <td><code>CLI</code></td>
+                            <td><span class="opcode">CLI</span></td>
+                            <td>(none)</td>
+                            <td>Clear interrupt flag (disable interrupts)</td>
+                        </tr>
+                        <tr>
+                            <td><code>STI</code></td>
+                            <td><span class="opcode">STI</span></td>
+                            <td>(none)</td>
+                            <td>Set interrupt flag (enable interrupts)</td>
+                        </tr>
+                        <tr>
+                            <td><code>HLT</code></td>
+                            <td><span class="opcode">HLT</span></td>
+                            <td>(none)</td>
+                            <td>Halt CPU (used in bootable OS to stop execution)</td>
+                        </tr>
+                        <tr>
+                            <td><code>NOP</code></td>
+                            <td><span class="opcode">NOP</span></td>
+                            <td>(none)</td>
+                            <td>No operation (useful for loops and delays)</td>
+                        </tr>
+                        <tr>
+                            <td><code>IN</code></td>
+                            <td><span class="opcode">IN</span></td>
+                            <td>reg, port</td>
+                            <td>Input from I/O port</td>
+                        </tr>
+                        <tr>
+                            <td><code>OUT</code></td>
+                            <td><span class="opcode">OUT</span></td>
+                            <td>port, reg</td>
+                            <td>Output to I/O port</td>
+                        </tr>
+                        <tr>
+                            <td><code>MOV_SEG</code></td>
+                            <td><span class="opcode">MSEG</span></td>
+                            <td>seg_reg, src</td>
+                            <td>Move to segment register (DS, SS, ES, etc.)</td>
+                        </tr>
+                        <tr>
+                            <td><code>LOAD8</code></td>
+                            <td><span class="opcode">L8</span></td>
+                            <td>reg, src</td>
+                            <td>Load 8-bit value (for byte operations)</td>
+                        </tr>
+                        <tr>
+                            <td><code>STORE8</code></td>
+                            <td><span class="opcode">X8</span></td>
+                            <td>src, dst</td>
+                            <td>Store 8-bit value</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="example">
+                    <strong>Example: BIOS Interrupt Call</strong>
+                    <pre><code>; Clear screen using BIOS interrupt 0x10
+LOAD R0, 3          ; Video mode 3 (text mode)
+MOV AX, R0          ; Set up AX register
+INT 0x10            ; Call BIOS video interrupt</code></pre>
+                </div>
+                <p style="margin-top: 1rem;">
+                    <strong>Note:</strong> These instructions require <a href="romanos.html">RomanOS</a> to compile to x86. 
+                    In the browser VM, some may be emulated or unavailable.
+                </p>
+            </section>
+
+            <section>
+                <h2>Related Documentation</h2>
+                <ul style="margin: 1rem 0; padding-left: 2rem;">
+                    <li><a href="romanos.html">RomanOS</a> - Build a real OS using these system instructions</li>
+                    <li><a href="x86-generator.html">x86 Generator</a> - How Romasm compiles to x86</li>
+                    <li><a href="syntax.html">Syntax</a> - Assembly syntax and conventions</li>
+                    <li><a href="registers.html">Registers</a> - Understanding the register system</li>
+                </ul>
+            </section>
         </main>
 
         <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-secondary);">
