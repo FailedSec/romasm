@@ -15,6 +15,9 @@ class RomasmCalculatorUI {
         this.secondKey = false; // For 2nd key functions
         this.alphaKey = false; // For alpha key functions
         
+        // Coordinate system (will be initialized after canvas is created)
+        this.coords = null;
+        
         // Calculator mode state
         this.calculatorExpression = '';
         this.calculatorResult = null;
@@ -132,6 +135,20 @@ class RomasmCalculatorUI {
         this.canvas = document.getElementById('calc-canvas');
         if (this.canvas) {
             this.ctx = this.canvas.getContext('2d');
+            // Initialize coordinate system
+            this.coords = new RomasmCoordinateSystem(
+                this.canvas.width,
+                this.canvas.height,
+                20 // padding
+            );
+            // Set initial window bounds (will center origin)
+            this.coords.setWindow(
+                this.engine.xMin,
+                this.engine.xMax,
+                this.engine.yMin,
+                this.engine.yMax,
+                true // center origin
+            );
             // Make canvas accessible globally for console
             window.calculatorCanvas = this.canvas;
             window.calculatorCanvasContext = this.ctx;
@@ -752,17 +769,20 @@ class RomasmCalculatorUI {
     }
     
     drawGraph() {
-        if (!this.ctx || !this.canvas) return;
+        if (!this.ctx || !this.canvas || !this.coords) return;
+        
+        // Update coordinate system with current engine bounds
+        this.coords.setWindow(
+            this.engine.xMin,
+            this.engine.xMax,
+            this.engine.yMin,
+            this.engine.yMax,
+            true // center origin at (0,0)
+        );
         
         const width = this.canvas.width;
         const height = this.canvas.height;
-        const padding = 20;
-        const graphWidth = width - 2 * padding;
-        const graphHeight = height - 2 * padding;
-        
-        // Calculate scaling
-        const xScale = graphWidth / (this.engine.xMax - this.engine.xMin);
-        const yScale = graphHeight / (this.engine.yMax - this.engine.yMin);
+        const padding = this.coords.padding;
         
         // Clear background (but preserve any console drawings)
         // Only clear if we're not preserving console drawings
@@ -775,43 +795,59 @@ class RomasmCalculatorUI {
         this.ctx.strokeStyle = '#ddd';
         this.ctx.lineWidth = 1;
         
+        const gridLines = this.coords.getGridLines();
+        
         // Vertical grid lines
-        for (let x = Math.ceil(this.engine.xMin); x <= Math.floor(this.engine.xMax); x++) {
-            const screenX = padding + (x - this.engine.xMin) * xScale;
-            this.ctx.beginPath();
-            this.ctx.moveTo(screenX, padding);
-            this.ctx.lineTo(screenX, height - padding);
-            this.ctx.stroke();
+        for (const x of gridLines.vertical) {
+            const screenX = this.coords.graphToScreenX(x);
+            if (this.coords.isInGraphArea(screenX, padding)) {
+                this.ctx.beginPath();
+                this.ctx.moveTo(screenX, padding);
+                this.ctx.lineTo(screenX, height - padding);
+                this.ctx.stroke();
+            }
         }
         
         // Horizontal grid lines
-        for (let y = Math.ceil(this.engine.yMin); y <= Math.floor(this.engine.yMax); y++) {
-            const screenY = padding + (this.engine.yMax - y) * yScale;
-            this.ctx.beginPath();
-            this.ctx.moveTo(padding, screenY);
-            this.ctx.lineTo(width - padding, screenY);
-            this.ctx.stroke();
+        for (const y of gridLines.horizontal) {
+            const screenY = this.coords.graphToScreenY(y);
+            if (this.coords.isInGraphArea(padding, screenY)) {
+                this.ctx.beginPath();
+                this.ctx.moveTo(padding, screenY);
+                this.ctx.lineTo(width - padding, screenY);
+                this.ctx.stroke();
+            }
         }
         
-        // Draw axes
+        // Draw axes (crosshair at origin)
         this.ctx.strokeStyle = '#000';
         this.ctx.lineWidth = 2;
         
-        const xAxisY = padding + (this.engine.yMax - 0) * yScale;
-        const yAxisX = padding + (0 - this.engine.xMin) * xScale;
+        const axes = this.coords.getAxisPositions();
         
-        if (xAxisY >= padding && xAxisY <= height - padding) {
+        // X-axis (horizontal line at y=0)
+        if (axes.xAxisY >= padding && axes.xAxisY <= height - padding) {
             this.ctx.beginPath();
-            this.ctx.moveTo(padding, xAxisY);
-            this.ctx.lineTo(width - padding, xAxisY);
+            this.ctx.moveTo(padding, axes.xAxisY);
+            this.ctx.lineTo(width - padding, axes.xAxisY);
             this.ctx.stroke();
         }
         
-        if (yAxisX >= padding && yAxisX <= width - padding) {
+        // Y-axis (vertical line at x=0)
+        if (axes.yAxisX >= padding && axes.yAxisX <= width - padding) {
             this.ctx.beginPath();
-            this.ctx.moveTo(yAxisX, padding);
-            this.ctx.lineTo(yAxisX, height - padding);
+            this.ctx.moveTo(axes.yAxisX, padding);
+            this.ctx.lineTo(axes.yAxisX, height - padding);
             this.ctx.stroke();
+        }
+        
+        // Draw origin crosshair marker (small circle at 0,0)
+        const origin = this.coords.getOriginScreenPosition();
+        if (this.coords.isInGraphArea(origin.x, origin.y)) {
+            this.ctx.fillStyle = '#000';
+            this.ctx.beginPath();
+            this.ctx.arc(origin.x, origin.y, 3, 0, 2 * Math.PI);
+            this.ctx.fill();
         }
         
         // Plot functions with different colors
@@ -828,11 +864,10 @@ class RomasmCalculatorUI {
                         this.ctx.beginPath();
                         let first = true;
                         for (const point of points) {
-                            const screenX = padding + (point.x - this.engine.xMin) * xScale;
-                            const screenY = padding + (this.engine.yMax - point.y) * yScale;
+                            const screenX = this.coords.graphToScreenX(point.x);
+                            const screenY = this.coords.graphToScreenY(point.y);
                             
-                            if (screenX >= padding && screenX <= width - padding &&
-                                screenY >= padding && screenY <= height - padding) {
+                            if (this.coords.isInGraphArea(screenX, screenY)) {
                                 if (first) {
                                     this.ctx.moveTo(screenX, screenY);
                                     first = false;
@@ -853,8 +888,8 @@ class RomasmCalculatorUI {
         
         // Draw trace cursor if active
         if (this.traceActive) {
-            const screenX = padding + (this.traceX - this.engine.xMin) * xScale;
-            if (screenX >= padding && screenX <= width - padding) {
+            const screenX = this.coords.graphToScreenX(this.traceX);
+            if (this.coords.isInGraphArea(screenX, padding)) {
                 this.ctx.strokeStyle = '#f00';
                 this.ctx.lineWidth = 2;
                 this.ctx.beginPath();
@@ -866,7 +901,7 @@ class RomasmCalculatorUI {
                 if (this.engine.compiledFunctions[this.selectedFunction]) {
                     try {
                         const y = this.engine.evaluateFunction(this.selectedFunction, this.traceX);
-                        const screenY = padding + (this.engine.yMax - y) * yScale;
+                        const screenY = this.coords.graphToScreenY(y);
                         this.ctx.fillStyle = '#f00';
                         this.ctx.fillRect(screenX - 3, screenY - 3, 6, 6);
                         

@@ -68,12 +68,24 @@ class RomasmCalculatorEngine {
     
     /**
      * Set graph window
+     * Automatically centers origin (0,0) if possible
      */
-    setWindow(xMin, xMax, yMin, yMax, xStep = null, yStep = null) {
+    setWindow(xMin, xMax, yMin, yMax, xStep = null, yStep = null, centerOrigin = true) {
         this.xMin = xMin;
         this.xMax = xMax;
         this.yMin = yMin;
         this.yMax = yMax;
+        
+        // Center origin if requested
+        if (centerOrigin) {
+            const xRange = xMax - xMin;
+            const yRange = yMax - yMin;
+            this.xMin = -xRange / 2;
+            this.xMax = xRange / 2;
+            this.yMin = -yRange / 2;
+            this.yMax = yRange / 2;
+        }
+        
         if (xStep !== null) this.stepSize = xStep;
     }
     
