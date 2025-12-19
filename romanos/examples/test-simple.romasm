@@ -1,0 +1,28 @@
+; Simple test - print single character
+; This will help us debug the BIOS interrupt setup
+
+start:
+  ; Set up segment registers
+  LOAD R0, 0x0000
+  MOV_SEG DS, R0
+  
+  ; Set up stack
+  LOAD R0, 0x0000
+  MOV_SEG SS, R0
+  LOAD R7, 0x7C00
+  
+  ; Clear screen
+  CALL bios_clear_screen
+  
+  ; Print single character 'A' (ASCII 65)
+  LOAD R0, 65  ; Character 'A'
+  CALL bios_putc
+  
+  ; Print another character 'B'
+  LOAD R0, 66  ; Character 'B'
+  CALL bios_putc
+  
+  ; Halt
+halt:
+  HLT
+  JMP halt

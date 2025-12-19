@@ -1,0 +1,52 @@
+; Hello World OS in Romasm
+; Bootable example that prints "Hello, RomanOS!" via BIOS
+; This is a complete bootable OS written entirely in Romasm!
+
+; Boot sector entry point (starts at 0x7C00)
+start:
+  ; Set up segment registers for real mode
+  ; Set DS = 0 (data segment)
+  LOAD R0, 0x0000
+  MOV_SEG DS, R0
+  
+  ; Set up stack
+  ; Set SS = 0, SP = 0x7C00 (grow downward)
+  LOAD R0, 0x0000
+  MOV_SEG SS, R0
+  LOAD R7, 0x7C00  ; R7 = SP
+  
+  ; Clear screen first
+  CALL bios_clear_screen
+  
+  ; Print message using BIOS print string function
+  LOAD R0, msg
+  CALL bios_print_string
+  
+  ; Infinite loop (busy wait instead of HLT to keep screen visible)
+halt:
+  NOP
+  NOP
+  NOP
+  JMP halt
+
+; Message string (null-terminated)
+msg:
+  DB 72   ; 'H'
+  DB 101  ; 'e'
+  DB 108  ; 'l'
+  DB 108  ; 'l'
+  DB 111  ; 'o'
+  DB 44   ; ','
+  DB 32   ; ' '
+  DB 82   ; 'R'
+  DB 111  ; 'o'
+  DB 109  ; 'm'
+  DB 97   ; 'a'
+  DB 110  ; 'n'
+  DB 79   ; 'O'
+  DB 83   ; 'S'
+  DB 33   ; '!'
+  DB 13   ; '\r' (carriage return)
+  DB 10   ; '\n' (newline)
+  DB 0    ; null terminator
+

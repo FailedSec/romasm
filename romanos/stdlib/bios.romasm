@@ -1,0 +1,169 @@
+; BIOS Interrupt Library for Romasm
+; Provides wrappers for common BIOS interrupts
+; All functions use Romasm conventions: R0-R3 for arguments/returns
+
+; Print character via BIOS INT 0x10
+; Input: R0 = character (ASCII code)
+; Uses: R1, R2 (saved and restored)
+; BIOS Requirements: AH=0x0E, AL=character, BH=page, BL=color
+; Note: The x86 generator will handle proper register setup
+bios_putc:
+  PUSH R1
+  PUSH R2
+  
+  ; Save character
+  LOAD R1, R0
+  
+  ; Set up BIOS call: INT 0x10, AH=0x0E (teletype output)
+  ; R0 = AX, so we need: AH = 0x0E, AL = character
+  ; We'll construct: AX = (0x0E << 8) | character
+  ; In Romasm: R0 = 0x0E00 + character
+  LOAD R0, 0x0E00  ; AH = 0x0E
+  ADD R0, R1        ; AL = character (low byte)
+  
+  ; Set BX = 0x0007 (BH=0 page, BL=7 color)
+  LOAD R1, 0x0007
+  
+  ; Call BIOS interrupt
+  ; The x86 generator will emit: MOV AH, 0x0E; MOV AL, [character]; MOV BX, 0x0007; INT 0x10
+  ; But for now, we rely on the register values being set correctly
+  INT 0x10
+  
+  ; Restore registers
+  POP R2
+  POP R1
+  RET
+
+; Clear screen via BIOS INT 0x10
+; Uses: R0, R1 (saved and restored)
+; BIOS: INT 0x10, AH=0x00, AL=mode (0x03 = 80x25 text)
+bios_clear_screen:
+  PUSH R0
+  PUSH R1
+  
+  ; Set AH = 0x00, AL = 0x03
+  LOAD R0, 0x0003  ; AH=0x00, AL=0x03
+  
+  ; Call BIOS
+  INT 0x10
+  
+  POP R1
+  POP R0
+  RET
+
+; Read character from keyboard via BIOS INT 0x16
+; Output: R0 = character (ASCII code)
+; Uses: R1 (saved and restored)
+; BIOS: INT 0x16, AH=0x00 (read character)
+bios_get_key:
+  PUSH R1
+  
+  ; Set AH = 0x00
+  LOAD R0, 0x0000  ; AH=0x00, AL will be returned
+  
+  ; Call BIOS
+  INT 0x16
+  
+  ; AL contains the character, which is in the low byte of R0
+  ; R0 already has the result (AL is low byte of AX)
+  
+  POP R1
+  RET
+
+; Check if key is available via BIOS INT 0x16
+; Output: R0 = 1 if key available, 0 if not
+; Uses: R1 (saved and restored)
+; BIOS: INT 0x16, AH=0x01 (check keyboard status)
+; Returns: ZF = 1 if no key, ZF = 0 if key available
+bios_key_available:
+  PUSH R1
+  
+  ; Set AH = 0x01
+  LOAD R0, 0x0100  ; AH=0x01
+  
+  ; Call BIOS
+  INT 0x16
+  
+  ; Check zero flag (ZF)
+  ; In x86, if ZF=1, no key; if ZF=0, key available
+  ; We'll use a conditional jump to set R0
+  ; For now, assume R0 = 0 means no key, R0 != 0 means key available
+  ; The BIOS call will set flags, we need to check them
+  ; This is tricky in Romasm - we'll need the x86 generator to handle this
+  
+  ; For now, set R0 based on a comparison
+  ; If the interrupt didn't set ZF (meaning key available), R0 should be 1
+  ; We'll use a workaround: check if AL was modified
+  ; Actually, BIOS INT 0x16 AH=0x01 doesn't modify AL if no key
+  ; So we check if we can read without waiting
+  
+  ; Simple approach: try to read (non-blocking check)
+  ; Actually, INT 0x16 AH=0x01 sets ZF appropriately
+  ; We need to check flags after the interrupt
+  ; For Romasm, we'll use a different approach:
+  ; Try INT 0x16 AH=0x01, then check if we can do a non-blocking read
+  
+  ; Simplified: assume key is available (this needs flag checking in x86)
+  LOAD R0, 1
+  
+  POP R1
+  RET
+
+; Print string via BIOS
+; Input: R0 = address of null-terminated string
+; Uses: R1, R2 (saved and restored)
+bios_print_string:
+  PUSH R1
+  PUSH R2
+  
+  ; R0 contains string address
+  LOAD R1, R0  ; R1 = current character pointer
+  
+bios_print_loop:
+  ; Load character from [R1]
+  LOAD R2, [R1]  ; R2 = character at address R1
+  
+  ; Check if null terminator
+  CMP R2, 0
+  JEQ bios_print_done
+  
+  ; Print character
+  LOAD R0, R2
+  CALL bios_putc
+  
+  ; Next character
+  INC R1
+  JMP bios_print_loop
+  
+bios_print_done:
+  POP R2
+  POP R1
+  RET
+
+; Set cursor position via BIOS INT 0x10
+; Input: R0 = row (DH), R1 = column (DL)
+; Uses: R2 (saved and restored)
+; BIOS: INT 0x10, AH=0x02, BH=page, DH=row, DL=column
+bios_set_cursor:
+  PUSH R2
+  
+  ; Set AH = 0x02
+  ; BH = 0 (page 0)
+  ; DH = row (R0)
+  ; DL = column (R1)
+  ; We need to set up registers properly
+  ; R0 = row, R1 = column
+  ; We'll use R2 to build the register values
+  ; For x86: MOV AH, 0x02; MOV BH, 0; MOV DH, row; MOV DL, col
+  ; In Romasm, we prepare values and let x86 generator handle it
+  
+  ; Set up for BIOS call
+  ; R0 already has row, R1 has column
+  ; We'll use segment register operations or direct register setup
+  ; For now, assume x86 generator will handle MOV DH, R0; MOV DL, R1
+  
+  ; Call BIOS
+  INT 0x10
+  
+  POP R2
+  RET
