@@ -1,0 +1,61 @@
+; Test advanced instructions: XCHG, bit manipulation, rotates, atomic ops
+
+user_main:
+  ; Test XCHG (atomic exchange)
+  LOAD R0, 10
+  LOAD R1, 20
+  XCHG R0, R1    ; Swap: R0 = 20, R1 = 10
+  
+  ; Test BT (Bit Test)
+  LOAD R0, 5     ; Binary: 101 (bit 0 and 2 set)
+  LOAD R1, 0
+  BT R0, R1      ; Test bit 0 (sets carry if set)
+  SETC R2        ; R2 = 1 if bit 0 was set
+  
+  ; Test BTS (Bit Test and Set)
+  LOAD R0, 4     ; Binary: 100
+  BTS R0, 0      ; Set bit 0, R0 = 5
+  
+  ; Test BTR (Bit Test and Reset)
+  LOAD R0, 7     ; Binary: 111
+  BTR R0, 0      ; Clear bit 0, R0 = 6
+  
+  ; Test BTC (Bit Test and Complement)
+  LOAD R0, 5     ; Binary: 101
+  BTC R0, 1      ; Toggle bit 1, R0 = 7
+  
+  ; Test BSF (Bit Scan Forward - find first set bit)
+  LOAD R0, 20    ; Binary: 10100 (bits 2 and 4 set)
+  BSF R1, R0     ; R1 = 2 (index of first set bit)
+  
+  ; Test BSR (Bit Scan Reverse - find last set bit)
+  LOAD R0, 20    ; Binary: 10100
+  BSR R1, R0     ; R1 = 4 (index of last set bit)
+  
+  ; Test ROL (Rotate Left)
+  LOAD R0, 1     ; Binary: 0001
+  ROL R0, 2      ; Rotate left 2: R0 = 4 (0100)
+  
+  ; Test ROR (Rotate Right)
+  LOAD R0, 4     ; Binary: 0100
+  ROR R0, 2      ; Rotate right 2: R0 = 1 (0001)
+  
+  ; Test RCL (Rotate Left through Carry)
+  CLC            ; Clear carry
+  LOAD R0, 1
+  RCL R0, 1      ; Rotate left through carry: R0 = 2
+  
+  ; Test RCR (Rotate Right through Carry)
+  STC            ; Set carry
+  LOAD R0, 1
+  RCR R0, 1      ; Rotate right through carry (with carry bit)
+  
+  ; Test CMPXCHG (Compare and Exchange - atomic)
+  LOAD R0, 10
+  LOAD R1, 10    ; Compare value
+  LOAD R2, 20    ; Exchange value
+  ; CMPXCHG compares RAX with R0, if equal: R0 = R2, else: RAX = R0
+  ; Note: This requires accumulator setup, so would need manual register setup
+  
+  ; All tests complete
+  HLT

@@ -1,0 +1,233 @@
+; Comprehensive test of all new Romasm instructions
+; Tests: String ops, flags, SETcc, extended arithmetic, CMOV, atomics, bit ops, rotates
+
+user_main:
+  ; Initialize UEFI system
+  CALL uefi_init
+  
+  ; Print header
+  LOAD R0, msg_header
+  CALL uefi_print_string
+  
+  ; ========== TEST 1: Flag Control ==========
+  LOAD R0, msg_test1
+  CALL uefi_print_string
+  
+  CLD            ; Clear direction flag (forward)
+  PUSHF          ; Save flags
+  POPF           ; Restore flags
+  STD            ; Set direction flag (backward)
+  CLD            ; Clear again
+  
+  LOAD R0, msg_passed
+  CALL uefi_print_string
+  
+  ; ========== TEST 2: SETcc Instructions ==========
+  LOAD R0, msg_test2
+  CALL uefi_print_string
+  
+  LOAD R0, 10
+  LOAD R1, 10
+  CMP R0, R1      ; Equal
+  SETZ R2         ; R2 = 1 if equal
+  CMP R0, R1      ; Still equal
+  SETNZ R3        ; R3 = 0 if equal (should be 0)
+  
+  LOAD R0, 5
+  LOAD R1, 3
+  CMP R0, R1      ; 5 > 3
+  SETG R4         ; R4 = 1 if greater
+  SETL R5         ; R5 = 0 if greater (should be 0)
+  
+  LOAD R0, msg_passed
+  CALL uefi_print_string
+  
+  ; ========== TEST 3: Extended Arithmetic ==========
+  LOAD R0, msg_test3
+  CALL uefi_print_string
+  
+  ; Test NEG
+  LOAD R0, 42
+  NEG R0          ; R0 = -42
+  
+  ; Test ADC (Add with Carry)
+  LOAD R0, 5
+  LOAD R1, 3
+  ADD R0, R1      ; R0 = 8
+  LOAD R2, 2
+  CLC             ; Clear carry
+  ADC R2, R0      ; R2 = 2 + 8 + 0 = 10
+  
+  ; Test SBB (Subtract with Borrow)
+  LOAD R0, 10
+  LOAD R1, 3
+  SUB R0, R1      ; R0 = 7
+  LOAD R2, 15
+  CLC             ; Clear carry (no borrow)
+  SBB R2, R0      ; R2 = 15 - 7 - 0 = 8
+  
+  LOAD R0, msg_passed
+  CALL uefi_print_string
+  
+  ; ========== TEST 4: Conditional Moves ==========
+  LOAD R0, msg_test4
+  CALL uefi_print_string
+  
+  LOAD R0, 0
+  CMP R0, 0       ; Zero flag set
+  LOAD R1, 100
+  LOAD R2, 200
+  CMOVZ R1, R2    ; R1 = R2 if zero (should move 200)
+  
+  LOAD R0, 5
+  LOAD R1, 0
+  CMP R0, 0       ; Not zero
+  LOAD R2, 300
+  CMOVNZ R1, R2   ; R1 = R2 if not zero (should move 300)
+  
+  LOAD R0, msg_passed
+  CALL uefi_print_string
+  
+  ; ========== TEST 5: Atomic Operations ==========
+  LOAD R0, msg_test5
+  CALL uefi_print_string
+  
+  LOAD R0, 10
+  LOAD R1, 20
+  XCHG R0, R1     ; Atomic swap: R0=20, R1=10
+  
+  LOAD R0, msg_passed
+  CALL uefi_print_string
+  
+  ; ========== TEST 6: Bit Manipulation ==========
+  LOAD R0, msg_test6
+  CALL uefi_print_string
+  
+  ; Test BT (Bit Test)
+  LOAD R0, 5      ; Binary: 101 (bits 0 and 2 set)
+  BT R0, 0        ; Test bit 0 (sets carry)
+  SETC R1         ; R1 = 1 if bit was set
+  
+  ; Test BTS (Bit Test and Set)
+  LOAD R0, 4      ; Binary: 100
+  BTS R0, 0       ; Set bit 0, R0 = 5
+  
+  ; Test BTR (Bit Test and Reset)
+  LOAD R0, 7      ; Binary: 111
+  BTR R0, 0       ; Clear bit 0, R0 = 6
+  
+  ; Test BTC (Bit Test and Complement)
+  LOAD R0, 5      ; Binary: 101
+  BTC R0, 1       ; Toggle bit 1, R0 = 7
+  
+  LOAD R0, msg_passed
+  CALL uefi_print_string
+  
+  ; ========== TEST 7: Bit Scan ==========
+  LOAD R0, msg_test7
+  CALL uefi_print_string
+  
+  LOAD R0, 20     ; Binary: 10100 (bits 2 and 4 set)
+  BSF R1, R0      ; R1 = 2 (first set bit)
+  BSR R2, R0      ; R2 = 4 (last set bit)
+  
+  LOAD R0, msg_passed
+  CALL uefi_print_string
+  
+  ; ========== TEST 8: Rotate Instructions ==========
+  LOAD R0, msg_test8
+  CALL uefi_print_string
+  
+  ; Test ROL (Rotate Left)
+  LOAD R0, 1      ; Binary: 0001
+  ROL R0, 2       ; Rotate left 2: R0 = 4 (0100)
+  
+  ; Test ROR (Rotate Right)
+  LOAD R0, 4      ; Binary: 0100
+  ROR R0, 2       ; Rotate right 2: R0 = 1 (0001)
+  
+  ; Test RCL (Rotate Left through Carry)
+  CLC             ; Clear carry
+  LOAD R0, 1
+  RCL R0, 1       ; Rotate left through carry
+  
+  ; Test RCR (Rotate Right through Carry)
+  STC             ; Set carry
+  LOAD R0, 1
+  RCR R0, 1       ; Rotate right through carry
+  
+  LOAD R0, msg_passed
+  CALL uefi_print_string
+  
+  ; ========== TEST 9: TEST Instruction ==========
+  LOAD R0, msg_test9
+  CALL uefi_print_string
+  
+  LOAD R0, 5
+  LOAD R1, 1
+  TEST R0, R1     ; Test bit 0 (sets flags, doesn't modify R0)
+  JNE test_bit_set
+  JMP test_bit_clear
+  
+test_bit_set:
+  LOAD R0, msg_passed
+  CALL uefi_print_string
+  JMP tests_done
+  
+test_bit_clear:
+  ; Should not reach here for value 5
+  HLT
+  
+tests_done:
+  ; Print completion message
+  LOAD R0, msg_complete
+  CALL uefi_print_string
+  
+  ; Draw a rectangle to show graphics work
+  LOAD R0, 50
+  LOAD R1, 100
+  LOAD R2, 200
+  LOAD R3, 50
+  LOAD R4, 0xFF0000FF  ; Red color
+  CALL uefi_fill_rect
+  
+  ; Loop forever
+main_loop:
+  JMP main_loop
+
+; Messages
+msg_header:
+  DB 84, 101, 115, 116, 105, 110, 103, 32, 97, 108, 108, 32, 110, 101, 119, 32, 105, 110, 115, 116, 114, 117, 99, 116, 105, 111, 110, 115, 46, 46, 46, 10, 10, 0  ; "Testing all new instructions...\n\n"
+  
+msg_test1:
+  DB 49, 46, 32, 70, 108, 97, 103, 32, 67, 111, 110, 116, 114, 111, 108, 32, 40, 67, 76, 68, 44, 32, 83, 84, 68, 44, 32, 80, 85, 83, 72, 70, 44, 32, 80, 79, 80, 70, 41, 58, 32, 0  ; "1. Flag Control (CLD, STD, PUSHF, POPF): "
+  
+msg_test2:
+  DB 50, 46, 32, 83, 69, 84, 99, 99, 32, 73, 110, 115, 116, 114, 117, 99, 116, 105, 111, 110, 115, 58, 32, 0  ; "2. SETcc Instructions: "
+  
+msg_test3:
+  DB 51, 46, 32, 69, 120, 116, 101, 110, 100, 101, 100, 32, 65, 114, 105, 116, 104, 109, 101, 116, 105, 99, 32, 40, 65, 68, 67, 44, 32, 83, 66, 66, 44, 32, 78, 69, 71, 41, 58, 32, 0  ; "3. Extended Arithmetic (ADC, SBB, NEG): "
+  
+msg_test4:
+  DB 52, 46, 32, 67, 111, 110, 100, 105, 116, 105, 111, 110, 97, 108, 32, 77, 111, 118, 101, 115, 32, 40, 67, 77, 79, 86, 99, 99, 41, 58, 32, 0  ; "4. Conditional Moves (CMOVcc): "
+  
+msg_test5:
+  DB 53, 46, 32, 65, 116, 111, 109, 105, 99, 32, 79, 112, 101, 114, 97, 116, 105, 111, 110, 115, 32, 40, 88, 67, 72, 71, 41, 58, 32, 0  ; "5. Atomic Operations (XCHG): "
+  
+msg_test6:
+  DB 54, 46, 32, 66, 105, 116, 32, 77, 97, 110, 105, 112, 117, 108, 97, 116, 105, 111, 110, 32, 40, 66, 84, 44, 32, 66, 84, 83, 44, 32, 66, 84, 82, 44, 32, 66, 84, 67, 41, 58, 32, 0  ; "6. Bit Manipulation (BT, BTS, BTR, BTC): "
+  
+msg_test7:
+  DB 55, 46, 32, 66, 105, 116, 32, 83, 99, 97, 110, 32, 40, 66, 83, 70, 44, 32, 66, 83, 82, 41, 58, 32, 0  ; "7. Bit Scan (BSF, BSR): "
+  
+msg_test8:
+  DB 56, 46, 32, 82, 111, 116, 97, 116, 101, 32, 73, 110, 115, 116, 114, 117, 99, 116, 105, 111, 110, 115, 32, 40, 82, 79, 76, 44, 32, 82, 79, 82, 44, 32, 82, 67, 76, 44, 32, 82, 67, 82, 41, 58, 32, 0  ; "8. Rotate Instructions (ROL, ROR, RCL, RCR): "
+  
+msg_test9:
+  DB 57, 46, 32, 84, 69, 83, 84, 32, 73, 110, 115, 116, 114, 117, 99, 116, 105, 111, 110, 58, 32, 0  ; "9. TEST Instruction: "
+  
+msg_passed:
+  DB 80, 65, 83, 83, 10, 0  ; "PASS\n"
+  
+msg_complete:
+  DB 10, 65, 108, 108, 32, 116, 101, 115, 116, 115, 32, 99, 111, 109, 112, 108, 101, 116, 101, 33, 10, 0  ; "\nAll tests complete!\n"

@@ -1,0 +1,306 @@
+; Framebuffer Terminal/Console
+; High-level terminal functions for text output
+; Uses font rendering to display characters
+
+; Terminal state
+terminal_cursor_x:
+  DD 0  ; Current X position (in pixels)
+
+terminal_cursor_y:
+  DD 0  ; Current Y position (in pixels)
+
+terminal_fg_color:
+  DD 0xFFFFFFFF  ; White foreground
+
+terminal_bg_color:
+  DD 0x00000000  ; Black background
+
+; Initialize terminal
+; Clears screen and resets cursor
+terminal_init:
+  PUSH R0
+  PUSH R1
+  
+  ; Clear screen
+  LOAD R0, 0x00000000  ; Black
+  CALL fb_clear
+  
+  ; Reset cursor to top-left
+  LOAD R0, 0
+  LOAD R1, terminal_cursor_x
+  STORE R0, [R1]
+  LOAD R1, terminal_cursor_y
+  STORE R0, [R1]
+  
+  ; Set default colors
+  LOAD R0, 0xFFFFFFFF  ; White
+  LOAD R1, terminal_fg_color
+  STORE R0, [R1]
+  LOAD R0, 0x00000000  ; Black
+  LOAD R1, terminal_bg_color
+  STORE R0, [R1]
+  
+  POP R1
+  POP R0
+  RET
+
+; Clear terminal screen
+terminal_clear:
+  PUSH R0
+  
+  ; Clear framebuffer
+  LOAD R0, 0x00000000  ; Black
+  CALL fb_clear
+  
+  ; Reset cursor
+  LOAD R0, 0
+  PUSH R1
+  LOAD R1, terminal_cursor_x
+  STORE R0, [R1]
+  LOAD R1, terminal_cursor_y
+  STORE R0, [R1]
+  POP R1
+  
+  POP R0
+  RET
+
+; Move cursor to position
+; Input: R0 = X (pixels), R1 = Y (pixels)
+terminal_set_cursor:
+  PUSH R2
+  
+  LOAD R2, terminal_cursor_x
+  STORE R0, [R2]
+  LOAD R2, terminal_cursor_y
+  STORE R1, [R2]
+  
+  POP R2
+  RET
+
+; Advance cursor to next character position
+; Moves cursor right by font width, handles line wrapping
+terminal_advance_cursor:
+  PUSH R0
+  PUSH R1
+  PUSH R2
+  
+  ; Get current cursor position
+  LOAD R0, terminal_cursor_x
+  LOAD R0, [R0]
+  LOAD R1, terminal_cursor_y
+  LOAD R1, [R1]
+  
+  ; Get font width
+  LOAD R2, FONT_WIDTH
+  LOAD R2, [R2]
+  
+  ; Advance X
+  ADD R0, R2
+  
+  ; Check if past right edge (need to wrap)
+  PUSH R3
+  LOAD R3, framebuffer_width
+  LOAD R3, [R3]
+  CMP R0, R3
+  JLT terminal_advance_done
+  
+  ; Wrap to next line
+  LOAD R0, 0  ; X = 0
+  LOAD R2, FONT_HEIGHT
+  LOAD R2, [R2]
+  ADD R1, R2  ; Y += font_height
+  
+  ; Check if past bottom (scroll or reset)
+  LOAD R3, framebuffer_height
+  LOAD R3, [R3]
+  CMP R1, R3
+  JLT terminal_advance_done
+  
+  ; Scroll or reset to top
+  LOAD R1, 0  ; Reset to top for now
+  ; TODO: Implement scrolling
+  
+terminal_advance_done:
+  POP R3
+  
+  ; Save new position
+  LOAD R2, terminal_cursor_x
+  STORE R0, [R2]
+  LOAD R2, terminal_cursor_y
+  STORE R1, [R2]
+  
+  POP R2
+  POP R1
+  POP R0
+  RET
+
+; Print single character
+; Input: R0 = character code (ASCII)
+terminal_putchar:
+  PUSH R1
+  PUSH R2
+  PUSH R3
+  PUSH R4
+  
+  ; Handle special characters
+  CMP R0, 10  ; '\n' (newline)
+  JEQ terminal_putchar_newline
+  CMP R0, 13  ; '\r' (carriage return)
+  JEQ terminal_putchar_return
+  CMP R0, 8   ; '\b' (backspace)
+  JEQ terminal_putchar_backspace
+  
+  ; Normal character - render it
+  ; Get cursor position
+  LOAD R1, terminal_cursor_x
+  LOAD R1, [R1]
+  LOAD R2, terminal_cursor_y
+  LOAD R2, [R2]
+  
+  ; Get colors
+  LOAD R3, terminal_fg_color
+  LOAD R3, [R3]
+  LOAD R4, terminal_bg_color
+  LOAD R4, [R4]
+  
+  ; Render character
+  ; R0 = char, R1 = X, R2 = Y, R3 = fg, R4 = bg
+  PUSH R0
+  LOAD R0, R1  ; X
+  LOAD R1, R2  ; Y
+  LOAD R2, R0  ; char (from stack)
+  POP R0
+  LOAD R0, R1  ; Actually, R2 already has char...
+  ; Let me fix the parameter order
+  ; font_render_char_simple(R0=X, R1=Y, R2=char, R3=color)
+  PUSH R0
+  LOAD R0, R1  ; X (from terminal_cursor_x)
+  LOAD R1, R2  ; Y (from terminal_cursor_y)
+  LOAD R2, R0  ; char (original R0, but we pushed it)
+  POP R0  ; Restore char
+  PUSH R0
+  LOAD R0, terminal_cursor_x
+  LOAD R0, [R0]
+  LOAD R1, terminal_cursor_y
+  LOAD R1, [R1]
+  LOAD R2, R0  ; char from stack
+  POP R0
+  
+  ; Get fg color for rendering
+  LOAD R3, terminal_fg_color
+  LOAD R3, [R3]
+  
+  ; Call simplified renderer
+  CALL font_render_char_simple
+  
+  ; Advance cursor
+  CALL terminal_advance_cursor
+  
+  JMP terminal_putchar_done
+  
+terminal_putchar_newline:
+  ; Move to start of next line
+  LOAD R0, 0
+  LOAD R1, terminal_cursor_x
+  STORE R0, [R1]
+  LOAD R1, terminal_cursor_y
+  LOAD R0, [R1]
+  LOAD R2, FONT_HEIGHT
+  LOAD R2, [R2]
+  ADD R0, R2
+  STORE R0, [R1]
+  JMP terminal_putchar_done
+  
+terminal_putchar_return:
+  ; Move to start of line
+  LOAD R0, 0
+  LOAD R1, terminal_cursor_x
+  STORE R0, [R1]
+  JMP terminal_putchar_done
+  
+terminal_putchar_backspace:
+  ; Move cursor back one character
+  LOAD R0, terminal_cursor_x
+  LOAD R0, [R0]
+  LOAD R1, FONT_WIDTH
+  LOAD R1, [R1]
+  SUB R0, R1
+  CMP R0, 0
+  JGE terminal_backspace_ok
+  LOAD R0, 0  ; Don't go negative
+terminal_backspace_ok:
+  LOAD R1, terminal_cursor_x
+  STORE R0, [R1]
+  JMP terminal_putchar_done
+  
+terminal_putchar_done:
+  POP R4
+  POP R3
+  POP R2
+  POP R1
+  RET
+
+; Print null-terminated string
+; Input: R0 = pointer to string
+terminal_print_string:
+  PUSH R1
+  PUSH R2
+  
+  LOAD R1, R0  ; R1 = string pointer
+  
+terminal_print_loop:
+  ; Load character
+  LOAD R2, [R1]
+  
+  ; Check for null terminator
+  CMP R2, 0
+  JEQ terminal_print_done
+  
+  ; Print character
+  LOAD R0, R2
+  CALL terminal_putchar
+  
+  ; Next character
+  INC R1
+  JMP terminal_print_loop
+  
+terminal_print_done:
+  POP R2
+  POP R1
+  RET
+
+; Print framebuffer information (for debugging)
+terminal_print_fb_info:
+  PUSH R0
+  PUSH R1
+  
+  ; Print resolution info
+  LOAD R0, fb_info_msg
+  CALL terminal_print_string
+  
+  ; Print width
+  CALL fb_get_width
+  ; TODO: Convert to string and print
+  ; For now, just print a marker
+  LOAD R0, 87  ; 'W'
+  CALL terminal_putchar
+  LOAD R0, 58  ; ':'
+  CALL terminal_putchar
+  
+  ; Print height
+  CALL fb_get_height
+  LOAD R0, 72  ; 'H'
+  CALL terminal_putchar
+  LOAD R0, 58  ; ':'
+  CALL terminal_putchar
+  
+  ; Newline
+  LOAD R0, 10
+  CALL terminal_putchar
+  
+  POP R1
+  POP R0
+  RET
+
+fb_info_msg:
+  DB "Framebuffer initialized: ", 0

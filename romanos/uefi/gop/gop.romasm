@@ -1,0 +1,274 @@
+; Graphics Output Protocol (GOP) Implementation
+; UEFI GOP protocol detection, mode querying, and framebuffer setup
+;
+; References:
+; - EFI_GUID GOP_GUID = {0x9042a9de, 0x23dc, 0x4a38, {0x96, 0xfb, 0x7a, 0xde, 0xd0, 0x80, 0x51, 0x6a}}
+; - EFI_GRAPHICS_OUTPUT_PROTOCOL structure
+
+; GOP Protocol GUID (128-bit)
+; Format: 32-bit, 16-bit, 16-bit, 8 bytes
+gop_guid:
+  DD 0x9042a9de  ; Data1
+  DW 0x23dc      ; Data2
+  DW 0x4a38      ; Data3
+  DB 0x96, 0xfb, 0x7a, 0xde, 0xd0, 0x80, 0x51, 0x6a  ; Data4
+
+; Initialize GOP - Locate Graphics Output Protocol
+; Output: R0 = EFI_STATUS (0 = success)
+; Sets global uefi_gop pointer on success
+gop_init:
+  PUSH R1
+  PUSH R2
+  PUSH R3
+  PUSH R4
+  
+  ; Get BootServices from SystemTable
+  ; SystemTable->BootServices (offset 0x60 in EFI_SYSTEM_TABLE for x86-64)
+  LOAD R0, uefi_system_table
+  LOAD R1, [R0]  ; R1 = SystemTable pointer
+  LOAD R2, 0x60  ; BootServices offset
+  ADD R1, R2
+  LOAD R2, [R1]  ; R2 = BootServices pointer
+  
+  ; Store BootServices globally
+  LOAD R3, uefi_boot_services
+  STORE R2, [R3]
+  
+  ; Call BootServices->LocateProtocol
+  ; EFI_STATUS LocateProtocol(
+  ;   EFI_GUID *Protocol,
+  ;   VOID *Registration OPTIONAL,
+  ;   VOID **Interface
+  ; )
+  ; System V ABI x86-64: RDI=Protocol GUID, RSI=Registration (NULL), RDX=Interface
+  
+  ; Load GOP GUID address into R0 (RDI)
+  LOAD R0, gop_guid
+  
+  ; R1 (RSI) = NULL (0)
+  LOAD R1, 0
+  
+  ; R2 (RDX) = address of uefi_gop pointer
+  LOAD R2, uefi_gop
+  
+  ; Call LocateProtocol (offset 0x140 in BootServices for x86-64)
+  ; This will be handled by a UEFI call wrapper
+  CALL uefi_locate_protocol
+  
+  ; Check return status (R0 = EFI_STATUS)
+  CMP R0, 0  ; EFI_SUCCESS
+  JEQ gop_init_success
+  
+  ; Error: GOP not found
+  LOAD R0, 0x80000002  ; EFI_NOT_FOUND
+  JMP gop_init_done
+  
+gop_init_success:
+  ; GOP protocol located successfully
+  ; uefi_gop now contains pointer to Graphics Output Protocol
+  LOAD R0, 0  ; EFI_SUCCESS
+  
+gop_init_done:
+  POP R4
+  POP R3
+  POP R2
+  POP R1
+  RET
+
+; UEFI LocateProtocol wrapper
+; Input: R0 = Protocol GUID pointer, R1 = Registration (NULL), R2 = Interface pointer
+; Output: R0 = EFI_STATUS
+; This will be implemented to call BootServices->LocateProtocol
+uefi_locate_protocol:
+  PUSH R3
+  PUSH R4
+  
+  ; Get BootServices pointer
+  LOAD R3, uefi_boot_services
+  LOAD R3, [R3]
+  
+  ; Load function pointer from BootServices->LocateProtocol (offset 0x140)
+  LOAD R4, 0x140
+  ADD R3, R4
+  LOAD R4, [R3]  ; R4 = LocateProtocol function pointer
+  
+  ; Setup System V ABI calling convention:
+  ; RDI = Protocol GUID (R0)
+  ; RSI = Registration (R1)
+  ; RDX = Interface (R2)
+  ; RCX, R8, R9 = 0 (not used)
+  
+  ; Call the function
+  ; This needs to be handled carefully - we'll need to ensure proper register mapping
+  ; For now, we'll use an assembly stub that the x86 generator will convert
+  CALL [R4]  ; Indirect call through function pointer
+  
+  ; Result is in R0 (RAX) per System V ABI
+  
+  POP R4
+  POP R3
+  RET
+
+; Query current GOP mode
+; Output: R0 = EFI_STATUS, R1 = Mode number (if success)
+gop_query_current_mode:
+  PUSH R2
+  PUSH R3
+  
+  ; Get GOP pointer
+  LOAD R0, uefi_gop
+  LOAD R0, [R0]
+  
+  ; GOP->Mode (offset 0x18)
+  LOAD R2, 0x18
+  ADD R0, R2
+  LOAD R2, [R0]  ; R2 = Mode pointer
+  
+  ; Mode->Mode (offset 0x0) = current mode number
+  LOAD R3, [R2]
+  LOAD R1, R3
+  
+  LOAD R0, 0  ; EFI_SUCCESS
+  
+  POP R3
+  POP R2
+  RET
+
+; Query available modes and set best mode
+; Sets framebuffer to highest resolution available
+; Output: R0 = EFI_STATUS
+gop_set_mode:
+  PUSH R1
+  PUSH R2
+  PUSH R3
+  PUSH R4
+  PUSH R5
+  
+  ; Get GOP pointer
+  LOAD R0, uefi_gop
+  LOAD R0, [R0]
+  
+  ; GOP->Mode->MaxMode (offset 0x18 + 0x8)
+  LOAD R1, 0x18  ; Mode offset
+  ADD R0, R1
+  LOAD R2, [R0]  ; Mode pointer
+  LOAD R3, 0x8   ; MaxMode offset
+  ADD R2, R3
+  LOAD R3, [R2]  ; R3 = MaxMode count
+  
+  ; Find best mode (highest resolution)
+  ; For simplicity, use mode 0 (usually highest resolution)
+  ; In a real implementation, we'd iterate through modes
+  
+  ; Call GOP->SetMode(0)
+  ; GOP->SetMode offset = 0x08 in Graphics Output Protocol
+  LOAD R1, uefi_gop
+  LOAD R1, [R1]
+  LOAD R2, 0x08  ; SetMode function offset
+  ADD R1, R2
+  LOAD R2, [R1]  ; R2 = SetMode function pointer
+  
+  ; Setup call: SetMode(ModeNumber)
+  ; RDI (R0) = GOP protocol pointer
+  LOAD R0, uefi_gop
+  LOAD R0, [R0]
+  
+  ; RSI (R1) = ModeNumber (0 = highest resolution)
+  LOAD R1, 0
+  
+  ; Call SetMode
+  CALL [R2]
+  
+  ; Result in R0 (EFI_STATUS)
+  
+  ; If successful, get framebuffer info
+  CMP R0, 0
+  JNE gop_set_mode_done
+  
+  ; Store framebuffer information globally
+  CALL gop_get_framebuffer_info
+  
+gop_set_mode_done:
+  POP R5
+  POP R4
+  POP R3
+  POP R2
+  POP R1
+  RET
+
+; Get framebuffer information
+; Reads framebuffer address, size, and resolution from GOP->Mode->Info
+; Output: R0 = EFI_STATUS
+; Sets global framebuffer variables
+gop_get_framebuffer_info:
+  PUSH R1
+  PUSH R2
+  PUSH R3
+  
+  ; Get GOP pointer
+  LOAD R0, uefi_gop
+  LOAD R0, [R0]
+  
+  ; GOP->Mode (offset 0x18)
+  LOAD R1, 0x18
+  ADD R0, R1
+  LOAD R1, [R0]  ; R1 = Mode pointer
+  
+  ; Mode->FrameBufferBase (offset 0x10)
+  LOAD R2, 0x10
+  ADD R1, R2
+  LOAD R2, [R1]  ; R2 = FrameBufferBase (64-bit address)
+  LOAD R3, framebuffer_base
+  STORE R2, [R3]
+  
+  ; Mode->FrameBufferSize (offset 0x18)
+  LOAD R2, 0x18
+  ADD R1, R2
+  LOAD R2, [R1]  ; R2 = FrameBufferSize
+  LOAD R3, framebuffer_size
+  STORE R2, [R3]
+  
+  ; Mode->Info (offset 0x0) = pointer to ModeInfo
+  LOAD R2, [R1]  ; R2 = Info pointer
+  
+  ; Info->HorizontalResolution (offset 0x0)
+  LOAD R3, [R2]  ; R3 = HorizontalResolution
+  LOAD R1, framebuffer_width
+  STORE R3, [R1]
+  
+  ; Info->VerticalResolution (offset 0x4)
+  LOAD R1, 0x4
+  ADD R2, R1
+  LOAD R3, [R2]  ; R3 = VerticalResolution
+  LOAD R1, framebuffer_height
+  STORE R3, [R1]
+  
+  ; Info->PixelsPerScanLine (offset 0x8)
+  LOAD R1, 0x8
+  ADD R2, R1
+  LOAD R3, [R2]  ; R3 = PixelsPerScanLine
+  LOAD R1, framebuffer_pitch
+  STORE R3, [R1]
+  
+  LOAD R0, 0  ; EFI_SUCCESS
+  
+  POP R3
+  POP R2
+  POP R1
+  RET
+
+; Global framebuffer information (set by gop_get_framebuffer_info)
+framebuffer_base:
+  DQ 0  ; 64-bit framebuffer base address
+
+framebuffer_size:
+  DQ 0  ; Framebuffer size in bytes
+
+framebuffer_width:
+  DD 0  ; Width in pixels
+
+framebuffer_height:
+  DD 0  ; Height in pixels
+
+framebuffer_pitch:
+  DD 0  ; Bytes per scanline

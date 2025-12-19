@@ -1,0 +1,133 @@
+; UEFI/GOP Standard Library
+; High-level interface for UEFI graphics operations
+; Replaces the old BIOS-based bios.romasm
+
+; Initialize UEFI/GOP system
+; Must be called first before any other UEFI functions
+; Output: R0 = status (0 = success)
+uefi_init:
+  ; Initialize GOP protocol
+  CALL gop_init
+  CMP R0, 0
+  JNE uefi_init_error
+  
+  ; Set video mode
+  CALL gop_set_mode
+  CMP R0, 0
+  JNE uefi_init_error
+  
+  ; Initialize terminal
+  CALL terminal_init
+  
+  LOAD R0, 0  ; Success
+  RET
+
+uefi_init_error:
+  RET  ; Error code already in R0
+
+; Clear screen
+uefi_clear_screen:
+  CALL terminal_clear
+  RET
+
+; Print character
+; Input: R0 = character (ASCII)
+uefi_putc:
+  CALL terminal_putchar
+  RET
+
+; Print string
+; Input: R0 = pointer to null-terminated string
+uefi_print_string:
+  CALL terminal_print_string
+  RET
+
+; Print newline
+uefi_newline:
+  PUSH R0
+  LOAD R0, 10  ; '\n'
+  CALL terminal_putchar
+  POP R0
+  RET
+
+; Set foreground color
+; Input: R0 = R, R1 = G, R2 = B (8-bit each)
+uefi_set_color:
+  PUSH R3
+  PUSH R4
+  
+  ; Pack RGB to 32-bit
+  CALL fb_pack_color
+  LOAD R3, R0  ; R3 = color
+  
+  ; Store in terminal_fg_color
+  LOAD R4, terminal_fg_color
+  STORE R3, [R4]
+  
+  POP R4
+  POP R3
+  RET
+
+; Set background color
+; Input: R0 = R, R1 = G, R2 = B (8-bit each)
+uefi_set_bg_color:
+  PUSH R3
+  PUSH R4
+  
+  ; Pack RGB to 32-bit
+  CALL fb_pack_color
+  LOAD R3, R0  ; R3 = color
+  
+  ; Store in terminal_bg_color
+  LOAD R4, terminal_bg_color
+  STORE R3, [R4]
+  
+  POP R4
+  POP R3
+  RET
+
+; Set cursor position
+; Input: R0 = X (character column), R1 = Y (character row)
+uefi_set_cursor:
+  PUSH R2
+  PUSH R3
+  
+  ; Convert character position to pixel position
+  LOAD R2, FONT_WIDTH
+  LOAD R2, [R2]
+  MUL R0, R2   ; X_pixels = X_chars * font_width
+  
+  LOAD R3, FONT_HEIGHT
+  LOAD R3, [R3]
+  MUL R1, R3   ; Y_pixels = Y_chars * font_height
+  
+  ; Set cursor
+  CALL terminal_set_cursor
+  
+  POP R3
+  POP R2
+  RET
+
+; Get framebuffer width (in pixels)
+; Output: R0 = width
+uefi_get_width:
+  CALL fb_get_width
+  RET
+
+; Get framebuffer height (in pixels)
+; Output: R0 = height
+uefi_get_height:
+  CALL fb_get_height
+  RET
+
+; Draw pixel directly
+; Input: R0 = X, R1 = Y, R2 = color (32-bit RGBA)
+uefi_draw_pixel:
+  CALL fb_plot_pixel
+  RET
+
+; Fill rectangle
+; Input: R0 = X, R1 = Y, R2 = Width, R3 = Height, R4 = Color (32-bit RGBA)
+uefi_fill_rect:
+  CALL fb_fill_rect
+  RET

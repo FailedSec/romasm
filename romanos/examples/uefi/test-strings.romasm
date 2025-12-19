@@ -1,0 +1,42 @@
+; Test string instructions and flag control
+; This demonstrates the new string instructions
+
+user_main:
+  ; Test CLD (clear direction flag for forward operations)
+  CLD
+  
+  ; Test PUSHF/POPF (save/restore flags)
+  PUSHF
+  POPF
+  
+  ; Test TEST instruction (bit testing)
+  LOAD R0, 5
+  LOAD R1, 1
+  TEST R0, R1  ; Test if bit 0 is set (5 & 1 = 1, so zero flag should be cleared)
+  JNE bit_set  ; Jump if bit was set
+  ; Should not reach here
+  HLT
+  
+bit_set:
+  ; Test STOS (store string - fill memory)
+  ; In a real scenario, this would fill a framebuffer
+  LOAD R0, buffer_addr  ; Destination address
+  LOAD R0, [R0]         ; Load actual address
+  LOAD R1, 0x00000000   ; Fill value (black color)
+  STOS R0, R1           ; Store value to [R0]
+  
+  ; Test TEST again
+  LOAD R0, 4
+  LOAD R1, 1
+  TEST R0, R1  ; Test if bit 0 is set (4 & 1 = 0, so zero flag should be set)
+  JEQ bit_clear  ; Jump if bit was not set
+  ; Should not reach here
+  HLT
+  
+bit_clear:
+  ; All tests passed
+  HLT
+
+; Data section
+buffer_addr:
+  DQ 0x100000  ; Example framebuffer address

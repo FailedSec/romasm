@@ -1,0 +1,64 @@
+; Optimized framebuffer clear using STOS string instruction
+; This demonstrates the efficiency of string instructions vs manual loops
+
+user_main:
+  ; Initialize UEFI
+  CALL uefi_init
+  
+  ; Print message
+  LOAD R0, msg_clearing
+  CALL uefi_print_string
+  
+  ; Get framebuffer info
+  CALL fb_get_width
+  PUSH R0  ; Save width
+  CALL fb_get_height
+  PUSH R0  ; Save height
+  
+  ; Calculate total pixel count (width * height)
+  POP R1   ; R1 = height
+  POP R0   ; R0 = width
+  MUL R0, R1  ; R0 = width * height
+  
+  ; Get framebuffer base address
+  LOAD R1, framebuffer_base
+  LOAD R1, [R1]  ; R1 = actual framebuffer address
+  
+  ; Set up for STOS (REP STOSD for 32-bit pixels)
+  ; RDI = destination (framebuffer address)
+  LOAD R2, R1  ; R2 = framebuffer address (will become RDI)
+  
+  ; RAX = fill value (black: 0x00000000)
+  LOAD R3, 0x00000000
+  
+  ; RCX = count (number of 32-bit pixels)
+  LOAD R4, R0  ; R4 = pixel count (will become RCX)
+  
+  ; Clear direction flag (forward)
+  CLD
+  
+  ; Use STOS to fill framebuffer
+  ; Note: In real code, we'd use:
+  ;   MOV RDI, framebuffer_base
+  ;   MOV RAX, 0x00000000  ; black
+  ;   MOV RCX, pixel_count
+  ;   REP STOSD
+  ; But Romasm maps registers, so we use our register mapping
+  
+  ; For now, demonstrate single STOS (without REP for testing)
+  STOS R2, R3  ; Store R3 to [R2]
+  
+  ; Print done message
+  LOAD R0, msg_done
+  CALL uefi_print_string
+  
+  ; Loop forever
+loop:
+  JMP loop
+
+; Messages
+msg_clearing:
+  DB 67, 108, 101, 97, 114, 105, 110, 103, 32, 102, 114, 97, 109, 101, 98, 117, 102, 102, 101, 114, 46, 46, 46, 10, 0  ; "Clearing framebuffer...\n"
+  
+msg_done:
+  DB 68, 111, 110, 101, 33, 10, 0  ; "Done!\n"

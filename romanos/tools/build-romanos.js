@@ -72,6 +72,10 @@ function loadRomasmComponents() {
 }
 
 async function buildRomanOS(exampleName = 'hello-world', mode = 'native') {
+    // Normalize mode
+    if (mode === 'uefi' || mode === 'efi') {
+        mode = 'efi';
+    }
     log('RomanOS Build System', 'green');
     log('====================', 'green');
     log('');
@@ -91,10 +95,14 @@ async function buildRomanOS(exampleName = 'hello-world', mode = 'native') {
     log('Loading Romasm components...', 'blue');
     const { RomasmAssembler, RomasmX86Generator, RomasmBytecodeGenerator, RomasmOptimizer } = loadRomasmComponents();
     
-    log(`Build mode: ${mode === 'vm' ? 'VM (Native Romasm)' : 'Native x86'}`, 'yellow');
+    log(`Build mode: ${mode === 'vm' ? 'VM (Native Romasm)' : mode === 'efi' ? 'UEFI/GOP (Modern)' : 'Native x86 (BIOS)'}`, 'yellow');
     
     // Step 1: Read main source file
-    const sourceFile = path.join(examplesDir, `${exampleName}.romasm`);
+    let sourceDir = examplesDir;
+    if (mode === 'efi') {
+        sourceDir = path.join(examplesDir, 'uefi');
+    }
+    const sourceFile = path.join(sourceDir, `${exampleName}.romasm`);
     if (!fs.existsSync(sourceFile)) {
         throw new Error(`Source file not found: ${sourceFile}`);
     }
@@ -120,12 +128,82 @@ async function buildRomanOS(exampleName = 'hello-world', mode = 'native') {
     // Step 3: Load and link with stdlib
     log('Linking with standard library...', 'blue');
     
-    // Store original instruction count before merging BIOS
+    // Store original instruction count before merging
     const originalInstructionCount = assembleResult.instructions.length;
     const originalDataCount = assembleResult.data.length;
     
-    // Load BIOS library (manual linking)
-    const biosLibPath = path.join(stdlibDir, 'bios.romasm');
+    if (mode === 'efi') {
+        // UEFI Mode: Load UEFI modules
+        log('  Loading UEFI/GOP modules...', 'yellow');
+        
+        const uefiModules = [
+            { path: path.join(romanosRoot, 'uefi', 'bootloader', 'uefi-main.romasm'), name: 'UEFI Bootloader' },
+            { path: path.join(romanosRoot, 'uefi', 'gop', 'gop.romasm'), name: 'GOP Protocol' },
+            { path: path.join(romanosRoot, 'uefi', 'framebuffer', 'fb.romasm'), name: 'Framebuffer' },
+            { path: path.join(romanosRoot, 'uefi', 'fonts', 'font.romasm'), name: 'Font System' },
+            { path: path.join(romanosRoot, 'uefi', 'terminal', 'term.romasm'), name: 'Terminal' },
+            { path: path.join(stdlibDir, 'uefi', 'gop.romasm'), name: 'UEFI Stdlib' }
+        ];
+        
+        for (const module of uefiModules) {
+            if (fs.existsSync(module.path)) {
+                const moduleSource = fs.readFileSync(module.path, 'utf8');
+                const moduleResult = assembler.assemble(moduleSource);
+                if (moduleResult.success) {
+                    log(`    Loading ${module.name}...`, 'yellow');
+                    const instructionOffset = assembleResult.instructions.length;
+                    
+                    // Update CALL/JMP instructions in module
+                    for (const instr of moduleResult.instructions) {
+                        if ((instr.opcode === 'CA' || instr.opcode === 'V' || instr.opcode === 'JE' || instr.opcode === 'JN' || instr.opcode === 'JL' || instr.opcode === 'JG' || instr.opcode === 'JLE' || instr.opcode === 'JGE') && instr.operands.length > 0) {
+                            const target = instr.operands[0];
+                            if (target.type === 'label' && typeof target.value === 'number' && target.value < moduleResult.instructions.length) {
+                                target.value = instructionOffset + target.value;
+                            }
+                        }
+                    }
+                    
+                    assembleResult.instructions.push(...moduleResult.instructions);
+                    
+                    // Update labels
+                    for (const [label, addr] of Object.entries(moduleResult.labels)) {
+                        if (addr < moduleResult.instructions.length) {
+                            assembleResult.labels[label] = instructionOffset + addr;
+                        } else {
+                            const dataOffset = assembleResult.data.length;
+                            assembleResult.labels[label] = assembleResult.instructions.length + dataOffset + (addr - moduleResult.instructions.length);
+                        }
+                    }
+                    
+                    // Merge data
+                    if (moduleResult.data && moduleResult.data.length > 0) {
+                        for (const dataItem of moduleResult.data) {
+                            assembleResult.data.push({
+                                address: assembleResult.data.length + dataItem.address,
+                                value: dataItem.value
+                            });
+                        }
+                    }
+                    
+                    log(`    ✓ Loaded ${module.name} (${moduleResult.instructions.length} instructions)`, 'green');
+                } else {
+                    log(`    ✗ Failed to load ${module.name}`, 'red');
+                    if (moduleResult.errors && moduleResult.errors.length > 0) {
+                        moduleResult.errors.forEach(err => {
+                            log(`      Line ${err.line}: ${err.message}`, 'red');
+                            if (err.code) log(`        Code: ${err.code}`, 'red');
+                        });
+                    } else {
+                        log(`      (No error details available)`, 'red');
+                    }
+                }
+            } else {
+                log(`    ⚠ Module not found: ${module.path}`, 'yellow');
+            }
+        }
+    } else {
+        // BIOS Mode: Load BIOS library (manual linking)
+        const biosLibPath = path.join(stdlibDir, 'bios.romasm');
     if (fs.existsSync(biosLibPath)) {
         log('  Loading BIOS library...', 'yellow');
         const biosSource = fs.readFileSync(biosLibPath, 'utf8');
@@ -186,6 +264,7 @@ async function buildRomanOS(exampleName = 'hello-world', mode = 'native') {
             
             log(`  ✓ Loaded BIOS library (${biosResult.instructions.length} instructions)`, 'green');
         }
+    }
     }
     
     // Step 4: Generate output (x86 or bytecode)
@@ -286,8 +365,36 @@ async function buildRomanOS(exampleName = 'hello-world', mode = 'native') {
         fs.writeFileSync(imgFile, buffer);
         log(`✓ Created bootable image: ${imgFile}`, 'green');
         
+    } else if (mode === 'efi') {
+        // UEFI Mode: Generate UEFI x86-64 assembly
+        log('Generating UEFI x86-64 assembly...', 'blue');
+        // Disable smart allocation for UEFI (it uses 16-bit registers)
+        const generator = new RomasmX86Generator(false);
+        log('  Using fixed 64-bit register mapping (RAX, RBX, RCX, etc.)', 'yellow');
+        log('  Generating 64-bit UEFI application', 'yellow');
+        
+        let x86Asm = generator.generateUEFI(assembleResult.instructions, assembleResult.data, assembleResult.labels);
+        
+        // Optimize
+        log('Optimizing x86-64 assembly...', 'blue');
+        const optimizer = new RomasmOptimizer();
+        x86Asm = optimizer.optimize(x86Asm);
+        log(`✓ Optimized assembly`, 'green');
+        
+        const asmFile = path.join(buildDir, `${exampleName}-uefi.asm`);
+        fs.writeFileSync(asmFile, x86Asm, 'utf8');
+        log(`✓ Generated UEFI assembly: ${asmFile}`, 'green');
+        
+        log('', 'reset');
+        log('Note: UEFI executables require PE32+ format and linking.', 'yellow');
+        log('To create a .efi file, you need:', 'yellow');
+        log('  1. NASM to assemble: nasm -f win64 -o hello-world.obj hello-world-uefi.asm', 'yellow');
+        log('  2. A linker (ld or link) to create PE32+ executable', 'yellow');
+        log('  3. Or use EDK2 build system for full UEFI support', 'yellow');
+        log('See uefi/README.md for more details.', 'yellow');
+        // UEFI block ends here - no image file creation needed
     } else {
-        // Native Mode: Generate x86 assembly (existing flow)
+        // Native BIOS Mode: Generate x86 assembly (existing flow)
         log('Generating x86 assembly...', 'blue');
         // Enable smart register allocation
         const generator = new RomasmX86Generator(true);
@@ -386,19 +493,34 @@ async function buildRomanOS(exampleName = 'hello-world', mode = 'native') {
     
     log('', 'reset');
     log('Build complete!', 'green');
-    const imgFile = path.join(buildDir, `${exampleName}.img`);
-    log(`Output: ${imgFile}`, 'green');
-    log('', 'reset');
-    log('Run with:', 'yellow');
-    log(`  ./tools/run.sh ${exampleName}`, 'yellow');
-    log('  or', 'yellow');
-    log(`  qemu-system-x86_64 -drive file=${imgFile},format=raw,if=floppy`, 'yellow');
+    
+    if (mode !== 'efi') {
+        const imgFile = path.join(buildDir, `${exampleName}.img`);
+        log(`Output: ${imgFile}`, 'green');
+        log('', 'reset');
+        log('Run with:', 'yellow');
+        log(`  ./tools/run.sh ${exampleName}`, 'yellow');
+        log('  or', 'yellow');
+        log(`  qemu-system-x86_64 -drive file=${imgFile},format=raw,if=floppy`, 'yellow');
+    } else {
+        const asmFile = path.join(buildDir, `${exampleName}-uefi.asm`);
+        log(`Output: ${asmFile}`, 'green');
+        log('', 'reset');
+        log('Next steps for UEFI:', 'yellow');
+        log('  See uefi/BUILD_INSTRUCTIONS.md for linking to .efi file', 'yellow');
+    }
 }
 
 // Main
-const exampleName = process.argv[2] || 'hello-world';
-const mode = process.argv[3] === '--vm' ? 'vm' : 'native';
-buildRomanOS(exampleName, mode).catch(error => {
+const appExampleName = process.argv[2] || 'hello-world';
+// Parse mode from command line arguments
+let appMode = 'native'; // default
+if (process.argv.includes('--vm')) {
+    appMode = 'vm';
+} else if (process.argv.includes('--efi') || process.argv.includes('--uefi')) {
+    appMode = 'efi';
+}
+buildRomanOS(appExampleName, appMode).catch(error => {
     log(`\nError: ${error.message}`, 'red');
     process.exit(1);
 });

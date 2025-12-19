@@ -1,0 +1,66 @@
+; Hello World OS in Romasm (UEFI/GOP Edition)
+; Modern UEFI bootable OS using Graphics Output Protocol
+; This version works on modern UEFI-only systems!
+
+; User main function (called after UEFI initialization)
+user_main:
+  ; Print welcome message
+  LOAD R0, welcome_msg
+  CALL uefi_print_string
+  
+  ; Print system info
+  LOAD R0, info_msg
+  CALL uefi_print_string
+  
+  ; Print framebuffer dimensions
+  CALL uefi_get_width
+  ; R0 now has width (we'll just print "Width: " for now)
+  LOAD R0, width_msg
+  CALL uefi_print_string
+  
+  CALL uefi_get_height
+  LOAD R0, height_msg
+  CALL uefi_print_string
+  
+  ; Draw a colored rectangle to demonstrate graphics
+  LOAD R0, 50   ; X
+  LOAD R1, 100  ; Y
+  LOAD R2, 200  ; Width
+  LOAD R3, 50   ; Height
+  LOAD R4, 0xFF0000FF  ; Red color (32-bit RGBA)
+  CALL uefi_fill_rect
+  
+  ; Draw another rectangle
+  LOAD R0, 300  ; X
+  LOAD R1, 100  ; Y
+  LOAD R2, 200  ; Width
+  LOAD R3, 50   ; Height
+  LOAD R4, 0x0000FFFF  ; Blue color
+  CALL uefi_fill_rect
+  
+  ; Infinite loop
+user_main_loop:
+  NOP
+  NOP
+  NOP
+  JMP user_main_loop
+
+; Messages (using numeric ASCII codes)
+welcome_msg:
+  DB 61, 61, 61, 61, 61, 61, 61, 61, 61, 61, 61, 61, 61, 61, 61, 61, 61, 61, 61, 61, 10  ; "===================="
+  DB 32, 32, 72, 101, 108, 108, 111, 44, 32, 82, 111, 109, 97, 110, 79, 83, 33, 32, 40, 85, 69, 70, 73, 47, 71, 79, 80, 32, 69, 100, 105, 116, 105, 111, 110, 41, 10  ; "  Hello, RomanOS! (UEFI/GOP Edition)"
+  DB 61, 61, 61, 61, 61, 61, 61, 61, 61, 61, 61, 61, 61, 61, 61, 61, 61, 61, 61, 61, 10  ; "===================="
+  DB 77, 111, 100, 101, 114, 110, 32, 102, 114, 97, 109, 101, 98, 117, 102, 102, 101, 114, 45, 98, 97, 115, 101, 100, 32, 79, 83, 32, 119, 114, 105, 116, 116, 101, 110, 10  ; "Modern framebuffer-based OS written"
+  DB 101, 110, 116, 105, 114, 101, 108, 121, 32, 105, 110, 32, 82, 111, 109, 97, 115, 109, 32, 97, 115, 115, 101, 109, 98, 108, 121, 33, 10, 10, 0  ; "entirely in Romasm assembly!"
+
+info_msg:
+  DB 83, 121, 115, 116, 101, 109, 32, 73, 110, 102, 111, 114, 109, 97, 116, 105, 111, 110, 58, 10  ; "System Information:"
+  DB 45, 32, 71, 114, 97, 112, 104, 105, 99, 115, 58, 32, 85, 69, 70, 73, 32, 71, 114, 97, 112, 104, 105, 99, 115, 32, 79, 117, 116, 112, 117, 116, 32, 80, 114, 111, 116, 111, 99, 111, 108, 10  ; "- Graphics: UEFI Graphics Output Protocol"
+  DB 45, 32, 86, 105, 100, 101, 111, 32, 77, 111, 100, 101, 58, 32, 70, 114, 97, 109, 101, 98, 117, 102, 102, 101, 114, 32, 40, 112, 105, 120, 101, 108, 32, 98, 117, 102, 102, 101, 114, 41, 10  ; "- Video Mode: Framebuffer (pixel buffer)"
+  DB 45, 32, 67, 111, 109, 112, 97, 116, 105, 98, 105, 108, 105, 116, 121, 58, 32, 77, 111, 100, 101, 114, 110, 32, 85, 69, 70, 73, 32, 115, 121, 115, 116, 101, 109, 115, 10, 10, 0  ; "- Compatibility: Modern UEFI systems"
+
+width_msg:
+  DB 70, 114, 97, 109, 101, 98, 117, 102, 102, 101, 114, 32, 87, 105, 100, 116, 104, 58, 32, 0  ; "Framebuffer Width: "
+
+height_msg:
+  DB 70, 114, 97, 109, 101, 98, 117, 102, 102, 101, 114, 32, 72, 101, 105, 103, 104, 116, 58, 32, 10, 0  ; "Framebuffer Height: "

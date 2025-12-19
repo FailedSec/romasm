@@ -1,0 +1,102 @@
+; UEFI Bootloader Entry Point
+; Modern UEFI application entry point for RomanOS
+; Uses x86-64 calling conventions (System V ABI)
+;
+; UEFI Entry Point Signature:
+; EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
+;
+; This will be called by UEFI firmware after loading our EFI application
+
+; UEFI Application Entry Point
+; Input: R0 (64-bit) = ImageHandle, R1 (64-bit) = SystemTable pointer
+; Output: R0 = EFI_STATUS (EFI_SUCCESS = 0)
+uefi_main:
+  ; Save UEFI parameters (System V ABI: RDI = ImageHandle, RSI = SystemTable)
+  ; In Romasm x86-64: R0=RAX, R1=RBX, but for UEFI ABI we need RDI/RSI
+  ; The x86 generator will handle this correctly in UEFI mode
+  
+  ; Save registers per calling convention
+  PUSH R1  ; Save RBP
+  PUSH R2  ; Save RBX (callee-saved)
+  PUSH R3  ; Save R12
+  PUSH R4  ; Save R13
+  PUSH R5  ; Save R14
+  PUSH R6  ; Save R15
+  
+  ; Store SystemTable globally (needed for UEFI calls)
+  ; SystemTable will be in RSI (second parameter in System V ABI)
+  ; We'll store it at a fixed memory location
+  LOAD R2, uefi_system_table
+  STORE R1, [R2]  ; Store SystemTable pointer
+  
+  ; Store ImageHandle
+  LOAD R2, uefi_image_handle
+  STORE R0, [R2]
+  
+  ; Initialize GOP
+  CALL gop_init
+  
+  ; Check if GOP initialization succeeded
+  CMP R0, 0  ; EFI_SUCCESS = 0
+  JNE uefi_error
+  
+  ; Initialize framebuffer terminal
+  CALL terminal_init
+  
+  ; Clear screen
+  CALL terminal_clear
+  
+  ; Print welcome message
+  LOAD R0, welcome_msg
+  CALL terminal_print_string
+  
+  ; Print framebuffer info
+  CALL terminal_print_fb_info
+  
+  ; Jump to user main function
+  CALL user_main
+  
+  ; If we return, exit successfully
+  LOAD R0, 0  ; EFI_SUCCESS
+  JMP uefi_exit
+  
+uefi_error:
+  ; Print error message (before terminal might be initialized)
+  ; Try to use GOP directly if terminal failed
+  LOAD R0, error_msg
+  CALL terminal_print_string
+  
+  LOAD R0, 0x80000000  ; EFI_LOAD_ERROR
+  
+uefi_exit:
+  ; Restore registers
+  POP R6
+  POP R5
+  POP R4
+  POP R3
+  POP R2
+  POP R1
+  
+  RET
+
+; Global UEFI data structures
+; These store UEFI pointers for later use
+uefi_image_handle:
+  DQ 0  ; 64-bit pointer to ImageHandle
+
+uefi_system_table:
+  DQ 0  ; 64-bit pointer to EFI_SYSTEM_TABLE
+
+uefi_boot_services:
+  DQ 0  ; 64-bit pointer to BootServices
+
+uefi_gop:
+  DQ 0  ; 64-bit pointer to Graphics Output Protocol
+
+; Messages
+welcome_msg:
+  DB "Hello, RomanOS (UEFI/GOP Edition)!", 13, 10
+  DB "Modern framebuffer-based OS written in Romasm", 13, 10, 0
+
+error_msg:
+  DB "ERROR: Failed to initialize UEFI/GOP system", 13, 10, 0

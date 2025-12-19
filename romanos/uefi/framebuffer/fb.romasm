@@ -1,0 +1,204 @@
+; Framebuffer Management
+; Direct pixel manipulation for UEFI GOP framebuffer
+; Supports 32-bit RGBA pixel format
+
+; Plot pixel at (X, Y) with color
+; Input: R0 = X coordinate, R1 = Y coordinate, R2 = color (32-bit RGBA)
+; Uses: R3, R4, R5
+fb_plot_pixel:
+  PUSH R3
+  PUSH R4
+  PUSH R5
+  
+  ; Get framebuffer base address
+  LOAD R3, framebuffer_base
+  LOAD R3, [R3]
+  
+  ; Get pitch (bytes per scanline)
+  LOAD R4, framebuffer_pitch
+  LOAD R4, [R4]
+  
+  ; Calculate offset: pitch * Y + (4 * X) for 32-bit pixels
+  ; R5 = pitch * Y
+  LOAD R5, R1  ; R5 = Y
+  MUL R5, R4   ; R5 = pitch * Y
+  
+  ; R4 = 4 * X
+  LOAD R4, R0  ; R4 = X
+  LOAD R0, 4
+  MUL R4, R0   ; R4 = 4 * X
+  
+  ; R5 = total offset
+  ADD R5, R4   ; R5 = (pitch * Y) + (4 * X)
+  
+  ; Add to framebuffer base
+  ADD R3, R5   ; R3 = framebuffer_base + offset
+  
+  ; Write pixel (32-bit)
+  STORE R2, [R3]  ; Write color to framebuffer
+  
+  POP R5
+  POP R4
+  POP R3
+  RET
+
+; Fill rectangle with color
+; Input: R0 = X, R1 = Y, R2 = Width, R3 = Height, R4 = Color (32-bit RGBA)
+; Uses: R5, R6, R7
+fb_fill_rect:
+  PUSH R5
+  PUSH R6
+  PUSH R7
+  
+  ; Save parameters
+  LOAD R5, R0  ; R5 = current X
+  LOAD R6, R1  ; R6 = current Y
+  LOAD R7, R2  ; R7 = width
+  
+  ; Outer loop: Y from R1 to R1 + R3
+  ; R6 = current Y
+fb_fill_y_loop:
+  ; Check if done with Y
+  LOAD R0, R6
+  LOAD R1, R1  ; Original Y
+  ADD R1, R3   ; R1 = Y + Height
+  CMP R0, R1
+  JGE fb_fill_done
+  
+  ; Inner loop: X from R5 to R5 + R7
+  LOAD R0, R5  ; Reset X to start
+  
+fb_fill_x_loop:
+  ; Check if done with X
+  LOAD R1, R5
+  ADD R1, R7   ; R1 = X + Width
+  CMP R0, R1
+  JGE fb_fill_next_y
+  
+  ; Plot pixel at (R0, R6) with color R4
+  LOAD R1, R6
+  LOAD R2, R4
+  CALL fb_plot_pixel
+  
+  ; Next X
+  INC R0
+  JMP fb_fill_x_loop
+  
+fb_fill_next_y:
+  ; Next Y
+  INC R6
+  JMP fb_fill_y_loop
+  
+fb_fill_done:
+  POP R7
+  POP R6
+  POP R5
+  RET
+
+; Clear entire framebuffer with color
+; Input: R0 = Color (32-bit RGBA, typically 0x00000000 for black)
+fb_clear:
+  PUSH R1
+  PUSH R2
+  PUSH R3
+  
+  ; Fill entire screen
+  LOAD R1, 0   ; X = 0
+  LOAD R2, 0   ; Y = 0
+  
+  ; Get dimensions
+  LOAD R3, framebuffer_width
+  LOAD R3, [R3]  ; Width
+  PUSH R3
+  LOAD R3, framebuffer_height
+  LOAD R3, [R3]  ; Height
+  
+  ; R0 already has color
+  ; R1 = 0 (X)
+  ; R2 = 0 (Y)
+  POP R1  ; Width
+  ; R3 = Height
+  
+  ; Fill rectangle
+  CALL fb_fill_rect
+  
+  POP R3
+  POP R2
+  POP R1
+  RET
+
+; Get framebuffer width
+; Output: R0 = width in pixels
+fb_get_width:
+  LOAD R0, framebuffer_width
+  LOAD R0, [R0]
+  RET
+
+; Get framebuffer height
+; Output: R0 = height in pixels
+fb_get_height:
+  LOAD R0, framebuffer_height
+  LOAD R0, [R0]
+  RET
+
+; Pack RGB to 32-bit RGBA color
+; Input: R0 = R (8-bit), R1 = G (8-bit), R2 = B (8-bit)
+; Output: R0 = 32-bit color (0xRRGGBBAA, A=0xFF)
+fb_pack_color:
+  ; Pack: (R << 24) | (G << 16) | (B << 8) | 0xFF
+  PUSH R3
+  
+  ; Clear high bits, keep only low 8 bits
+  LOAD R3, 0xFF
+  AND R0, R3
+  AND R1, R3
+  AND R2, R3
+  
+  ; R0 = R << 24
+  LOAD R3, 24
+fb_pack_shift_r:
+  CMP R3, 0
+  JEQ fb_pack_g
+  SHL R0, 1
+  DEC R3
+  JMP fb_pack_shift_r
+  
+fb_pack_g:
+  ; R1 = G << 16
+  LOAD R3, R1
+  LOAD R1, 16
+fb_pack_shift_g:
+  CMP R1, 0
+  JEQ fb_pack_b
+  SHL R3, 1
+  DEC R1
+  JMP fb_pack_shift_g
+  
+fb_pack_b:
+  ; R2 = B << 8
+  SHL R2, 8
+  
+  ; Combine: R0 | R3 | R2 | 0xFF
+  OR R0, R3   ; R0 = R | G
+  OR R0, R2   ; R0 = R | G | B
+  LOAD R3, 0xFF
+  OR R0, R3   ; R0 = R | G | B | A
+  
+  POP R3
+  RET
+
+; Color constants (32-bit RGBA)
+FB_COLOR_BLACK:
+  DD 0x00000000
+  
+FB_COLOR_WHITE:
+  DD 0xFFFFFFFF
+  
+FB_COLOR_RED:
+  DD 0xFF0000FF
+  
+FB_COLOR_GREEN:
+  DD 0x00FF00FF
+  
+FB_COLOR_BLUE:
+  DD 0x0000FFFF

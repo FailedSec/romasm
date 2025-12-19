@@ -27,6 +27,10 @@ class RomasmAssembler {
             'SUB': 'S',
             'SHL': 'SL',  // Shift Left (multiply by 2)
             'SHR': 'SR',  // Shift Right (divide by 2)
+            'AND': 'AN',  // Bitwise AND
+            'OR': 'OR',   // Bitwise OR
+            'XOR': 'XO',  // Bitwise XOR
+            'NOT': 'NOT', // Bitwise NOT
             'CALL': 'CA',
             'RET': 'R',
             'PUSH': 'P',
@@ -45,6 +49,59 @@ class RomasmAssembler {
             'NOP': 'NOP',  // No Operation
             'IN': 'IN',    // Input from I/O port
             'OUT': 'OUT',  // Output to I/O port
+            // String instructions (for efficient memory operations)
+            'MOVS': 'MOVS', // Move String (copy memory)
+            'STOS': 'STOS', // Store String (fill memory)
+            'LODS': 'LODS', // Load String (read sequential memory)
+            'CMPS': 'CMPS', // Compare String
+            'SCAS': 'SCAS', // Scan String (search)
+            // Flag control instructions
+            'CLD': 'CLD',  // Clear Direction Flag (forward)
+            'STD': 'STD',  // Set Direction Flag (backward)
+            'CLC': 'CLC',  // Clear Carry Flag
+            'STC': 'STC',  // Set Carry Flag
+            'CMC': 'CMC',  // Complement Carry Flag
+            'PUSHF': 'PUSHF', // Push Flags register
+            'POPF': 'POPF',   // Pop Flags register
+            'TEST': 'TEST',   // Test bits (sets flags without modifying operands)
+            // SETcc instructions (set byte on condition)
+            'SETZ': 'SETZ',   // Set if Zero (equal)
+            'SETNZ': 'SETNZ', // Set if Not Zero (not equal)
+            'SETL': 'SETL',   // Set if Less (signed)
+            'SETG': 'SETG',   // Set if Greater (signed)
+            'SETLE': 'SETLE', // Set if Less or Equal (signed)
+            'SETGE': 'SETGE', // Set if Greater or Equal (signed)
+            'SETC': 'SETC',   // Set if Carry
+            'SETNC': 'SETNC', // Set if No Carry
+            // Extended arithmetic
+            'ADC': 'ADC',     // Add with Carry
+            'SBB': 'SBB',     // Subtract with Borrow
+            'NEG': 'NEG',     // Negate (two's complement)
+            // Conditional moves
+            'CMOVZ': 'CMOVZ', // Conditional Move if Zero
+            'CMOVNZ': 'CMOVNZ', // Conditional Move if Not Zero
+            'CMOVL': 'CMOVL', // Conditional Move if Less
+            'CMOVG': 'CMOVG', // Conditional Move if Greater
+            'CMOVLE': 'CMOVLE', // Conditional Move if Less or Equal
+            'CMOVGE': 'CMOVGE', // Conditional Move if Greater or Equal
+            'CMOVC': 'CMOVC', // Conditional Move if Carry
+            'CMOVNC': 'CMOVNC', // Conditional Move if No Carry
+            // Atomic operations
+            'XCHG': 'XCHG',     // Exchange (atomic swap)
+            'CMPXCHG': 'CMPXCHG', // Compare and Exchange (atomic)
+            // Bit manipulation
+            'BT': 'BT',         // Bit Test
+            'BTS': 'BTS',       // Bit Test and Set
+            'BTR': 'BTR',       // Bit Test and Reset
+            'BTC': 'BTC',       // Bit Test and Complement
+            // Bit scan
+            'BSF': 'BSF',       // Bit Scan Forward (find first set bit)
+            'BSR': 'BSR',       // Bit Scan Reverse (find last set bit)
+            // Rotate instructions
+            'ROL': 'ROL',       // Rotate Left
+            'ROR': 'ROR',       // Rotate Right
+            'RCL': 'RCL',       // Rotate Left through Carry
+            'RCR': 'RCR',       // Rotate Right through Carry
             // Segment register operations
             'MOV_SEG': 'MSEG', // Move to segment register
             // Control register operations
@@ -120,7 +177,8 @@ class RomasmAssembler {
 
             // Check if it's a data directive
             const upperLine = line.toUpperCase();
-            if (upperLine.startsWith('DB ')) {
+            if (upperLine.startsWith('DB ') || upperLine.startsWith('DW ') || 
+                upperLine.startsWith('DD ') || upperLine.startsWith('DQ ')) {
                 // Data directive - will be handled in second pass
                 continue;
             }
@@ -150,7 +208,9 @@ class RomasmAssembler {
                     }
                 }
                 
-                if (nextLine.startsWith('DB ')) {
+                const nextUpper = nextLine.trim().toUpperCase();
+                if (nextUpper.startsWith('DB ') || nextUpper.startsWith('DW ') || 
+                    nextUpper.startsWith('DD ') || nextUpper.startsWith('DQ ')) {
                     // Data label
                     dataLabels[label] = currentDataAddress;
                 } else {
@@ -162,7 +222,8 @@ class RomasmAssembler {
 
             // Check for data directives
             const upperLine = line.toUpperCase();
-            if (upperLine.startsWith('DB ')) {
+            if (upperLine.startsWith('DB ') || upperLine.startsWith('DW ') || 
+                upperLine.startsWith('DD ') || upperLine.startsWith('DQ ')) {
                 try {
                     const dataBytes = this.parseDataDirective(line);
                     for (const byte of dataBytes) {
@@ -230,9 +291,48 @@ class RomasmAssembler {
         if (upperLine.startsWith('DB ')) {
             // Define Byte: DB value1, value2, ...
             const values = line.substring(3).trim();
-            const parts = values.split(',').map(p => p.trim());
             
-            for (const part of parts) {
+            // Parse values, handling quoted strings properly
+            const parts = [];
+            let current = '';
+            let inQuotes = false;
+            let quoteChar = null;
+            
+            for (let i = 0; i < values.length; i++) {
+                const char = values[i];
+                if ((char === '"' || char === "'") && (i === 0 || values[i-1] !== '\\')) {
+                    if (!inQuotes) {
+                        inQuotes = true;
+                        quoteChar = char;
+                        current += char;
+                    } else if (char === quoteChar) {
+                        inQuotes = false;
+                        current += char;
+                        parts.push(current.trim());
+                        current = '';
+                        quoteChar = null;
+                        // Skip comma after quoted string
+                        if (i + 1 < values.length && values[i + 1] === ',') {
+                            i++;
+                        }
+                    } else {
+                        current += char;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    if (current.trim()) {
+                        parts.push(current.trim());
+                    }
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            if (current.trim()) {
+                parts.push(current.trim());
+            }
+            
+            for (let i = 0; i < parts.length; i++) {
+                const part = parts[i];
                 // Try to parse as number
                 let value;
                 if (part.startsWith("'") && part.endsWith("'") && part.length === 3) {
@@ -241,8 +341,8 @@ class RomasmAssembler {
                 } else if (part.startsWith('"') && part.endsWith('"')) {
                     // String literal: "Hello"
                     const str = part.slice(1, -1);
-                    for (let i = 0; i < str.length; i++) {
-                        bytes.push(str.charCodeAt(i));
+                    for (let k = 0; k < str.length; k++) {
+                        bytes.push(str.charCodeAt(k));
                     }
                     continue;
                 } else {
@@ -261,7 +361,7 @@ class RomasmAssembler {
                 bytes.push(value & 0xFF); // Ensure it's a byte
             }
         } else if (upperLine.startsWith('DW ')) {
-            // Define Word: DW value1, value2, ...
+            // Define Word: DW value1, value2, ... (16-bit, little-endian)
             const values = line.substring(3).trim();
             const parts = values.split(',').map(p => p.trim());
             
@@ -277,9 +377,71 @@ class RomasmAssembler {
                     throw new Error(`Invalid DW value: ${part}`);
                 }
                 
-                // Store as little-endian bytes
+                // Store as little-endian bytes (16-bit)
                 bytes.push(value & 0xFF);
                 bytes.push((value >> 8) & 0xFF);
+            }
+        } else if (upperLine.startsWith('DD ')) {
+            // Define Dword: DD value1, value2, ... (32-bit, little-endian)
+            const values = line.substring(3).trim();
+            const parts = values.split(',').map(p => p.trim());
+            
+            for (const part of parts) {
+                let value;
+                if (part.toLowerCase().startsWith('0x')) {
+                    value = parseInt(part, 16);
+                } else {
+                    value = parseInt(part, 10);
+                }
+                
+                if (isNaN(value)) {
+                    throw new Error(`Invalid DD value: ${part}`);
+                }
+                
+                // Store as little-endian bytes (32-bit)
+                bytes.push(value & 0xFF);
+                bytes.push((value >> 8) & 0xFF);
+                bytes.push((value >> 16) & 0xFF);
+                bytes.push((value >> 24) & 0xFF);
+            }
+        } else if (upperLine.startsWith('DQ ')) {
+            // Define Qword: DQ value1, value2, ... (64-bit, little-endian)
+            const values = line.substring(3).trim();
+            const parts = values.split(',').map(p => p.trim());
+            
+            for (const part of parts) {
+                let value;
+                // Handle large 64-bit values (may need BigInt for very large)
+                if (part.toLowerCase().startsWith('0x')) {
+                    // For hex, handle as unsigned 64-bit
+                    const hexPart = part.substring(2);
+                    // Parse as 64-bit (JavaScript numbers are safe up to 2^53, but hex can be larger)
+                    if (hexPart.length <= 16) {
+                        value = parseInt(part, 16);
+                    } else {
+                        // Very large value - use BigInt then convert to bytes
+                        const bigVal = BigInt(part);
+                        // Extract 64-bit value (low 64 bits)
+                        const low64 = Number(bigVal & BigInt(0xFFFFFFFFFFFFFFFF));
+                        value = low64;
+                    }
+                } else {
+                    value = parseInt(part, 10);
+                }
+                
+                if (isNaN(value)) {
+                    throw new Error(`Invalid DQ value: ${part}`);
+                }
+                
+                // Store as little-endian bytes (64-bit)
+                bytes.push(value & 0xFF);
+                bytes.push((value >> 8) & 0xFF);
+                bytes.push((value >> 16) & 0xFF);
+                bytes.push((value >> 24) & 0xFF);
+                bytes.push((value >> 32) & 0xFF);
+                bytes.push((value >> 40) & 0xFF);
+                bytes.push((value >> 48) & 0xFF);
+                bytes.push((value >> 56) & 0xFF);
             }
         } else {
             throw new Error(`Unknown data directive: ${line}`);
@@ -308,12 +470,30 @@ class RomasmAssembler {
             throw new Error('Empty instruction');
         }
 
-        const mnemonic = parts[0].toUpperCase();
-        const operands = parts.slice(1);
+        let mnemonic = parts[0].toUpperCase();
+        let operands = parts.slice(1);
+        
+        // Check for REP prefix (REP, REPE, REPNE)
+        let repPrefix = null;
+        if (mnemonic === 'REP' || mnemonic === 'REPE' || mnemonic === 'REPNE') {
+            repPrefix = mnemonic;
+            // Next part should be the actual instruction
+            if (parts.length < 2) {
+                throw new Error(`${repPrefix} requires an instruction`);
+            }
+            mnemonic = parts[1].toUpperCase();
+            // Remaining parts are operands
+            operands = parts.slice(2);
+        }
 
         // Check if it's a known instruction
         if (!(mnemonic in this.opcodes)) {
             throw new Error(`Unknown instruction: ${mnemonic}`);
+        }
+        
+        // Validate REP prefix only on string instructions
+        if (repPrefix && !['MOVS', 'STOS', 'LODS', 'CMPS', 'SCAS'].includes(mnemonic)) {
+            throw new Error(`REP prefix can only be used with string instructions (MOVS, STOS, LODS, CMPS, SCAS)`);
         }
 
         const opcode = this.opcodes[mnemonic];
@@ -321,6 +501,7 @@ class RomasmAssembler {
             address,
             opcode,
             mnemonic,
+            repPrefix,  // Store REP prefix if present
             operands: [],
             raw: line
         };
@@ -363,12 +544,60 @@ class RomasmAssembler {
             case 'CMP':
             case 'SHL':
             case 'SHR':
+            case 'AND':
+            case 'OR':
+            case 'XOR':
+            case 'TEST':
+            case 'MOVS':
+            case 'STOS':
+            case 'LODS':
+            case 'CMPS':
+            case 'SCAS':
+            case 'ADC':
+            case 'SBB':
+            case 'CMOVZ':
+            case 'CMOVNZ':
+            case 'CMOVL':
+            case 'CMOVG':
+            case 'CMOVLE':
+            case 'CMOVGE':
+            case 'CMOVC':
+            case 'CMOVNC':
+            case 'XCHG':
+            case 'CMPXCHG':
+            case 'BT':
+            case 'BTS':
+            case 'BTR':
+            case 'BTC':
+            case 'BSF':
+            case 'BSR':
+            case 'ROL':
+            case 'ROR':
+            case 'RCL':
+            case 'RCR':
                 // Two register operands
                 if (operands.length !== 2) {
                     throw new Error(`${mnemonic} requires 2 operands`);
                 }
                 instruction.operands.push(this.parseOperand(operands[0], labels));
                 instruction.operands.push(this.parseOperand(operands[1], labels));
+                break;
+                
+            case 'NOT':
+            case 'NEG':
+            case 'SETZ':
+            case 'SETNZ':
+            case 'SETL':
+            case 'SETG':
+            case 'SETLE':
+            case 'SETGE':
+            case 'SETC':
+            case 'SETNC':
+                // Single register operand
+                if (operands.length !== 1) {
+                    throw new Error(`${mnemonic} requires 1 operand`);
+                }
+                instruction.operands.push(this.parseOperand(operands[0], labels));
                 break;
 
             case 'JMP':
@@ -419,6 +648,13 @@ class RomasmAssembler {
             case 'CLI':
             case 'STI':
             case 'IRET':
+            case 'CLD':
+            case 'STD':
+            case 'CLC':
+            case 'STC':
+            case 'CMC':
+            case 'PUSHF':
+            case 'POPF':
                 // No operands
                 if (operands.length !== 0) {
                     throw new Error(`${mnemonic} takes no operands`);

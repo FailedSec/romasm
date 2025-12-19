@@ -1,0 +1,51 @@
+; Test extended instructions: SETcc, ADC, SBB, NEG, CMOVcc
+
+user_main:
+  ; Test SETZ (set byte on zero)
+  LOAD R0, 5
+  LOAD R1, 5
+  CMP R0, R1      ; Compare (sets zero flag)
+  SETZ R2         ; R2 = 1 if equal, 0 otherwise
+  
+  ; Test SETNZ (set byte on not zero)
+  LOAD R0, 5
+  LOAD R1, 3
+  CMP R0, R1      ; Not equal
+  SETNZ R3        ; R3 = 1 if not equal
+  
+  ; Test NEG (negate)
+  LOAD R0, 10
+  NEG R0          ; R0 = -10
+  
+  ; Test ADC (add with carry)
+  LOAD R0, 5
+  LOAD R1, 3
+  ADD R0, R1      ; R0 = 8 (may set carry)
+  LOAD R2, 2
+  ADC R2, R0      ; R2 = R2 + R0 + carry
+  
+  ; Test SBB (subtract with borrow)
+  LOAD R0, 10
+  LOAD R1, 3
+  SUB R0, R1      ; R0 = 7
+  LOAD R2, 5
+  SBB R2, R0      ; R2 = R2 - R0 - borrow
+  
+  ; Test CMOVZ (conditional move if zero)
+  LOAD R0, 5
+  LOAD R1, 5
+  CMP R0, R1      ; Equal (zero flag set)
+  LOAD R2, 100
+  LOAD R3, 200
+  CMOVZ R2, R3    ; R2 = R3 if zero (should move)
+  
+  ; Test CMOVNZ (conditional move if not zero)
+  LOAD R0, 5
+  LOAD R1, 3
+  CMP R0, R1      ; Not equal
+  LOAD R2, 100
+  LOAD R3, 200
+  CMOVNZ R2, R3   ; R2 = R3 if not zero (should move)
+  
+  ; All tests complete
+  HLT
