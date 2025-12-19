@@ -2,21 +2,72 @@
 ; Based on Taylor Series and CORDIC algorithms
 
 ; Sine function using Taylor Series
-; Input: R0 = angle in degrees (0-90)
+; Input: R0 = angle in degrees (scaled by 100, e.g., 30° = 3000)
 ; Output: R0 = sin(angle) * 1000
 sin:
-  ; Argument reduction: ensure 0-90 degrees
-  LOAD R1, 90
+  PUSH R1
+  PUSH R2
+  PUSH R3
+  PUSH R4
+  PUSH R5
+  
+  ; Handle negative angles: sin(-x) = -sin(x)
+  LOAD R5, 0    ; Sign flag: 0 = positive, 1 = negative
+  CMP R0, 0
+  JGE sin_positive
+  LOAD R5, 1    ; Mark as negative
+  LOAD R1, -1
+  MUL R0, R1    ; Make positive
+  
+sin_positive:
+  ; Reduce to 0-360 range (36000 scaled by 100)
+  ; Use MOD instruction for efficiency (no loop!)
+  LOAD R1, 36000
+  MOD R0, R1     ; R0 = R0 % 36000 (much faster than a loop!)
+  
+  ; Now reduce to 0-90 range for Taylor series
+  ; sin(x) = sin(180-x) for 90 < x <= 180
+  ; sin(x) = -sin(x-180) for 180 < x <= 270
+  ; sin(x) = -sin(360-x) for 270 < x < 360
+  LOAD R1, 9000   ; 90° scaled by 100
   CMP R0, R1
   JLE sin_ok
-  ; For angles > 90, use identity: sin(x) = sin(180-x)
-  LOAD R1, 180
+  
+  LOAD R1, 18000  ; 180° scaled by 100
+  CMP R0, R1
+  JLE sin_180_range
+  ; 180 < x <= 360
+  LOAD R1, 27000  ; 270° scaled by 100
+  CMP R0, R1
+  JLE sin_270_range
+  ; 270 < x < 360: sin(x) = -sin(360-x)
+  LOAD R1, 36000
   SUB R1, R0
   LOAD R0, R1
-sin_ok:
+  LOAD R1, 1
+  ADD R5, R1    ; Flip sign
+  JMP sin_ok
   
+sin_270_range:
+  ; 180 < x <= 270: sin(x) = -sin(x-180)
+  LOAD R1, 18000
+  SUB R0, R1
+  LOAD R1, 1
+  ADD R5, R1    ; Flip sign
+  JMP sin_ok
+  
+sin_180_range:
+  ; 90 < x <= 180: sin(x) = sin(180-x)
+  LOAD R1, 18000
+  SUB R1, R0
+  LOAD R0, R1
+  
+sin_ok:
+  ; Now R0 is in 0-90 range (scaled by 100)
   ; Convert to approximate radians (degrees * 1745 / 100000)
-  ; This approximates degrees * PI / 180
+  ; But R0 is already scaled by 100, so we need to adjust
+  ; radians = (degrees*100) * (π/180) / 100
+  ; = (degrees*100) * 1745 / 100000
   LOAD R1, 1745
   MUL R0, R1
   LOAD R1, 100000
@@ -24,40 +75,53 @@ sin_ok:
   
   ; Taylor series: sin(x) = x - x³/6 + x⁵/120 - x⁷/5040 + ...
   ; We'll use first 3 terms for reasonable accuracy
+  ; R0 currently contains x (in radians, scaled)
   
+  ; Save x for later
   PUSH R0  ; Save x
-  PUSH R1
-  PUSH R2
-  PUSH R3
   
-  ; Calculate x³
+  ; Calculate x² = x * x
   LOAD R1, R0
   LOAD R2, R0
-  MUL R1, R2
-  MUL R1, R0
+  MUL R1, R2   ; R1 = x²
+  
+  ; Calculate x³ = x² * x
+  LOAD R2, R0
+  MUL R2, R1   ; R2 = x³
   
   ; x³/6
-  LOAD R2, 6
-  DIV R1, R2
+  LOAD R3, 6
+  DIV R2, R3   ; R2 = x³/6
   
-  ; Calculate x⁵
-  LOAD R2, R0
-  LOAD R3, R0
-  MUL R2, R3
-  MUL R2, R1  ; R2 = x⁵
+  ; Calculate x⁵ = x² * x³
+  LOAD R3, R1  ; R3 = x²
+  MUL R3, R1   ; R3 = x⁴ (x² * x²)
+  LOAD R4, R0
+  MUL R3, R4   ; R3 = x⁵ (x⁴ * x)
   
   ; x⁵/120
-  LOAD R3, 120
-  DIV R2, R3
+  LOAD R4, 120
+  DIV R3, R4   ; R3 = x⁵/120
   
-  ; result = x - x³/6 + x⁵/120
-  SUB R0, R1
-  ADD R0, R2
+  ; Restore x and calculate result = x - x³/6 + x⁵/120
+  POP R0       ; Restore x
+  SUB R0, R2   ; R0 = x - x³/6
+  ADD R0, R3   ; R0 = x - x³/6 + x⁵/120
   
   ; Scale by 1000 for integer representation
   LOAD R1, 1000
   MUL R0, R1
   
+  ; Apply sign if angle was negative or in 180-360 range
+  LOAD R1, 1
+  CMP R5, R1
+  JNE sin_done
+  LOAD R1, -1
+  MUL R0, R1    ; Negate result
+  
+sin_done:
+  POP R5
+  POP R4
   POP R3
   POP R2
   POP R1
@@ -73,25 +137,82 @@ cos:
   CALL sin
   RET
 
-; CORDIC-based sine (simplified)
-; More efficient for hardware implementation
-; Input: R0 = angle in degrees (0-45)
+; Fast sine function optimized for plotting
+; Uses simpler approximation - much faster than full Taylor series
+; Input: R0 = angle in degrees (scaled by 100, e.g., 30° = 3000)
 ; Output: R0 = sin(angle) * 1000
-sin_cordic:
-  ; This is a simplified CORDIC implementation
-  ; Full CORDIC requires lookup tables and iterative rotations
-  ; For now, we'll use a simplified approximation
+sin_fast:
+  PUSH R1
+  PUSH R2
+  PUSH R3
   
-  ; For small angles: sin(x) ≈ x (in radians)
-  ; Convert degrees to radians
-  LOAD R1, 1745
+  ; Handle negative angles
+  LOAD R3, 0    ; Sign flag
+  CMP R0, 0
+  JGE sin_fast_positive
+  LOAD R3, 1
+  LOAD R1, -1
   MUL R0, R1
-  LOAD R1, 100000
+  
+sin_fast_positive:
+  ; Reduce to 0-360 range using MOD (fast!)
+  LOAD R1, 36000
+  MOD R0, R1
+  
+  ; Reduce to 0-90 range
+  LOAD R1, 9000
+  CMP R0, R1
+  JLE sin_fast_ok
+  
+  LOAD R1, 18000
+  CMP R0, R1
+  JLE sin_fast_180
+  ; 180-360: use symmetry
+  LOAD R1, 36000
+  SUB R1, R0
+  LOAD R0, R1
+  LOAD R1, 1
+  ADD R3, R1    ; Flip sign
+  
+sin_fast_180:
+  ; 90-180: sin(x) = sin(180-x)
+  LOAD R1, 18000
+  SUB R1, R0
+  LOAD R0, R1
+  
+sin_fast_ok:
+  ; Convert to radians (simplified: degrees * 17 / 1000)
+  LOAD R1, 17
+  MUL R0, R1
+  LOAD R1, 1000
   DIV R0, R1
   
-  ; Scale result
+  ; Simple approximation: sin(x) ≈ x - x³/6 for small x
+  ; This is much faster than full Taylor series
+  PUSH R0       ; Save x
+  LOAD R1, R0
+  LOAD R2, R0
+  MUL R1, R2    ; R1 = x²
+  MUL R1, R0    ; R1 = x³
+  LOAD R2, 6
+  DIV R1, R2    ; R1 = x³/6
+  POP R0        ; Restore x
+  SUB R0, R1    ; R0 = x - x³/6
+  
+  ; Scale by 1000
   LOAD R1, 1000
   MUL R0, R1
   
+  ; Apply sign
+  LOAD R1, 1
+  CMP R3, R1
+  JNE sin_fast_done
+  LOAD R1, -1
+  MUL R0, R1
+  
+sin_fast_done:
+  POP R3
+  POP R2
+  POP R1
   RET
 
