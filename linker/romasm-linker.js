@@ -14,14 +14,18 @@ class RomasmLinker {
     
     /**
      * Load a stdlib file (async, fetches from server)
+     * @param {string} filename - Name of the stdlib file
+     * @param {boolean} forceReload - If true, bypass cache and reload
      */
-    async loadStdlibFile(filename) {
-        if (this.stdlibCache[filename]) {
+    async loadStdlibFile(filename, forceReload = false) {
+        if (!forceReload && this.stdlibCache[filename]) {
             return this.stdlibCache[filename];
         }
         
         try {
-            const response = await fetch(`stdlib/${filename}`);
+            // Add cache-busting query parameter to force reload
+            const url = forceReload ? `stdlib/${filename}?t=${Date.now()}` : `stdlib/${filename}`;
+            const response = await fetch(url);
             if (!response.ok) {
                 throw new Error(`Failed to load ${filename}: ${response.statusText}`);
             }
@@ -35,51 +39,25 @@ class RomasmLinker {
     }
     
     /**
-     * Parse function labels from Romasm source
-     * Finds lines like "sin:" or "cos:" and extracts the label name
-     */
-    parseFunctionLabels(source) {
-        const labels = {};
-        const lines = source.split('\n');
-        let instructionCount = 0;
-        
-        for (const line of lines) {
-            const trimmed = line.trim();
-            
-            // Skip empty lines and comments
-            if (!trimmed || trimmed.startsWith(';')) {
-                continue;
-            }
-            
-            // Check for label (ends with colon, not a comment)
-            if (trimmed.endsWith(':') && !trimmed.startsWith(';')) {
-                const label = trimmed.slice(0, -1).trim();
-                labels[label] = instructionCount;
-            } else {
-                // This is an instruction (or data)
-                // Count it if it's not just a comment
-                const withoutComment = trimmed.split(';')[0].trim();
-                if (withoutComment) {
-                    instructionCount++;
-                }
-            }
-        }
-        
-        return labels;
-    }
-    
-    /**
      * Assemble stdlib source and extract function entry points
+     * Uses the assembler's built-in label resolution (more accurate than manual parsing)
      */
     assembleStdlib(source) {
         const result = this.assembler.assemble(source);
         if (!result.success) {
             console.error('Failed to assemble stdlib:', result.errors);
+            if (result.errors && result.errors.length > 0) {
+                console.error('Assembly errors:', result.errors);
+            }
             return null;
         }
         
-        // Parse labels to find function entry points
-        const labels = this.parseFunctionLabels(source);
+        // Use the assembler's label map - it's already correctly resolved!
+        // The assembler does a two-pass assembly:
+        // 1. First pass: collects all labels and their instruction addresses
+        // 2. Second pass: assembles instructions
+        // So result.labels is the authoritative source of truth
+        const labels = result.labels || {};
         
         return {
             instructions: result.instructions,
@@ -90,8 +68,9 @@ class RomasmLinker {
     
     /**
      * Load and prepare stdlib functions
+     * @param {boolean} forceReload - If true, force reload all stdlib files (bypass cache)
      */
-    async loadStdlibFunctions() {
+    async loadStdlibFunctions(forceReload = false) {
         const stdlibFiles = [
             'trig.romasm',
             'math.romasm',
@@ -104,8 +83,14 @@ class RomasmLinker {
         const allInstructions = [];
         let offset = 0;
         
+        // Clear cache if forcing reload
+        if (forceReload) {
+            this.stdlibCache = {};
+            this.functionLabels = {};
+        }
+        
         for (const filename of stdlibFiles) {
-            const source = await this.loadStdlibFile(filename);
+            const source = await this.loadStdlibFile(filename, forceReload);
             if (!source) continue;
             
             const assembled = this.assembleStdlib(source);
@@ -114,6 +99,18 @@ class RomasmLinker {
             // Map function labels to their offsets
             for (const [label, localOffset] of Object.entries(assembled.labels)) {
                 this.functionLabels[label] = offset + localOffset;
+            }
+            
+            // Debug: Log labels found in this file
+            if (filename === 'trig.romasm') {
+                console.log(`[Linker] Labels found in ${filename}:`, Object.keys(assembled.labels).sort());
+                console.log(`[Linker] Total labels: ${Object.keys(assembled.labels).length}, Total instructions: ${assembled.instructions.length}`);
+                if (assembled.labels['sin_fast'] !== undefined) {
+                    console.log(`✓ sin_fast found at local offset ${assembled.labels['sin_fast']}, global offset ${offset + assembled.labels['sin_fast']}`);
+                } else {
+                    console.warn(`✗ sin_fast NOT found in ${filename} labels!`);
+                    console.warn(`Available labels starting with 'sin':`, Object.keys(assembled.labels).filter(l => l.startsWith('sin')));
+                }
             }
             
             // Add instructions to combined program
@@ -134,17 +131,17 @@ class RomasmLinker {
      * @param {Array} requiredFunctions - List of function names needed (e.g., ['sin', 'cos'])
      * @returns {Object} Linked program with instructions and function map
      */
-    async link(userInstructions, requiredFunctions = []) {
-        // Load stdlib if not already loaded
-        if (Object.keys(this.functionLabels).length === 0) {
-            await this.loadStdlibFunctions();
+    async link(userInstructions, requiredFunctions = [], forceReload = false) {
+        // Load stdlib if not already loaded, or if forceReload is true
+        if (forceReload || Object.keys(this.functionLabels).length === 0) {
+            await this.loadStdlibFunctions(forceReload);
         }
         
         // Build combined instruction array
         const linkedInstructions = [];
         
         // First, add stdlib instructions
-        const stdlibResult = await this.loadStdlibFunctions();
+        const stdlibResult = await this.loadStdlibFunctions(forceReload);
         linkedInstructions.push(...stdlibResult.instructions);
         const stdlibSize = stdlibResult.instructions.length;
         
@@ -167,7 +164,10 @@ class RomasmLinker {
                             }]
                         };
                     } else {
-                        console.warn(`Function ${funcName} not found in stdlib`);
+                        console.error(`Function ${funcName} not found in stdlib`);
+                        console.error(`Available functions:`, Object.keys(this.functionLabels));
+                        // Don't fail silently - this could cause infinite loops!
+                        throw new Error(`Function ${funcName} not found in stdlib. Available: ${Object.keys(this.functionLabels).join(', ')}`);
                     }
                 }
             }
